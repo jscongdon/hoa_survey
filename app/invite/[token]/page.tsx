@@ -1,0 +1,41 @@
+"use client"
+import React, { useState } from 'react'
+import { useRouter } from 'next/navigation'
+
+export default function AcceptInvitePage({ params }: { params: { token: string } }) {
+  const router = useRouter()
+  const [password, setPassword] = useState('')
+  const [status, setStatus] = useState<string | null>(null)
+
+  async function handleAccept(e: React.FormEvent) {
+    e.preventDefault()
+    setStatus(null)
+    const res = await fetch('/api/auth/accept-invite', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: params.token, password })
+    })
+    if (res.ok) {
+      setStatus('Account activated! Redirecting to login...')
+      setTimeout(() => {
+        router.push('/login')
+      }, 3000)
+    } else {
+      setStatus('Invalid or expired invite')
+    }
+  }
+
+  return (
+    <main className="max-w-md mx-auto p-8">
+      <h1 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Accept Admin Invite</h1>
+      <form className="space-y-4" onSubmit={handleAccept}>
+        <div>
+          <label className="block text-sm text-gray-900 dark:text-white">Set Password</label>
+          <input className="w-full border border-gray-300 dark:border-gray-600 p-2 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white" type="password" value={password} onChange={e => setPassword(e.target.value)} />
+        </div>
+        <button className="px-4 py-2 bg-blue-600 text-white rounded">Activate Account</button>
+      </form>
+      {status && <div className="mt-4 text-green-600 dark:text-green-400">{status}</div>}
+    </main>
+  )
+}

@@ -1,0 +1,96 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Admin {
+  id          String   @id @default(cuid())
+  email       String   @unique
+  password    String
+  name        String?
+  role        String   @default("FULL")
+  twoFactor   Boolean  @default(false)
+  secret2FA   String?
+  invitedById String?
+  invitedBy   Admin?   @relation("InvitedAdmins", fields: [invitedById], references: [id])
+  invites     Admin[]  @relation("InvitedAdmins")
+  createdAt   DateTime @default(now())
+}
+
+model MemberList {
+  id        String    @id @default(cuid())
+  name      String
+  members   Member[]  @relation("MemberListsOnMembers")
+  surveys   Survey[]
+  createdAt DateTime  @default(now())
+}
+
+model Member {
+  id        String     @id @default(cuid())
+  lot       String
+  name      String
+  email     String
+  address   String?
+  lists     MemberList[] @relation("MemberListsOnMembers")
+  responses Response[]
+}
+
+model Survey {
+  id             String     @id @default(cuid())
+  title          String
+  description    String?
+  opensAt        DateTime
+  closesAt       DateTime
+  memberListId   String
+  memberList     MemberList @relation(fields: [memberListId], references: [id])
+  questions      Question[]
+  responses      Response[]
+  showLive       Boolean    @default(false)
+  showAfterClose Boolean    @default(true)
+  minResponses   Int?       // Minimum number of responses needed (optional)
+  minResponsesAll Boolean   @default(false) // If true, minResponses should equal total members in list
+  createdAt      DateTime   @default(now())
+}
+
+model Question {
+  id            String   @id @default(cuid())
+  surveyId      String
+  survey        Survey   @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  type          String
+  text          String
+  // JSON content stored as string (use JSON.parse/stringify in application code)
+  options       String?
+  maxSelections Int?     // For MULTI_MULTI questions: max number of options that can be selected
+  required      Boolean  @default(false) // Whether this question must be answered
+  order         Int
+}
+
+model Response {
+  id         String   @id @default(cuid())
+  surveyId   String
+  survey     Survey   @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  memberId   String
+  member     Member   @relation(fields: [memberId], references: [id])
+  token      String   @unique
+  // Answers stored as stringified JSON. Parse when reading, stringify when writing.
+  answers    String
+  submittedAt DateTime?
+  signed      Boolean  @default(false)
+  signedAt    DateTime?
+  signatureToken String? @unique
+  createdAt  DateTime @default(now())
+  @@unique([surveyId, memberId])
+}
+
+model Reminder {
+  id          String @id @default(cuid())
+  surveyId    String
+  memberId    String
+  sentAt      DateTime
+  reminderNum Int
+}
