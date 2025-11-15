@@ -9,6 +9,10 @@ RUN apk add --no-cache libc6-compat openssl && \
 # Copy source
 COPY . .
 
+# Set build-time environment variables
+ENV SKIP_ENV_VALIDATION=1
+ENV DATABASE_URL="file:./dev.db"
+
 # Generate Prisma Client and build Next.js
 RUN npx prisma generate && \
     npm run build
