@@ -11,6 +11,9 @@ function LoginForm() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
+  const [needsVerification, setNeedsVerification] = useState(false);
+  const [unverifiedEmail, setUnverifiedEmail] = useState('');
+  const [resendingVerification, setResendingVerification] = useState(false);
 
   useEffect(() => {
     if (searchParams.get('verified') === 'true') {
@@ -19,11 +22,43 @@ function LoginForm() {
     if (searchParams.get('reset') === 'success') {
       setSuccess('Password reset successfully! You can now log in with your new password.')
     }
+    if (searchParams.get('pending') === 'verification') {
+      setError('Please verify your email address before accessing the dashboard.')
+    }
   }, [searchParams])
+
+  const handleResendVerification = async () => {
+    setResendingVerification(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      const res = await fetch('/api/auth/resend-verification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: unverifiedEmail }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || 'Failed to resend verification email');
+      } else {
+        setSuccess('Verification email sent! Please check your inbox.');
+        setNeedsVerification(false);
+      }
+    } catch (err) {
+      setError('An error occurred. Please try again.');
+    } finally {
+      setResendingVerification(false);
+    }
+  };
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError('');
+    setSuccess('');
+    setNeedsVerification(false);
     setLoading(true);
 
     try {
@@ -33,9 +68,16 @@ function LoginForm() {
         body: JSON.stringify({ email, password }),
       });
 
+      const data = await res.json();
+
       if (!res.ok) {
-        const data = await res.json();
-        setError(data.error || 'Login failed');
+        if (data.needsVerification) {
+          setNeedsVerification(true);
+          setUnverifiedEmail(data.email);
+          setError(data.error);
+        } else {
+          setError(data.error || 'Login failed');
+        }
         setLoading(false);
         return;
       }
@@ -66,6 +108,16 @@ function LoginForm() {
         {error && (
           <div className="mb-4 p-3 bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-200 rounded">
             {error}
+            {needsVerification && (
+              <button
+                type="button"
+                onClick={handleResendVerification}
+                disabled={resendingVerification}
+                className="mt-2 text-sm underline hover:no-underline disabled:opacity-50"
+              >
+                {resendingVerification ? 'Sending...' : 'Resend verification email'}
+              </button>
+            )}
           </div>
         )}
 

@@ -22,7 +22,11 @@ export async function POST(request: NextRequest) {
 
     // Check if admin has verified their email (LIMITED role means unverified)
     if (admin.role === 'LIMITED') {
-      return NextResponse.json({ error: 'Please check your email and click the verification link to activate your account.' }, { status: 403 })
+      return NextResponse.json({ 
+        error: 'Please verify your email address to activate your account.',
+        needsVerification: true,
+        email: admin.email
+      }, { status: 403 })
     }
 
     // If 2FA required, short-circuit
