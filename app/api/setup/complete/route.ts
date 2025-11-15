@@ -131,9 +131,7 @@ export async function POST(req: NextRequest) {
       where: { id: 'system' },
       select: { appUrl: true }
     })
-    const appUrl = config?.appUrl || (process.env.NODE_ENV === 'development'
-      ? (process.env.DEVELOPMENT_URL || 'http://localhost:3000')
-      : (process.env.PRODUCTION_URL || 'http://localhost:3000'))
+    const appUrl = config?.appUrl || 'http://localhost:3000'
     
     log('[SETUP-COMPLETE] Using appUrl for verification:', appUrl)
     
