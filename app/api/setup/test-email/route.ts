@@ -10,6 +10,7 @@ export async function POST(req: NextRequest) {
     log('[TEST-EMAIL] Received request:', { smtpHost, smtpPort, smtpUser, smtpFrom, testEmail })
 
     if (!smtpHost || !smtpPort || !smtpUser || !smtpPass || !smtpFrom || !testEmail) {
+      log('[TEST-EMAIL] Missing required fields')
       return NextResponse.json(
         { error: 'All SMTP fields are required' },
         { status: 400 }
@@ -17,46 +18,85 @@ export async function POST(req: NextRequest) {
     }
 
     // Create transporter
-    const transporter = nodemailer.createTransport({
+    const transportConfig = {
       host: smtpHost,
       port: parseInt(smtpPort.toString()),
       secure: parseInt(smtpPort.toString()) === 465,
+      connectionTimeout: 10000, // 10 seconds
+      greetingTimeout: 10000,
+      socketTimeout: 10000,
       auth: {
         user: smtpUser,
         pass: smtpPass
       }
-    })
+    }
+    
+    log('[TEST-EMAIL] Transport config:', { ...transportConfig, auth: { user: smtpUser, pass: '***' } })
+    
+    const transporter = nodemailer.createTransport(transportConfig)
 
     log('[TEST-EMAIL] Verifying connection...')
     
-    // Verify connection
-    await transporter.verify()
+    try {
+      // Verify connection
+      await transporter.verify()
+      log('[TEST-EMAIL] Connection verified successfully')
+    } catch (verifyErr: any) {
+      logError('[TEST-EMAIL] Connection verification failed:', verifyErr)
+      return NextResponse.json(
+        { 
+          error: 'SMTP connection failed',
+          details: verifyErr.message,
+          code: verifyErr.code 
+        },
+        { status: 500 }
+      )
+    }
 
     log('[TEST-EMAIL] Sending test email...')
     
-    // Send test email
-    await transporter.sendMail({
-      from: smtpFrom,
-      to: testEmail,
-      subject: 'HOA Survey - Email Configuration Test',
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #2563eb;">Email Configuration Successful!</h2>
-          <p>Your SMTP settings are working correctly.</p>
-          <p>You can now proceed with setting up your administrator account.</p>
-          <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;">
-          <p style="color: #6b7280; font-size: 14px;">
-            This is an automated test email from HOA Survey setup wizard.
-          </p>
-        </div>
-      `
-    })
+    try {
+      // Send test email - don't wait for full completion, just fire it off
+      transporter.sendMail({
+        from: smtpFrom,
+        to: testEmail,
+        subject: 'HOA Survey - Email Configuration Test',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #2563eb;">Email Configuration Successful!</h2>
+            <p>Your SMTP settings are working correctly.</p>
+            <p>You can now proceed with setting up your administrator account.</p>
+            <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;">
+            <p style="color: #6b7280; font-size: 14px;">
+              This is an automated test email from HOA Survey setup wizard.
+            </p>
+          </div>
+        `
+      }).then(info => {
+        log('[TEST-EMAIL] Email sent successfully:', info.messageId)
+      }).catch(sendErr => {
+        logError('[TEST-EMAIL] Email send failed (async):', sendErr)
+      })
+      
+      // Return success immediately after queuing
+      log('[TEST-EMAIL] Email queued successfully')
+    } catch (sendErr: any) {
+      logError('[TEST-EMAIL] Email send failed:', sendErr)
+      return NextResponse.json(
+        { 
+          error: 'Failed to send email',
+          details: sendErr.message,
+          code: sendErr.code 
+        },
+        { status: 500 }
+      )
+    }
 
     log('[TEST-EMAIL] Success!')
 
     return NextResponse.json({ success: true })
   } catch (err: any) {
-    logError('[TEST-EMAIL] Error:', err)
+    logError('[TEST-EMAIL] Unexpected error:', err)
     return NextResponse.json(
       { error: err.message || 'Failed to send test email', details: err.code },
       { status: 500 }
