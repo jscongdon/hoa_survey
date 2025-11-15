@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  app:
+    image: ghcr.io/jscongdon/hoa_survey:latest
+    container_name: hoa_survey
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - hoasurvey_data:/data
+    environment:
+      - DATABASE_URL=file:/data/hoasurvey.db
+      - NODE_ENV=production
+      # Update PRODUCTION_URL after deployment with your actual domain
+      - PRODUCTION_URL=${PRODUCTION_URL:-http://localhost:3000}
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  hoasurvey_data:
+    driver: local
