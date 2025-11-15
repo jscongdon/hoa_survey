@@ -132,13 +132,15 @@ export async function POST(req: NextRequest) {
         host: smtpHost,
         port: smtpPort,
         secure: smtpPort === 465,
-        connectionTimeout: 10000,
-        greetingTimeout: 10000,
-        socketTimeout: 10000,
+        connectionTimeout: 30000, // 30 seconds
+        greetingTimeout: 30000,
+        socketTimeout: 120000, // 2 minutes for actual sending
         auth: {
           user: smtpUser,
           pass: smtpPass
-        }
+        },
+        logger: true,
+        debug: true
       })
 
       const appUrl = process.env.NODE_ENV === 'development'

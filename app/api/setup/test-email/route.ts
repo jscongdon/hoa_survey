@@ -22,16 +22,18 @@ export async function POST(req: NextRequest) {
       host: smtpHost,
       port: parseInt(smtpPort.toString()),
       secure: parseInt(smtpPort.toString()) === 465,
-      connectionTimeout: 10000, // 10 seconds
-      greetingTimeout: 10000,
-      socketTimeout: 10000,
+      connectionTimeout: 30000, // 30 seconds
+      greetingTimeout: 30000,
+      socketTimeout: 120000, // 2 minutes for actual sending
       auth: {
         user: smtpUser,
         pass: smtpPass
-      }
+      },
+      logger: true, // Enable debug logging
+      debug: true
     }
     
-    log('[TEST-EMAIL] Transport config:', { ...transportConfig, auth: { user: smtpUser, pass: '***' } })
+    log('[TEST-EMAIL] Transport config:', { ...transportConfig, auth: { user: smtpUser, pass: '***' }, logger: false, debug: false })
     
     const transporter = nodemailer.createTransport(transportConfig)
 
