@@ -2,12 +2,10 @@
 
 ## ✅ What's Been Set Up
 
-
 ### 1. Branch Structure
 
 - **`main`** branch → Production environment
 - **`develop`** branch → Development/staging environment
-
 
 ### 2. Docker Images
 
