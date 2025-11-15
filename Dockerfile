@@ -18,8 +18,7 @@ RUN npx prisma generate && \
     npm run build
 
 # Copy static files for standalone mode
-RUN cp -r .next/static .next/standalone/.next/static && \
-    cp -r public .next/standalone/public
+RUN cp -r .next/static .next/standalone/.next/static
 
 # Switch to standalone directory
 WORKDIR /app/.next/standalone
