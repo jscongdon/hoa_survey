@@ -53,6 +53,3 @@ Thumbs.db
 
 # Testing
 .prettierignore
-
-# Project-specific
-full_prompt.txt
