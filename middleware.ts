@@ -34,7 +34,10 @@ export async function middleware(request: NextRequest) {
   // Verify token
   const payload = await verifyToken(token)
   if (!payload) {
-    return NextResponse.redirect(new URL('/login', request.url))
+    // Clear invalid token and redirect to login
+    const response = NextResponse.redirect(new URL('/login', request.url))
+    response.cookies.delete('auth-token')
+    return response
   }
 
   // Add admin info to headers for API routes (safe coerce to string)
