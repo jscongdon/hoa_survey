@@ -12,8 +12,8 @@ services:
     environment:
       - DATABASE_URL=file:/data/hoasurvey.db
       - NODE_ENV=production
-      # Update PRODUCTION_URL after deployment with your actual domain
-      - PRODUCTION_URL=${PRODUCTION_URL:-http://localhost:3000}
+      # Update PRODUCTION_URL with your actual domain
+      - PRODUCTION_URL=${PRODUCTION_URL:-https://survey.yourdomain.com}
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/"]
       interval: 30s
