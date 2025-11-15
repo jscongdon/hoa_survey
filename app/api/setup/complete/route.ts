@@ -126,13 +126,6 @@ export async function POST(req: NextRequest) {
 
     log('[SETUP-COMPLETE] Database updated, sending verification email')
     
-    // Get the appUrl from the database (just saved)
-    const config = await prisma.systemConfig.findUnique({
-      where: { id: 'system' },
-      select: { appUrl: true }
-    })
-    const appUrl = config?.appUrl || 'http://localhost:3000'
-    
     log('[SETUP-COMPLETE] Using appUrl for verification:', appUrl)
     
     try {
