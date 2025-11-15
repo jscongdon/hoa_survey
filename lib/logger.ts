@@ -4,7 +4,7 @@ let cachedDevMode: boolean | null = null
 let lastCheck = 0
 const CACHE_DURATION = 60000 // Cache for 1 minute
 
-export async function isDevelopmentMode(): Promise<boolean> {
+async function isDevelopmentMode(): Promise<boolean> {
   // During setup, always enable dev mode
   if (process.env.NODE_ENV === 'development') {
     return true
@@ -31,8 +31,9 @@ export async function isDevelopmentMode(): Promise<boolean> {
   }
 }
 
-export async function log(message: string, data?: any) {
-  const devMode = await isDevelopmentMode()
+export function log(message: string, data?: any) {
+  // Use sync check - check cached value or assume true
+  const devMode = cachedDevMode ?? true
   if (devMode) {
     if (data) {
       console.log(message, data)
@@ -40,9 +41,12 @@ export async function log(message: string, data?: any) {
       console.log(message)
     }
   }
+  
+  // Refresh cache in background
+  isDevelopmentMode().catch(() => {})
 }
 
-export async function error(message: string, err?: any) {
+export function error(message: string, err?: any) {
   // Always log errors
   if (err) {
     console.error(message, err)

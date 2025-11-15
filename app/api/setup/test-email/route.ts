@@ -7,7 +7,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const { smtpHost, smtpPort, smtpUser, smtpPass, smtpFrom, testEmail } = body
 
-    await log('[TEST-EMAIL] Received request:', { smtpHost, smtpPort, smtpUser, smtpFrom, testEmail })
+    log('[TEST-EMAIL] Received request:', { smtpHost, smtpPort, smtpUser, smtpFrom, testEmail })
 
     if (!smtpHost || !smtpPort || !smtpUser || !smtpPass || !smtpFrom || !testEmail) {
       return NextResponse.json(
@@ -27,12 +27,12 @@ export async function POST(req: NextRequest) {
       }
     })
 
-    await log('[TEST-EMAIL] Verifying connection...')
+    log('[TEST-EMAIL] Verifying connection...')
     
     // Verify connection
     await transporter.verify()
 
-    await log('[TEST-EMAIL] Sending test email...')
+    log('[TEST-EMAIL] Sending test email...')
     
     // Send test email
     await transporter.sendMail({
@@ -52,11 +52,11 @@ export async function POST(req: NextRequest) {
       `
     })
 
-    await log('[TEST-EMAIL] Success!')
+    log('[TEST-EMAIL] Success!')
 
     return NextResponse.json({ success: true })
   } catch (err: any) {
-    await logError('[TEST-EMAIL] Error:', err)
+    logError('[TEST-EMAIL] Error:', err)
     return NextResponse.json(
       { error: err.message || 'Failed to send test email', details: err.code },
       { status: 500 }
