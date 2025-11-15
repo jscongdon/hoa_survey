@@ -15,6 +15,7 @@ export default function SetupWizard() {
   // HOA Configuration
   const [hoaName, setHoaName] = useState('')
   const [hoaLogoUrl, setHoaLogoUrl] = useState('')
+  const [appUrl, setAppUrl] = useState('')
 
   // SMTP Configuration
   const [smtpHost, setSmtpHost] = useState('')
@@ -108,6 +109,7 @@ export default function SetupWizard() {
         body: JSON.stringify({
           hoaName,
           hoaLogoUrl,
+          appUrl,
           smtpHost,
           smtpPort: parseInt(smtpPort),
           smtpUser,
@@ -224,6 +226,23 @@ export default function SetupWizard() {
                   You can add a logo later in settings
                 </p>
               </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-white">
+                  Application URL *
+                </label>
+                <input
+                  type="url"
+                  value={appUrl}
+                  onChange={e => setAppUrl(e.target.value)}
+                  className="w-full border border-gray-300 dark:border-gray-600 p-3 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  placeholder="https://hoasurvey.foxpointva.com"
+                  required
+                />
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                  The public URL where this application will be accessed
+                </p>
+              </div>
             </div>
 
             <div className="flex gap-4">
@@ -235,8 +254,8 @@ export default function SetupWizard() {
               </button>
               <button
                 onClick={() => setStep('smtp')}
-                disabled={!hoaName}
-                className="flex-1 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                disabled={!hoaName || !appUrl}
+                className="flex-1 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed">
               >
                 Next
               </button>

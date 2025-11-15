@@ -12,6 +12,7 @@ export async function POST(req: NextRequest) {
     const {
       hoaName,
       hoaLogoUrl,
+      appUrl,
       smtpHost,
       smtpPort,
       smtpUser,
@@ -22,10 +23,10 @@ export async function POST(req: NextRequest) {
       adminName
     } = await req.json()
 
-    log('[SETUP-COMPLETE] Received data:', { hoaName, smtpHost, smtpPort, smtpUser, smtpFrom, adminEmail, adminName })
+    log('[SETUP-COMPLETE] Received data:', { hoaName, appUrl, smtpHost, smtpPort, smtpUser, smtpFrom, adminEmail, adminName })
 
     // Validate required fields
-    if (!hoaName || !smtpHost || !smtpPort || !smtpUser || !smtpPass || !smtpFrom || !adminEmail || !adminPassword || !adminName) {
+    if (!hoaName || !appUrl || !smtpHost || !smtpPort || !smtpUser || !smtpPass || !smtpFrom || !adminEmail || !adminPassword || !adminName) {
       log('[SETUP-COMPLETE] Missing required fields')
       return NextResponse.json(
         { error: 'All required fields must be provided' },
@@ -93,9 +94,7 @@ export async function POST(req: NextRequest) {
           smtpUser,
           smtpPass,
           smtpFrom,
-          appUrl: process.env.NODE_ENV === 'development'
-            ? (process.env.DEVELOPMENT_URL || 'http://localhost:3000')
-            : (process.env.PRODUCTION_URL || 'http://localhost:3000'),
+          appUrl, // Use the provided appUrl
           jwtSecret
         },
         update: {
@@ -106,6 +105,7 @@ export async function POST(req: NextRequest) {
           smtpUser,
           smtpPass,
           smtpFrom,
+          appUrl, // Update appUrl as well
           jwtSecret
         }
       })
@@ -126,6 +126,17 @@ export async function POST(req: NextRequest) {
 
     log('[SETUP-COMPLETE] Database updated, sending verification email')
     
+    // Get the appUrl from the database (just saved)
+    const config = await prisma.systemConfig.findUnique({
+      where: { id: 'system' },
+      select: { appUrl: true }
+    })
+    const appUrl = config?.appUrl || (process.env.NODE_ENV === 'development'
+      ? (process.env.DEVELOPMENT_URL || 'http://localhost:3000')
+      : (process.env.PRODUCTION_URL || 'http://localhost:3000'))
+    
+    log('[SETUP-COMPLETE] Using appUrl for verification:', appUrl)
+    
     try {
       // Send verification email
       const transporter = nodemailer.createTransport({
@@ -143,9 +154,6 @@ export async function POST(req: NextRequest) {
         debug: true
       })
 
-      const appUrl = process.env.NODE_ENV === 'development'
-        ? (process.env.DEVELOPMENT_URL || 'http://localhost:3000')
-        : (process.env.PRODUCTION_URL || 'http://localhost:3000')
       const verificationUrl = `${appUrl}/api/setup/verify?token=${verificationToken}&email=${encodeURIComponent(adminEmail)}`
 
       // Send email asynchronously to avoid timeout
