@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { testEmail } = body;
+    const { testEmail, smtpHost, smtpPort, smtpUser, smtpPass, smtpFrom } = body;
 
     if (!testEmail || !testEmail.includes('@')) {
       return NextResponse.json(
@@ -28,25 +28,32 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if SMTP settings are configured
-    if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
+    // Use provided SMTP settings or fall back to environment variables
+    const host = smtpHost || process.env.SMTP_HOST;
+    const port = smtpPort || process.env.SMTP_PORT || '587';
+    const user = smtpUser || process.env.SMTP_USER;
+    const pass = smtpPass || process.env.SMTP_PASS;
+    const from = smtpFrom || process.env.SMTP_FROM || 'noreply@hoa.local';
+
+    // Check if SMTP settings are available
+    if (!host || !user || !pass) {
       return NextResponse.json(
         { 
           error: 'SMTP settings not configured',
-          details: 'Please set SMTP_HOST, SMTP_USER, and SMTP_PASS in your .env file'
+          details: 'Please provide SMTP settings or set them in environment variables'
         },
         { status: 400 }
       );
     }
 
-    // Create transporter with current settings
+    // Create transporter with provided or configured settings
     const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: parseInt(process.env.SMTP_PORT || '587', 10),
-      secure: process.env.SMTP_PORT === '465',
+      host,
+      port: parseInt(port, 10),
+      secure: port === '465',
       auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
+        user,
+        pass,
       },
     });
 
@@ -55,7 +62,7 @@ export async function POST(request: NextRequest) {
 
     // Send test email
     await transporter.sendMail({
-      from: process.env.SMTP_FROM || 'noreply@hoa.local',
+      from,
       to: testEmail,
       subject: 'HOA Survey System - SMTP Test',
       html: `
@@ -65,10 +72,10 @@ export async function POST(request: NextRequest) {
           <p><strong>Your SMTP settings are working correctly!</strong></p>
           <hr style="margin: 20px 0; border: none; border-top: 1px solid #e5e7eb;" />
           <p style="font-size: 12px; color: #666;">
-            Server: ${process.env.SMTP_HOST}<br>
-            Port: ${process.env.SMTP_PORT || '587'}<br>
-            User: ${process.env.SMTP_USER}<br>
-            From: ${process.env.SMTP_FROM || 'noreply@hoa.local'}
+            Server: ${host}<br>
+            Port: ${port}<br>
+            User: ${user}<br>
+            From: ${from}
           </p>
         </div>
       `,
@@ -78,10 +85,10 @@ SMTP Configuration Test
 This is a test email from your HOA Survey System.
 Your SMTP settings are working correctly!
 
-Server: ${process.env.SMTP_HOST}
-Port: ${process.env.SMTP_PORT || '587'}
-User: ${process.env.SMTP_USER}
-From: ${process.env.SMTP_FROM || 'noreply@hoa.local'}
+Server: ${host}
+Port: ${port}
+User: ${user}
+From: ${from}
       `,
     });
 
@@ -89,10 +96,10 @@ From: ${process.env.SMTP_FROM || 'noreply@hoa.local'}
       success: true,
       message: `Test email sent successfully to ${testEmail}`,
       config: {
-        host: process.env.SMTP_HOST,
-        port: process.env.SMTP_PORT || '587',
-        user: process.env.SMTP_USER,
-        from: process.env.SMTP_FROM || 'noreply@hoa.local',
+        host,
+        port,
+        user,
+        from,
       },
     });
   } catch (error: any) {

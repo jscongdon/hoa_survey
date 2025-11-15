@@ -33,7 +33,10 @@ export async function GET(req: NextRequest) {
 
       await tx.systemConfig.update({
         where: { id: 'system' },
-        data: { setupCompleted: true }
+        data: { 
+          setupCompleted: true,
+          developmentMode: false // Disable development mode after setup
+        }
       })
     })
 

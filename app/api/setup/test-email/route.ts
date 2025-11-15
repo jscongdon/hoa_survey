@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import nodemailer from 'nodemailer'
+import { log, error as logError } from '@/lib/logger'
 
 export async function POST(req: NextRequest) {
   try {
-    const { smtpHost, smtpPort, smtpUser, smtpPass, smtpFrom, testEmail } = await req.json()
+    const body = await req.json()
+    const { smtpHost, smtpPort, smtpUser, smtpPass, smtpFrom, testEmail } = body
+
+    await log('[TEST-EMAIL] Received request:', { smtpHost, smtpPort, smtpUser, smtpFrom, testEmail })
 
     if (!smtpHost || !smtpPort || !smtpUser || !smtpPass || !smtpFrom || !testEmail) {
       return NextResponse.json(
@@ -15,17 +19,21 @@ export async function POST(req: NextRequest) {
     // Create transporter
     const transporter = nodemailer.createTransport({
       host: smtpHost,
-      port: smtpPort,
-      secure: smtpPort === 465,
+      port: parseInt(smtpPort.toString()),
+      secure: parseInt(smtpPort.toString()) === 465,
       auth: {
         user: smtpUser,
         pass: smtpPass
       }
     })
 
+    await log('[TEST-EMAIL] Verifying connection...')
+    
     // Verify connection
     await transporter.verify()
 
+    await log('[TEST-EMAIL] Sending test email...')
+    
     // Send test email
     await transporter.sendMail({
       from: smtpFrom,
@@ -44,11 +52,13 @@ export async function POST(req: NextRequest) {
       `
     })
 
+    await log('[TEST-EMAIL] Success!')
+
     return NextResponse.json({ success: true })
-  } catch (error: any) {
-    console.error('Test email error:', error)
+  } catch (err: any) {
+    await logError('[TEST-EMAIL] Error:', err)
     return NextResponse.json(
-      { error: error.message || 'Failed to send test email' },
+      { error: err.message || 'Failed to send test email', details: err.code },
       { status: 500 }
     )
   }

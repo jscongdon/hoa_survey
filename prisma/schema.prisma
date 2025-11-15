@@ -11,6 +11,7 @@ datasource db {
 model SystemConfig {
   id              String   @id @default("system")
   setupCompleted  Boolean  @default(false)
+  developmentMode Boolean  @default(true)
   hoaName         String?
   hoaLogoUrl      String?
   smtpHost        String?
