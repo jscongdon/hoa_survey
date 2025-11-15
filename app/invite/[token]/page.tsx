@@ -1,19 +1,28 @@
 "use client"
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
-export default function AcceptInvitePage({ params }: { params: { token: string } }) {
+export default function AcceptInvitePage({ params }: { params: Promise<{ token: string }> }) {
   const router = useRouter()
   const [password, setPassword] = useState('')
   const [status, setStatus] = useState<string | null>(null)
+  const [token, setToken] = useState<string | null>(null)
+
+  useEffect(() => {
+    params.then((resolvedParams) => {
+      setToken(resolvedParams.token)
+    })
+  }, [params])
 
   async function handleAccept(e: React.FormEvent) {
     e.preventDefault()
+    if (!token) return
+    
     setStatus(null)
     const res = await fetch('/api/auth/accept-invite', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token: params.token, password })
+      body: JSON.stringify({ token, password })
     })
     if (res.ok) {
       setStatus('Account activated! Redirecting to login...')
@@ -23,6 +32,10 @@ export default function AcceptInvitePage({ params }: { params: { token: string }
     } else {
       setStatus('Invalid or expired invite')
     }
+  }
+
+  if (!token) {
+    return <div className="max-w-md mx-auto p-8">Loading...</div>
   }
 
   return (
