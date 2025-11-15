@@ -28,6 +28,7 @@ export async function GET(
         responses: {
           include: {
             member: true,
+            answers: true,
           },
           where: {
             submittedAt: { not: null },
@@ -50,7 +51,16 @@ export async function GET(
     rows.push(headers)
 
     survey.responses.forEach((response) => {
-      const answers = response.answers ? JSON.parse(response.answers as string) : {}
+      // Convert Answer[] to answers object
+      const answers = response.answers.reduce((acc, answer) => {
+        try {
+          acc[answer.questionId] = JSON.parse(answer.value)
+        } catch {
+          acc[answer.questionId] = answer.value
+        }
+        return acc
+      }, {} as Record<string, any>)
+      
       const row = [
         response.member.lot,
         response.member.name,
