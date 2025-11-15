@@ -1,14 +1,67 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { verifyToken } from './lib/auth/jwt'
+import { verifyToken } from './lib/auth/jwt-edge'
 
 export async function middleware(request: NextRequest) {
-  const token = request.cookies.get('auth-token')?.value
   const pathname = request.nextUrl.pathname
+
+  // Always allow API and static assets
+  if (
+    pathname.startsWith('/api') ||
+    pathname.startsWith('/_next') ||
+    pathname.startsWith('/favicon.ico')
+  ) {
+    return NextResponse.next()
+  }
+
+  // For /setup page, check if setup is complete via API
+  if (pathname === '/setup') {
+    try {
+      const setupStatusUrl = new URL('/api/setup/status', request.url)
+      const response = await fetch(setupStatusUrl)
+      const data = await response.json()
+      
+      if (data.setupCompleted) {
+        return NextResponse.redirect(new URL('/login', request.url))
+      }
+      return NextResponse.next()
+    } catch (error) {
+      // Allow setup page on error
+      return NextResponse.next()
+    }
+  }
+
+  // For other routes, check setup status
+  try {
+    const setupStatusUrl = new URL('/api/setup/status', request.url)
+    const response = await fetch(setupStatusUrl)
+    const data = await response.json()
+
+    if (!data.setupCompleted && !data.adminExists) {
+      // No setup, redirect to setup
+      return NextResponse.redirect(new URL('/setup', request.url))
+    } else if (!data.setupCompleted && data.adminExists) {
+      // Admin exists but not verified, allow login only
+      if (pathname !== '/login' && !pathname.startsWith('/survey/')) {
+        return NextResponse.redirect(new URL('/login?pending=verification', request.url))
+      }
+      return NextResponse.next()
+    }
+  } catch (error) {
+    // On error, redirect to setup unless already there
+    if (pathname !== '/setup') {
+      return NextResponse.redirect(new URL('/setup', request.url))
+    }
+    return NextResponse.next()
+  }
+
+  const token = request.cookies.get('auth-token')?.value
 
   // Public routes
   if (
     pathname.startsWith('/survey/') ||
-    pathname === '/login'
+    pathname === '/login' ||
+    pathname === '/forgot-password' ||
+    pathname === '/reset-password'
   ) {
     return NextResponse.next()
   }

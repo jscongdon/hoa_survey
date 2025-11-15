@@ -8,23 +8,29 @@ const execAsync = promisify(exec)
 
 export async function POST(request: NextRequest) {
   try {
-    const token = request.cookies.get('auth-token')?.value
-    if (!token) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    // Check if this is being called during setup (allow unauthenticated)
+    const isSetupCall = request.headers.get('x-setup-restart') === 'true'
+    
+    if (!isSetupCall) {
+      // Normal authenticated restart requires FULL role
+      const token = request.cookies.get('auth-token')?.value
+      if (!token) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      }
 
-    const payload = await verifyToken(token)
-    if (!payload?.adminId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+      const payload = await verifyToken(token)
+      if (!payload?.adminId) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      }
 
-    // Check if admin has FULL role
-    const admin = await prisma.admin.findUnique({
-      where: { id: payload.adminId },
-    })
+      // Check if admin has FULL role
+      const admin = await prisma.admin.findUnique({
+        where: { id: payload.adminId },
+      })
 
-    if (!admin || admin.role !== 'FULL') {
-      return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
+      if (!admin || admin.role !== 'FULL') {
+        return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
+      }
     }
 
     // Attempt to restart the application

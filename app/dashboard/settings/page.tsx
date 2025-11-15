@@ -284,9 +284,9 @@ export default function SettingsPage() {
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
             <div className="flex justify-between items-center mb-4">
               <div>
-                <h2 className="text-xl font-semibold">Environment Variables</h2>
+                <h2 className="text-xl font-semibold">Application Settings</h2>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                  Configure application settings (requires restart after changes)
+                  Configure SMTP, branding, and application settings
                 </p>
               </div>
               <button

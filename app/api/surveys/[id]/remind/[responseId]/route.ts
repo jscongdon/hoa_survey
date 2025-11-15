@@ -58,8 +58,8 @@ export async function POST(
     // Determine base URL for links
     const isDevelopment = process.env.NODE_ENV === 'development';
     const baseUrl = isDevelopment 
-      ? (process.env.NEXT_PUBLIC_APP_URL || `${req.headers.get('x-forwarded-proto') || 'http'}://${req.headers.get('host')}`)
-      : (process.env.BASE_URL || `${req.headers.get('x-forwarded-proto') || 'http'}://${req.headers.get('host')}`);
+      ? (process.env.DEVELOPMENT_URL || `${req.headers.get('x-forwarded-proto') || 'http'}://${req.headers.get('host')}`)
+      : (process.env.PRODUCTION_URL || `${req.headers.get('x-forwarded-proto') || 'http'}://${req.headers.get('host')}`);
 
     try {
       console.log('[SPECIFIC_REMIND] Sending to:', response.member.email, 'Token:', response.token);

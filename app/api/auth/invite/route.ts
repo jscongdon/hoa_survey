@@ -27,7 +27,9 @@ export async function POST(req: Request) {
       }
     })
     // Send invite email
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+    const appUrl = process.env.NODE_ENV === 'development'
+      ? (process.env.DEVELOPMENT_URL || 'http://localhost:3000')
+      : (process.env.PRODUCTION_URL || 'http://localhost:3000')
     const inviteUrl = `${appUrl}/invite/${token}`
     await sendEmail({
       to: email,

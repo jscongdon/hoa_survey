@@ -35,6 +35,7 @@ export async function GET(
           },
           include: {
             member: true,
+            answers: true,
           },
         },
         memberList: true,
@@ -45,14 +46,22 @@ export async function GET(
       return NextResponse.json({ error: 'Survey not found' }, { status: 404 });
     }
 
-    // Parse answers from each response
+    // Convert answers array to object with questionId as key
     const responses = survey.responses.map((response) => ({
       id: response.id,
       member: {
         lot: response.member.lot,
         name: response.member.name,
       },
-      answers: JSON.parse(response.answers as string),
+      answers: response.answers.reduce((acc, answer) => {
+        // Parse arrays stored as JSON strings
+        try {
+          acc[answer.questionId] = JSON.parse(answer.value);
+        } catch {
+          acc[answer.questionId] = answer.value;
+        }
+        return acc;
+      }, {} as Record<string, any>),
       submittedAt: response.submittedAt,
     }));
 
@@ -62,35 +71,19 @@ export async function GET(
 
     // Calculate statistics for each question
     const questionStats = survey.questions.map((question, questionIndex) => {
-      // Try to get answers by question ID
-      let questionAnswers = responses
-        .map((r) => r.answers[question.id])
-        .filter((a) => {
-          if (a === undefined || a === null || a === '') return false;
-          if (Array.isArray(a)) return a.length > 0;
+      // Collect answers by question ID
+      const questionAnswers = responses
+        .map(response => response.answers[question.id])
+        .filter(answer => {
+          // Filter out empty answers
+          if (answer === undefined || answer === null || answer === '') return false;
+          if (Array.isArray(answer) && answer.length === 0) return false;
           return true;
         });
 
-      // If no answers found by ID, and we have responses, try to match by order
-      // This handles cases where question IDs changed after responses were submitted
-      if (questionAnswers.length === 0 && responses.length > 0) {
-        questionAnswers = responses
-          .map((r) => {
-            const answerKeys = Object.keys(r.answers);
-            // If response has answers, use the answer at the same index as the question
-            if (answerKeys.length > questionIndex) {
-              return r.answers[answerKeys[questionIndex]];
-            }
-            return undefined;
-          })
-          .filter((a) => {
-            if (a === undefined || a === null || a === '') return false;
-            if (Array.isArray(a)) return a.length > 0;
-            return true;
-          });
-      }
-
-      console.log(`[RESULTS] Question ${question.id} (${question.type}):`, questionAnswers);
+      console.log(`[RESULTS] Question ${question.id} "${question.text}" (${question.type}):`, 
+        `Found ${questionAnswers.length} answers out of ${responses.length} total responses`,
+        questionAnswers);
 
       let stats: any = {
         questionId: question.id,

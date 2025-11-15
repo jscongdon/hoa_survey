@@ -1,20 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyToken } from '@/lib/auth/jwt'
 import { prisma } from '@/lib/prisma'
-import { readFileSync, writeFileSync } from 'fs'
-import { join } from 'path'
 
-// Environment variables that can be safely edited
-const EDITABLE_ENV_VARS = [
-  { key: 'SMTP_HOST', label: 'SMTP Host', type: 'text', category: 'Email' },
-  { key: 'SMTP_PORT', label: 'SMTP Port', type: 'number', category: 'Email' },
-  { key: 'SMTP_USER', label: 'SMTP Username', type: 'text', category: 'Email' },
-  { key: 'SMTP_PASS', label: 'SMTP Password', type: 'password', category: 'Email' },
-  { key: 'SMTP_FROM', label: 'From Email Address', type: 'email', category: 'Email' },
-  { key: 'HOA_NAME', label: 'HOA Name', type: 'text', category: 'Branding' },
-  { key: 'HOA_LOGO_URL', label: 'Logo URL', type: 'text', category: 'Branding' },
-  { key: 'NEXT_PUBLIC_APP_URL', label: 'Application URL', type: 'url', category: 'Application' },
-  { key: 'BASE_URL', label: 'Base URL', type: 'url', category: 'Application' },
+// Configuration fields that can be safely edited (stored in database)
+const EDITABLE_CONFIG_FIELDS = [
+  { key: 'smtpHost', label: 'SMTP Host', type: 'text', category: 'Email' },
+  { key: 'smtpPort', label: 'SMTP Port', type: 'number', category: 'Email' },
+  { key: 'smtpUser', label: 'SMTP Username', type: 'text', category: 'Email' },
+  { key: 'smtpPass', label: 'SMTP Password', type: 'password', category: 'Email' },
+  { key: 'smtpFrom', label: 'From Email Address', type: 'email', category: 'Email' },
+  { key: 'hoaName', label: 'HOA Name', type: 'text', category: 'Branding' },
+  { key: 'hoaLogoUrl', label: 'Logo URL', type: 'text', category: 'Branding' },
+  { key: 'appUrl', label: 'Application URL', type: 'url', category: 'Application' },
 ]
 
 export async function GET(request: NextRequest) {
@@ -38,15 +35,23 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
     }
 
-    // Read current env values
-    const envValues: Record<string, string> = {}
-    EDITABLE_ENV_VARS.forEach(({ key }) => {
-      envValues[key] = process.env[key] || ''
+    // Read current config values from database
+    const config = await prisma.systemConfig.findUnique({
+      where: { id: 'system' }
     })
 
+    const configValues: Record<string, string> = {}
+    if (config) {
+      EDITABLE_CONFIG_FIELDS.forEach(({ key }) => {
+        // Convert database field names to values
+        const value = config[key as keyof typeof config]
+        configValues[key] = value?.toString() || ''
+      })
+    }
+
     return NextResponse.json({ 
-      variables: EDITABLE_ENV_VARS,
-      values: envValues 
+      variables: EDITABLE_CONFIG_FIELDS,
+      values: configValues 
     })
   } catch (error) {
     console.error('Error fetching env variables:', error)
@@ -78,37 +83,23 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { updates } = body
 
-    // Validate that only editable variables are being updated
-    const editableKeys = EDITABLE_ENV_VARS.map(v => v.key)
+    // Validate that only editable fields are being updated
+    const editableKeys = EDITABLE_CONFIG_FIELDS.map(v => v.key)
     for (const key of Object.keys(updates)) {
       if (!editableKeys.includes(key)) {
         return NextResponse.json({ error: `Cannot update ${key}` }, { status: 400 })
       }
     }
 
-    // Read current .env file
-    const envPath = join(process.cwd(), '.env')
-    let envContent = readFileSync(envPath, 'utf-8')
-
-    // Update each variable
-    for (const [key, value] of Object.entries(updates)) {
-      const regex = new RegExp(`^${key}=.*$`, 'm')
-      const newLine = `${key}="${value}"`
-      
-      if (regex.test(envContent)) {
-        envContent = envContent.replace(regex, newLine)
-      } else {
-        // Add new variable if it doesn't exist
-        envContent += `\n${newLine}\n`
-      }
-    }
-
-    // Write back to .env file
-    writeFileSync(envPath, envContent, 'utf-8')
+    // Update the SystemConfig in database
+    await prisma.systemConfig.update({
+      where: { id: 'system' },
+      data: updates
+    })
 
     return NextResponse.json({ 
       success: true, 
-      message: 'Environment variables updated. Restart the application for changes to take effect.' 
+      message: 'Configuration updated successfully!' 
     })
   } catch (error) {
     console.error('Error updating env variables:', error)

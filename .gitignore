@@ -15,6 +15,7 @@ coverage/
 .env.*.local
 .env.production
 .env.development
+# Note: stack.env is intentionally NOT ignored - it's needed for Portainer deployment
 
 # Database files
 *.db
@@ -52,3 +53,6 @@ Thumbs.db
 
 # Testing
 .prettierignore
+
+# Project-specific
+full_prompt.txt

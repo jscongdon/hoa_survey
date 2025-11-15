@@ -13,6 +13,7 @@ export async function GET(
     include: {
       survey: { include: { questions: { orderBy: { order: 'asc' } } } },
       member: true,
+      answers: true,
     },
   })
 
@@ -23,9 +24,17 @@ export async function GET(
   const now = new Date()
   const isClosed = response.survey.closesAt && now > response.survey.closesAt
   
-  // Parse existing answers if response was submitted
-  const existingAnswers = response.submittedAt && response.answers 
-    ? JSON.parse(response.answers as string)
+  // Convert answers array to object with questionId as key
+  const existingAnswers = response.submittedAt && response.answers.length > 0
+    ? response.answers.reduce((acc, answer) => {
+        // Parse arrays stored as JSON strings
+        try {
+          acc[answer.questionId] = JSON.parse(answer.value)
+        } catch {
+          acc[answer.questionId] = answer.value
+        }
+        return acc
+      }, {} as Record<string, any>)
     : null
 
   return NextResponse.json({
@@ -72,10 +81,31 @@ export async function PUT(
     // Generate signature token
     const signatureToken = crypto.randomBytes(32).toString('hex')
 
+    // Delete existing answers and create new ones
+    await prisma.answer.deleteMany({
+      where: { responseId: existingResponse.id },
+    })
+
+    // Create new answer records
+    const answerData = Object.entries(answers)
+      .filter(([, value]) => {
+        // Skip empty values
+        if (value === null || value === undefined || value === '') return false
+        if (Array.isArray(value) && value.length === 0) return false
+        return true
+      })
+      .map(([questionId, value]) => ({
+        responseId: existingResponse.id,
+        questionId,
+        value: typeof value === 'object' ? JSON.stringify(value) : String(value),
+      }))
+
     const response = await prisma.response.update({
       where: { token },
       data: {
-        answers: JSON.stringify(answers),
+        answers: {
+          create: answerData,
+        },
         submittedAt: new Date(),
         signatureToken,
       },
@@ -83,7 +113,10 @@ export async function PUT(
 
     // Send signature request email
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
+      const isDevelopment = process.env.NODE_ENV === 'development'
+      const baseUrl = isDevelopment 
+        ? (process.env.DEVELOPMENT_URL || 'http://localhost:3000')
+        : (process.env.PRODUCTION_URL || 'http://localhost:3000')
       const signatureUrl = `${baseUrl}/survey/${token}/sign/${signatureToken}`
       const viewResponseUrl = `${baseUrl}/survey/${token}`
 

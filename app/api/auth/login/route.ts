@@ -20,6 +20,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 })
     }
 
+    // Check if admin has verified their email (LIMITED role means unverified)
+    if (admin.role === 'LIMITED') {
+      return NextResponse.json({ error: 'Please check your email and click the verification link to activate your account.' }, { status: 403 })
+    }
+
     // If 2FA required, short-circuit
     if (admin.twoFactor && admin.secret2FA) {
       return NextResponse.json({ requiresTwoFactor: true, adminId: admin.id })

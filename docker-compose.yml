@@ -11,10 +11,11 @@ services:
     environment:
       - DATABASE_URL=file:/data/hoasurvey.db
       - NODE_ENV=development
-      - NEXT_PUBLIC_APP_URL=http://localhost:3000
-      # copy SMTP variables into env or use .env file
+      - DEVELOPMENT_URL=http://localhost:3000
+      - PRODUCTION_URL=https://yourdomain.com
+      # Most config now via setup wizard
     command: >
-      sh -c "npm install && npx prisma generate && npx prisma migrate deploy || true && npx prisma db push && npm run prisma:seed || true && npm run dev"
+      sh -c "npm install && ./startup.sh"
 
 volumes:
   hoasurvey-data:

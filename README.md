@@ -1,49 +1,61 @@
-# HOA Survey (scaffold)
-
-This repository is a scaffold for the HOA Survey app (Next.js 15, TypeScript, Prisma + SQLite).
-
-Quick start (local):
-
-1. Copy `.env.example` to `.env` and adjust values.
-2. Install dependencies:
-
-```bash
-npm install
-npx prisma generate
-npx prisma migrate deploy || true
-npm run prisma:seed
-npm run dev
-```
-
-Or with Docker:
-
-```bash
-docker compose up --build
-```
-
-Files created in this scaffold:
-
-- `package.json`, `tsconfig.json`, `next.config.js`
-- `prisma/schema.prisma`, `prisma/seed.ts`
-- `Dockerfile`, `docker-compose.yml`
-- App Router skeleton under `app/` and API route stubs under `app/api/`.
-
-This is a scaffold. Many handlers and UI flows are intentionally minimal. Continue implementing business logic and improved validation for production.
-
-## HOA Survey
+# HOA Survey
 
 A secure, production-ready survey management system for HOA communities built with Next.js 15, TypeScript, Prisma, and SQLite.
 
 ## Features
 
+- **First-Time Setup Wizard**: Guided setup for HOA configuration, SMTP settings, and admin account creation
+- **Email Verification**: Secure administrator account activation via email verification
 - **Admin Dashboard**: Manage surveys, member lists, and view live results
 - **Survey Builder**: Create surveys with multiple question types (multiple choice, rating, paragraph, yes/no)
-- **Member List Management**: Import CSV files with member details
+- **Member List Management**: Import CSV files or create empty lists and add members manually
 - **Email Distribution**: Send personalized survey links to homeowners via email
-- **Response Tracking**: View real-time response rates and results
-- **Role-Based Access**: Admin and View-Only admin roles
-- **Data Export**: CSV exports of survey responses
-- **Dark Mode**: Full dark mode support in the UI
+- **Response Tracking**: View real-time response rates and results with progress indicators
+- **Minimum Response Threshold**: Set required response counts with automatic tracking
+- **Role-Based Access**: Full Access and View-Only admin roles
+- **Data Export**: CSV exports of survey responses and non-respondents
+- **Dark Mode**: Full dark mode support throughout the UI
+
+## Quick Start
+
+### Docker Deployment (Recommended)
+
+1. **Clone and configure:**
+```bash
+git clone https://github.com/YOUR_USERNAME/hoa_survey.git
+cd hoa_survey
+```
+
+2. **Deploy with Docker:**
+```bash
+docker compose up -d --build
+```
+
+3. **Access the setup wizard:**
+   - Navigate to `http://localhost:3000`
+   - You'll be automatically redirected to `/setup`
+   - Follow the guided setup wizard
+
+### Setup Wizard Steps
+
+The first time you access the application, you'll be guided through:
+
+1. **HOA Configuration**
+   - Enter your HOA name
+   - Optionally add a logo URL
+
+2. **Email Server Setup**
+   - Configure SMTP settings
+   - Test email delivery
+
+3. **Administrator Account**
+   - Create your admin account
+   - Receive verification email
+   - Click verification link to activate full access
+
+4. **Start Using**
+   - Log in with your credentials
+   - Create member lists and surveys
 
 ## Tech Stack
 

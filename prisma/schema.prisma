@@ -8,6 +8,22 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model SystemConfig {
+  id              String   @id @default("system")
+  setupCompleted  Boolean  @default(false)
+  hoaName         String?
+  hoaLogoUrl      String?
+  smtpHost        String?
+  smtpPort        Int?
+  smtpUser        String?
+  smtpPass        String?
+  smtpFrom        String?
+  appUrl          String?
+  jwtSecret       String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
 model Admin {
   id          String   @id @default(cuid())
   email       String   @unique
@@ -19,6 +35,8 @@ model Admin {
   invitedById String?
   invitedBy   Admin?   @relation("InvitedAdmins", fields: [invitedById], references: [id])
   invites     Admin[]  @relation("InvitedAdmins")
+  resetToken  String?  @unique
+  resetTokenExpires DateTime?
   createdAt   DateTime @default(now())
 }
 
@@ -68,6 +86,7 @@ model Question {
   maxSelections Int?     // For MULTI_MULTI questions: max number of options that can be selected
   required      Boolean  @default(false) // Whether this question must be answered
   order         Int
+  answers       Answer[] // Answers to this question
 }
 
 model Response {
@@ -77,14 +96,26 @@ model Response {
   memberId   String
   member     Member   @relation(fields: [memberId], references: [id])
   token      String   @unique
-  // Answers stored as stringified JSON. Parse when reading, stringify when writing.
-  answers    String
+  answers    Answer[] // Individual answers for each question
   submittedAt DateTime?
   signed      Boolean  @default(false)
   signedAt    DateTime?
   signatureToken String? @unique
   createdAt  DateTime @default(now())
   @@unique([surveyId, memberId])
+}
+
+model Answer {
+  id         String   @id @default(cuid())
+  responseId String
+  response   Response @relation(fields: [responseId], references: [id], onDelete: Cascade)
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  // Store the answer value as string (can be JSON for array answers)
+  value      String
+  createdAt  DateTime @default(now())
+  
+  @@unique([responseId, questionId])
 }
 
 model Reminder {

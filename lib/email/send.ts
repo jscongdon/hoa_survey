@@ -1,14 +1,50 @@
 import nodemailer from 'nodemailer'
+import prisma from '@/lib/prisma'
 
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: parseInt(process.env.SMTP_PORT || '587', 10),
-  secure: process.env.SMTP_PORT === '465',
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-})
+let cachedConfig: any = null
+let cacheTime = 0
+const CACHE_TTL = 60000 // Cache for 1 minute
+
+async function getEmailConfig() {
+  // Use cache to avoid database queries on every email
+  if (cachedConfig && Date.now() - cacheTime < CACHE_TTL) {
+    return cachedConfig
+  }
+
+  const config = await prisma.systemConfig.findUnique({
+    where: { id: 'system' }
+  })
+
+  if (config && config.smtpHost) {
+    cachedConfig = config
+    cacheTime = Date.now()
+    return config
+  }
+
+  // Fallback to environment variables if no database config
+  return {
+    smtpHost: process.env.SMTP_HOST,
+    smtpPort: parseInt(process.env.SMTP_PORT || '587', 10),
+    smtpUser: process.env.SMTP_USER,
+    smtpPass: process.env.SMTP_PASS,
+    smtpFrom: process.env.SMTP_FROM,
+    hoaName: process.env.HOA_NAME || 'HOA'
+  }
+}
+
+async function createTransporter() {
+  const config = await getEmailConfig()
+  
+  return nodemailer.createTransport({
+    host: config.smtpHost,
+    port: config.smtpPort,
+    secure: config.smtpPort === 465,
+    auth: {
+      user: config.smtpUser,
+      pass: config.smtpPass,
+    },
+  })
+}
 
 export interface EmailOptions {
   to: string
@@ -18,8 +54,10 @@ export interface EmailOptions {
 }
 
 export async function sendEmail(options: EmailOptions): Promise<void> {
-  const fromName = process.env.HOA_NAME || 'HOA';
-  const fromEmail = process.env.SMTP_FROM || 'noreply@hoa.local';
+  const config = await getEmailConfig()
+  const transporter = await createTransporter()
+  const fromName = config.hoaName || 'HOA'
+  const fromEmail = config.smtpFrom || 'noreply@hoa.local'
   
   await transporter.sendMail({
     from: `"${fromName}" <${fromEmail}>`,
