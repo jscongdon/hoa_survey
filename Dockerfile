@@ -9,8 +9,9 @@ RUN apk add --no-cache libc6-compat openssl && \
 # Copy source
 COPY . .
 
-# Generate Prisma Client
-RUN npx prisma generate
+# Generate Prisma Client and build Next.js
+RUN npx prisma generate && \
+    npm run build
 
 ENV NODE_ENV=production
 EXPOSE 3000
