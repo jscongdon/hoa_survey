@@ -6,14 +6,16 @@ services:
     container_name: hoa_survey_dev
     restart: unless-stopped
     ports:
-      - "3001:3000"  # Different port for dev
+      - "3001:3000"
     volumes:
       - hoasurvey_dev_data:/data
     environment:
       - DATABASE_URL=file:/data/hoasurvey-dev.db
       - NODE_ENV=production
+      # Update PRODUCTION_URL with your actual dev domain
       - PRODUCTION_URL=${PRODUCTION_URL:-https://dev-hoasurvey.yourdomain.com}
-      # Add JWT_SECRET after setup: - JWT_SECRET=<your-jwt-secret>
+      # Set JWT_SECRET after setup wizard
+      - JWT_SECRET=${JWT_SECRET:-changeme}
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/setup/status"]
       interval: 30s
