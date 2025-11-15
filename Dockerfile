@@ -17,7 +17,14 @@ ENV DATABASE_URL="file:./dev.db"
 RUN npx prisma generate && \
     npm run build
 
+# Copy static files for standalone mode
+RUN cp -r .next/static .next/standalone/.next/static && \
+    cp -r public .next/standalone/public
+
+# Switch to standalone directory
+WORKDIR /app/.next/standalone
+
 ENV NODE_ENV=production
 EXPOSE 3000
 
-CMD ["sh", "-c", "npx prisma migrate deploy && node .next/standalone/server.js"]
+CMD ["sh", "-c", "cd /app && npx prisma migrate deploy && cd /app/.next/standalone && node server.js"]
