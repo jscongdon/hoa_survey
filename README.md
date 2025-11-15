@@ -2,6 +2,11 @@
 
 A secure, production-ready survey management system for HOA communities built with Next.js 15, TypeScript, Prisma, and SQLite.
 
+## Documentation
+
+- [Development Workflow](./WORKFLOW.md) - Branch strategy, deployment, and development practices
+- [Docker Deployment Guide](./DOCKER-DEPLOYMENT.md) - Detailed deployment instructions
+
 ## Features
 
 - **First-Time Setup Wizard**: Guided setup for HOA configuration, SMTP settings, and admin account creation
