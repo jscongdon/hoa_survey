@@ -83,7 +83,6 @@ export async function POST(
           surveyId: survey.id,
           memberId: newMember.id,
           token,
-          answers: '{}',
           submittedAt: null,
         },
       });

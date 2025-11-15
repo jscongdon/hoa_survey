@@ -58,7 +58,6 @@ export async function DELETE(
         surveyId: surveyId,
         memberId: memberId,
         token: newToken,
-        answers: '{}',
         submittedAt: null,
       },
     });
