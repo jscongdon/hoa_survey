@@ -36,19 +36,32 @@ export async function middleware(request: NextRequest) {
     const response = await fetch(setupStatusUrl)
     const data = await response.json()
 
+    console.log('[MIDDLEWARE] Setup status:', { 
+      pathname, 
+      setupCompleted: data.setupCompleted, 
+      adminExists: data.adminExists 
+    })
+
     if (!data.setupCompleted && !data.adminExists) {
       // No setup, redirect to setup
-      return NextResponse.redirect(new URL('/setup', request.url))
+      if (pathname !== '/setup') {
+        console.log('[MIDDLEWARE] No admin exists, redirecting to setup')
+        return NextResponse.redirect(new URL('/setup', request.url))
+      }
+      return NextResponse.next()
     } else if (!data.setupCompleted && data.adminExists) {
-      // Admin exists but not verified, allow login only
+      // Admin exists but not verified, allow login and survey pages only
+      console.log('[MIDDLEWARE] Admin exists but not verified, pathname:', pathname)
       if (pathname !== '/login' && !pathname.startsWith('/survey/')) {
+        console.log('[MIDDLEWARE] Redirecting to login')
         return NextResponse.redirect(new URL('/login?pending=verification', request.url))
       }
       return NextResponse.next()
     }
   } catch (error) {
+    console.error('[MIDDLEWARE] Error checking setup status:', error)
     // On error, redirect to setup unless already there
-    if (pathname !== '/setup') {
+    if (pathname !== '/setup' && pathname !== '/login') {
       return NextResponse.redirect(new URL('/setup', request.url))
     }
     return NextResponse.next()
