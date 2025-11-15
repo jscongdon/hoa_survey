@@ -97,7 +97,7 @@ export async function POST(
 
       return NextResponse.json({
         success: true,
-        message: `Reminder sent to ${response.member.firstName} ${response.member.lastName}`,
+        message: `Reminder sent to ${response.member.name}`,
       });
     } catch (err) {
       console.error('[SPECIFIC_REMIND] Failed to send reminder to', response.member.email, err);

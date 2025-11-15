@@ -138,7 +138,6 @@ export async function POST(request: NextRequest) {
             surveyId: created.id,
             memberId: member.id,
             token,
-            answers: JSON.stringify([]),
           },
         });
       }
