@@ -16,6 +16,21 @@ function LoginForm() {
   const [resendingVerification, setResendingVerification] = useState(false);
 
   useEffect(() => {
+    // Check if setup is complete
+    fetch('/api/setup/status')
+      .then(res => res.json())
+      .then(data => {
+        if (!data.setupCompleted && !data.adminExists) {
+          // No admin exists, redirect to setup
+          router.push('/setup');
+        }
+      })
+      .catch(() => {
+        // Ignore errors, allow login page to load
+      });
+  }, [router]);
+
+  useEffect(() => {
     if (searchParams.get('verified') === 'true') {
       setSuccess('Email verified successfully! You can now log in with full administrator access.')
     }
