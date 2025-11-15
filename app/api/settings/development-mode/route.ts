@@ -1,3 +1,4 @@
+import { log, error as logError } from '@/lib/logger'
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyToken } from '@/lib/auth/jwt'
 import prisma from '@/lib/prisma'
@@ -22,7 +23,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ developmentMode: config?.developmentMode ?? true })
   } catch (error: any) {
-    console.error('Get development mode error:', error)
+    logError('Get development mode error:', error)
     return NextResponse.json({ error: 'Failed to get setting' }, { status: 500 })
   }
 }
@@ -53,7 +54,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, developmentMode })
   } catch (error: any) {
-    console.error('Update development mode error:', error)
+    logError('Update development mode error:', error)
     return NextResponse.json({ error: 'Failed to update setting' }, { status: 500 })
   }
 }

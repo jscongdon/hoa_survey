@@ -1,3 +1,4 @@
+import { log, error as logError } from '@/lib/logger'
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { cookies } from 'next/headers';
@@ -65,9 +66,9 @@ export async function GET(
       submittedAt: response.submittedAt,
     }));
 
-    console.log('[RESULTS] Survey questions:', JSON.stringify(survey.questions.map(q => ({ id: q.id, text: q.text, type: q.type })), null, 2));
-    console.log('[RESULTS] Total responses:', responses.length);
-    console.log('[RESULTS] Response answers:', JSON.stringify(responses.map(r => r.answers), null, 2));
+    log('[RESULTS] Survey questions:', JSON.stringify(survey.questions.map(q => ({ id: q.id, text: q.text, type: q.type })), null, 2));
+    log('[RESULTS] Total responses:', responses.length);
+    log('[RESULTS] Response answers:', JSON.stringify(responses.map(r => r.answers), null, 2));
 
     // Calculate statistics for each question
     const questionStats = survey.questions.map((question, questionIndex) => {
@@ -81,7 +82,7 @@ export async function GET(
           return true;
         });
 
-      console.log(`[RESULTS] Question ${question.id} "${question.text}" (${question.type}):`, 
+      log(`[RESULTS] Question ${question.id} "${question.text}" (${question.type}):`, 
         `Found ${questionAnswers.length} answers out of ${responses.length} total responses`,
         questionAnswers);
 
@@ -153,7 +154,7 @@ export async function GET(
       responses,
     });
   } catch (error) {
-    console.error('Error fetching survey results:', error);
+    logError('Error fetching survey results:', error);
     return NextResponse.json(
       { error: 'Failed to fetch survey results' },
       { status: 500 }

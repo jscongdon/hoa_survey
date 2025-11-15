@@ -1,3 +1,4 @@
+import { log, error as logError } from '@/lib/logger'
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { verifyToken } from '@/lib/auth/jwt';
@@ -64,7 +65,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true, message: 'Response deleted successfully and new response created' });
   } catch (error) {
-    console.error('Error deleting response:', error);
+    logError('Error deleting response:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

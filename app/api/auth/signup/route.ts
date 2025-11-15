@@ -1,3 +1,4 @@
+import { log, error as logError } from '@/lib/logger'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { hashPassword } from '@/lib/auth/password'
@@ -49,7 +50,7 @@ export async function POST(request: NextRequest) {
     if (error instanceof ZodError) {
       return NextResponse.json({ error: 'Validation failed', details: error.errors }, { status: 400 })
     }
-    console.error(error)
+    logError(error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

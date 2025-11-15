@@ -1,4 +1,5 @@
 import { SignJWT, jwtVerify } from 'jose'
+import { log, error as logError } from '@/lib/logger'
 
 // Single shared cache for JWT secret
 let cachedSecret: string | null = null
@@ -16,20 +17,20 @@ async function getJWTSecret(): Promise<string> {
     if (envSecret && envSecret !== 'dev-secret-will-be-replaced-by-setup' && envSecret.length > 0) {
       return envSecret
     }
-    console.error('[JWT] Edge Runtime but no valid JWT_SECRET in environment!')
+    logError('[JWT] Edge Runtime but no valid JWT_SECRET in environment!')
     return 'dev-secret-change-in-production'
   }
 
   // In Node.js Runtime (API routes), prefer database over env var
   // If we have a cached secret, use it
   if (cachedSecret) {
-    console.log('[JWT] Using cached secret from database, length:', cachedSecret.length)
+    log('[JWT] Using cached secret from database, length:', cachedSecret.length)
     return cachedSecret
   }
 
   // If a fetch is already in progress, wait for it
   if (secretPromise) {
-    console.log('[JWT] Waiting for in-progress database fetch')
+    log('[JWT] Waiting for in-progress database fetch')
     return secretPromise
   }
 
@@ -44,14 +45,14 @@ async function getJWTSecret(): Promise<string> {
       })
 
       if (config?.jwtSecret) {
-        console.log('[JWT] Loaded secret from database successfully, length:', config.jwtSecret.length)
+        log('[JWT] Loaded secret from database successfully, length:', config.jwtSecret.length)
         cachedSecret = config.jwtSecret
         return config.jwtSecret
       }
       
-      console.log('[JWT] No config found in database, using fallback')
+      log('[JWT] No config found in database, using fallback')
     } catch (error) {
-      console.error('[JWT] Failed to load secret from database:', error)
+      logError('[JWT] Failed to load secret from database:', error)
     }
 
     // Fallback to dev secret (should only happen before setup)
@@ -95,7 +96,7 @@ export async function verifyToken(token: string): Promise<JWTPayload | null> {
     const verified = await jwtVerify(token, SECRET)
     return verified.payload as any as JWTPayload
   } catch (error) {
-    console.error('[JWT] Token verification failed:', error instanceof Error ? error.message : 'Unknown error')
+    logError('[JWT] Token verification failed:', error instanceof Error ? error.message : 'Unknown error')
     return null
   }
 }

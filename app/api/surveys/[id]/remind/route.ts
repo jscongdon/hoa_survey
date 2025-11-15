@@ -1,3 +1,4 @@
+import { log, error as logError } from '@/lib/logger'
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyToken } from '@/lib/auth/jwt';
@@ -45,9 +46,9 @@ export async function POST(
 
     const pendingResponses = survey.responses;
 
-    console.log('[REMIND] Survey:', survey.id, survey.title);
-    console.log('[REMIND] Total responses:', survey.responses.length);
-    console.log('[REMIND] Pending (unsubmitted):', pendingResponses.length);
+    log('[REMIND] Survey:', survey.id, survey.title);
+    log('[REMIND] Total responses:', survey.responses.length);
+    log('[REMIND] Pending (unsubmitted):', pendingResponses.length);
     
     if (pendingResponses.length === 0) {
       return NextResponse.json({ 
@@ -72,7 +73,7 @@ export async function POST(
     await Promise.all(
       pendingResponses.map(async (response) => {
         try {
-          console.log('[REMIND] Sending to:', response.member.email, 'Token:', response.token);
+          log('[REMIND] Sending to:', response.member.email, 'Token:', response.token);
           
           const link = `${baseUrl}/survey/${response.token}`;
           const html = generateSurveyEmail(
@@ -90,7 +91,7 @@ export async function POST(
             text: `Please complete the survey: ${link}`,
           });
 
-          console.log('[REMIND] Sent successfully to:', response.member.email);
+          log('[REMIND] Sent successfully to:', response.member.email);
 
           // Record reminder only on successful send
           await prisma.reminder.create({
@@ -107,7 +108,7 @@ export async function POST(
 
           sent += 1;
         } catch (err) {
-          console.error('[REMIND] Failed to send reminder to', response.member.email, err);
+          logError('[REMIND] Failed to send reminder to', response.member.email, err);
           failed += 1;
         }
       })
@@ -120,7 +121,7 @@ export async function POST(
       failed,
     });
   } catch (error) {
-    console.error('Reminder error:', error);
+    logError('Reminder error:', error);
     return NextResponse.json(
       { error: 'Failed to send reminders' },
       { status: 500 }

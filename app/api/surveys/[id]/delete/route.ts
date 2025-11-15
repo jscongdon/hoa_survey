@@ -1,3 +1,4 @@
+import { log, error as logError } from '@/lib/logger'
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyToken } from '@/lib/auth/jwt';
@@ -20,9 +21,9 @@ export async function DELETE(
   }
 
   try {
-    console.log('[DELETE_SURVEY] Starting delete request');
+    log('[DELETE_SURVEY] Starting delete request');
     const { id } = await params;
-    console.log('[DELETE_SURVEY] Survey ID:', id);
+    log('[DELETE_SURVEY] Survey ID:', id);
 
     // Check if survey exists
     const survey = await prisma.survey.findUnique({
@@ -39,11 +40,11 @@ export async function DELETE(
     });
 
     if (!survey) {
-      console.log('[DELETE_SURVEY] Survey not found:', id);
+      log('[DELETE_SURVEY] Survey not found:', id);
       return NextResponse.json({ error: 'Survey not found' }, { status: 404 });
     }
 
-    console.log('[DELETE_SURVEY] Survey found:', {
+    log('[DELETE_SURVEY] Survey found:', {
       id: survey.id,
       title: survey.title,
       responses: survey._count.responses,
@@ -52,14 +53,14 @@ export async function DELETE(
 
     // Check for submitted responses
     const submittedCount = survey.responses.filter(r => r.submittedAt !== null).length;
-    console.log('[DELETE_SURVEY] Submitted responses count:', submittedCount);
+    log('[DELETE_SURVEY] Submitted responses count:', submittedCount);
 
     // Check for force flag
     const forceDelete = req.nextUrl.searchParams.get('force') === 'true';
-    console.log('[DELETE_SURVEY] Force delete:', forceDelete);
+    log('[DELETE_SURVEY] Force delete:', forceDelete);
 
     if (submittedCount > 0 && !forceDelete) {
-      console.log('[DELETE_SURVEY] Returning 409 - has submitted responses');
+      log('[DELETE_SURVEY] Returning 409 - has submitted responses');
       return NextResponse.json({
         error: 'Survey has submitted responses',
         requiresConfirmation: true,
@@ -68,35 +69,35 @@ export async function DELETE(
       }, { status: 409 });
     }
 
-    console.log('[DELETE_SURVEY] Starting transaction delete');
+    log('[DELETE_SURVEY] Starting transaction delete');
 
     // Delete survey (cascades to questions, responses via schema; manually delete reminders)
     await prisma.$transaction(async (tx) => {
       // Delete reminders first (not cascade-constrained)
-      console.log('[DELETE_SURVEY] Deleting reminders');
+      log('[DELETE_SURVEY] Deleting reminders');
       const deletedReminders = await tx.reminder.deleteMany({
         where: { surveyId: id },
       });
-      console.log('[DELETE_SURVEY] Deleted reminders:', deletedReminders.count);
+      log('[DELETE_SURVEY] Deleted reminders:', deletedReminders.count);
       
       // Delete survey (cascades to questions and responses)
-      console.log('[DELETE_SURVEY] Deleting survey');
+      log('[DELETE_SURVEY] Deleting survey');
       await tx.survey.delete({
         where: { id },
       });
-      console.log('[DELETE_SURVEY] Survey deleted successfully');
+      log('[DELETE_SURVEY] Survey deleted successfully');
     });
 
-    console.log('[DELETE_SURVEY] Transaction completed successfully');
+    log('[DELETE_SURVEY] Transaction completed successfully');
     return NextResponse.json({
       success: true,
       message: 'Survey deleted successfully',
     });
   } catch (error: any) {
-    console.error('[DELETE_SURVEY] ERROR:', error);
-    console.error('[DELETE_SURVEY] Error stack:', error?.stack);
-    console.error('[DELETE_SURVEY] Error type:', typeof error);
-    console.error('[DELETE_SURVEY] Error details:', JSON.stringify(error, Object.getOwnPropertyNames(error)));
+    logError('[DELETE_SURVEY] ERROR:', error);
+    logError('[DELETE_SURVEY] Error stack:', error?.stack);
+    logError('[DELETE_SURVEY] Error type:', typeof error);
+    logError('[DELETE_SURVEY] Error details:', JSON.stringify(error, Object.getOwnPropertyNames(error)));
     
     return NextResponse.json(
       { 

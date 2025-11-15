@@ -1,3 +1,4 @@
+import { log, error as logError } from '@/lib/logger'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { sendEmail } from '@/lib/email/send'
@@ -36,7 +37,7 @@ export async function POST(request: NextRequest) {
       },
     })
     
-    console.log('[FORGOT-PASSWORD] Stored token in DB for email:', admin.email)
+    log('[FORGOT-PASSWORD] Stored token in DB for email:', admin.email)
 
     // Get system config for app URL
     const config = await prisma.systemConfig.findUnique({ where: { id: 'system' } })
@@ -74,7 +75,7 @@ export async function POST(request: NextRequest) {
       message: 'If an account exists with this email, you will receive a password reset link.' 
     })
   } catch (error) {
-    console.error('Forgot password error:', error)
+    logError('Forgot password error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

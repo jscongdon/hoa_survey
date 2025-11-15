@@ -1,3 +1,4 @@
+import { log, error as logError } from '@/lib/logger'
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 
@@ -46,17 +47,17 @@ export async function GET(req: NextRequest) {
     pendingVerifications.delete(token)
 
     // Log JWT secret for manual addition to environment variables (Docker deployments)
-    console.log('='.repeat(80))
-    console.log('IMPORTANT: Add this environment variable to your container:')
-    console.log(`JWT_SECRET=${config.jwtSecret}`)
-    console.log('='.repeat(80))
-    console.log('For Portainer: Go to your stack, edit, add the JWT_SECRET environment variable, and redeploy.')
-    console.log('='.repeat(80))
+    log('='.repeat(80))
+    log('IMPORTANT: Add this environment variable to your container:')
+    log(`JWT_SECRET=${config.jwtSecret}`)
+    log('='.repeat(80))
+    log('For Portainer: Go to your stack, edit, add the JWT_SECRET environment variable, and redeploy.')
+    log('='.repeat(80))
 
     // Redirect to login with success message
     return NextResponse.redirect(new URL('/login?verified=true', req.url))
   } catch (error: any) {
-    console.error('Verification error:', error)
+    logError('Verification error:', error)
     return NextResponse.redirect(new URL('/setup?error=verification-failed', req.url))
   }
 }

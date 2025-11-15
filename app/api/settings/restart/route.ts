@@ -1,3 +1,4 @@
+import { log, error as logError } from '@/lib/logger'
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyToken } from '@/lib/auth/jwt'
 import { prisma } from '@/lib/prisma'
@@ -39,16 +40,16 @@ export async function POST(request: NextRequest) {
       const { stdout: hostname } = await execAsync('hostname')
       const containerIdOrName = hostname.trim()
       
-      console.log('Attempting to restart container:', containerIdOrName)
+      log('Attempting to restart container:', containerIdOrName)
       
       // Send response BEFORE restarting to avoid connection issues
       // Use setTimeout to delay the actual restart
       setTimeout(async () => {
         try {
           await execAsync(`docker restart ${containerIdOrName}`)
-          console.log('Container restart initiated')
+          log('Container restart initiated')
         } catch (error) {
-          console.error('Restart command error (may be expected):', error)
+          logError('Restart command error (may be expected):', error)
         }
       }, 1000) // 1 second delay to allow response to be sent
       
@@ -57,7 +58,7 @@ export async function POST(request: NextRequest) {
         message: 'Application is restarting. Please wait a moment and refresh the page.' 
       })
     } catch (error: any) {
-      console.error('Error during restart setup:', error)
+      logError('Error during restart setup:', error)
       
       // Try alternative: find container by name
       try {
@@ -65,15 +66,15 @@ export async function POST(request: NextRequest) {
         const containerName = stdout.trim().split('\n')[0]
         
         if (containerName) {
-          console.log('Trying restart with container name:', containerName)
+          log('Trying restart with container name:', containerName)
           
           // Send response BEFORE restarting
           setTimeout(async () => {
             try {
               await execAsync(`docker restart ${containerName}`)
-              console.log('Container restart initiated')
+              log('Container restart initiated')
             } catch (error) {
-              console.error('Restart command error (may be expected):', error)
+              logError('Restart command error (may be expected):', error)
             }
           }, 1000)
           
@@ -83,7 +84,7 @@ export async function POST(request: NextRequest) {
           })
         }
       } catch (fallbackError) {
-        console.error('Fallback restart also failed:', fallbackError)
+        logError('Fallback restart also failed:', fallbackError)
       }
     }
 
@@ -94,7 +95,7 @@ export async function POST(request: NextRequest) {
     }, { status: 200 })
 
   } catch (error) {
-    console.error('Error restarting application:', error)
+    logError('Error restarting application:', error)
     return NextResponse.json({ 
       error: 'Failed to restart application. Please restart manually.' 
     }, { status: 500 })

@@ -1,3 +1,4 @@
+import { log, error as logError } from '@/lib/logger'
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/auth/jwt';
 import nodemailer from 'nodemailer';
@@ -103,7 +104,7 @@ From: ${from}
       },
     });
   } catch (error: any) {
-    console.error('SMTP test error:', error);
+    logError('SMTP test error:', error);
     
     let errorMessage = 'Failed to send test email';
     let details = error.message || 'Unknown error';

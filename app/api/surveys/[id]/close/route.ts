@@ -1,3 +1,4 @@
+import { log, error as logError } from '@/lib/logger'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { verifyToken } from '@/lib/auth/jwt'
@@ -38,7 +39,7 @@ export async function POST(
 
     return NextResponse.json({ success: true, survey })
   } catch (error) {
-    console.error('Error closing survey:', error)
+    logError('Error closing survey:', error)
     return NextResponse.json({ error: 'Failed to close survey' }, { status: 500 })
   }
 }

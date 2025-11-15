@@ -1,3 +1,4 @@
+import { log, error as logError } from '@/lib/logger'
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyToken } from '@/lib/auth/jwt';
@@ -62,7 +63,7 @@ export async function POST(
       : (process.env.PRODUCTION_URL || `${req.headers.get('x-forwarded-proto') || 'http'}://${req.headers.get('host')}`);
 
     try {
-      console.log('[SPECIFIC_REMIND] Sending to:', response.member.email, 'Token:', response.token);
+      log('[SPECIFIC_REMIND] Sending to:', response.member.email, 'Token:', response.token);
       
       const link = `${baseUrl}/survey/${response.token}`;
       const html = generateSurveyEmail(
@@ -80,7 +81,7 @@ export async function POST(
         text: `Please complete the survey: ${link}`,
       });
 
-      console.log('[SPECIFIC_REMIND] Sent successfully to:', response.member.email);
+      log('[SPECIFIC_REMIND] Sent successfully to:', response.member.email);
 
       // Record reminder
       await prisma.reminder.create({
@@ -100,14 +101,14 @@ export async function POST(
         message: `Reminder sent to ${response.member.name}`,
       });
     } catch (err) {
-      console.error('[SPECIFIC_REMIND] Failed to send reminder to', response.member.email, err);
+      logError('[SPECIFIC_REMIND] Failed to send reminder to', response.member.email, err);
       return NextResponse.json(
         { error: 'Failed to send reminder' },
         { status: 500 }
       );
     }
   } catch (error) {
-    console.error('[SPECIFIC_REMIND] Error:', error);
+    logError('[SPECIFIC_REMIND] Error:', error);
     return NextResponse.json(
       { error: 'Failed to send reminder' },
       { status: 500 }

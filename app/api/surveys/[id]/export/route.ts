@@ -1,3 +1,4 @@
+import { log, error as logError } from '@/lib/logger'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { verifyToken } from '@/lib/auth/jwt'
@@ -105,7 +106,7 @@ export async function GET(
       },
     })
   } catch (error) {
-    console.error('Error exporting survey:', error)
+    logError('Error exporting survey:', error)
     return NextResponse.json({ error: 'Failed to export survey' }, { status: 500 })
   }
 }

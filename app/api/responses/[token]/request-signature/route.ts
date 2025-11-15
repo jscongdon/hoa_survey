@@ -1,3 +1,4 @@
+import { log, error as logError } from '@/lib/logger'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { sendEmail } from '@/lib/email/send'
@@ -70,7 +71,7 @@ export async function POST(
       message: 'Signature request email sent successfully' 
     })
   } catch (error) {
-    console.error('Error requesting signature:', error)
+    logError('Error requesting signature:', error)
     return NextResponse.json({ error: 'Failed to send signature request' }, { status: 500 })
   }
 }

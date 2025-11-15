@@ -1,3 +1,4 @@
+import { log, error as logError } from '@/lib/logger'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { sendEmail } from '@/lib/email/send'
@@ -99,7 +100,7 @@ export async function POST(
       signedAt: new Date(),
     })
   } catch (error) {
-    console.error('Error signing response:', error)
+    logError('Error signing response:', error)
     return NextResponse.json({ error: 'Failed to sign response' }, { status: 500 })
   }
 }

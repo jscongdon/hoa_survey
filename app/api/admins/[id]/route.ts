@@ -1,3 +1,4 @@
+import { log, error as logError } from '@/lib/logger'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { verifyToken } from '@/lib/auth/jwt'
@@ -58,7 +59,7 @@ export async function PATCH(
 
     return NextResponse.json({ success: true, admin })
   } catch (error) {
-    console.error('Error updating admin:', error)
+    logError('Error updating admin:', error)
     return NextResponse.json({ error: 'Failed to update admin' }, { status: 500 })
   }
 }
@@ -97,7 +98,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('Error deleting admin:', error)
+    logError('Error deleting admin:', error)
     return NextResponse.json({ error: 'Failed to delete admin' }, { status: 500 })
   }
 }

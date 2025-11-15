@@ -3,7 +3,7 @@ WORKDIR /app
 
 # Install dependencies
 COPY package.json package-lock.json* ./
-RUN apk add --no-cache libc6-compat openssl && \
+RUN apk add --no-cache libc6-compat openssl wget && \
     npm install --legacy-peer-deps
 
 # Copy source

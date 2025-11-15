@@ -1,3 +1,4 @@
+import { log, error as logError } from '@/lib/logger'
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyToken } from '@/lib/auth/jwt';
@@ -65,7 +66,7 @@ export async function GET(
 
     return NextResponse.json(formattedNonRespondents);
   } catch (error) {
-    console.error('[NON_RESPONDENTS_GET]', error);
+    logError('[NON_RESPONDENTS_GET]', error);
     return NextResponse.json(
       { error: 'Failed to fetch non-respondents' },
       { status: 500 }

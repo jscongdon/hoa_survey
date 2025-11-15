@@ -1,3 +1,4 @@
+import { log, error as logError } from '@/lib/logger'
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyToken } from '@/lib/auth/jwt'
 import { prisma } from '@/lib/prisma'
@@ -54,7 +55,7 @@ export async function GET(request: NextRequest) {
       values: configValues 
     })
   } catch (error) {
-    console.error('Error fetching env variables:', error)
+    logError('Error fetching env variables:', error)
     return NextResponse.json({ error: 'Failed to fetch environment variables' }, { status: 500 })
   }
 }
@@ -102,7 +103,7 @@ export async function POST(request: NextRequest) {
       message: 'Configuration updated successfully!' 
     })
   } catch (error) {
-    console.error('Error updating env variables:', error)
+    logError('Error updating env variables:', error)
     return NextResponse.json({ error: 'Failed to update environment variables' }, { status: 500 })
   }
 }

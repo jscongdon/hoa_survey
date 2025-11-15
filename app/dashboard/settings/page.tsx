@@ -25,6 +25,9 @@ export default function SettingsPage() {
   const [restarting, setRestarting] = useState(false)
   const [restartMessage, setRestartMessage] = useState('')
   const [restartStatus, setRestartStatus] = useState<'idle' | 'restarting' | 'checking' | 'complete'>('idle')
+  const [developmentMode, setDevelopmentMode] = useState(false)
+  const [devModeLoading, setDevModeLoading] = useState(false)
+  const [devModeMessage, setDevModeMessage] = useState('')
 
   useEffect(() => {
     const fetchAdminRole = async () => {
@@ -44,7 +47,44 @@ export default function SettingsPage() {
       }
     }
     fetchAdminRole()
+    
+    // Fetch development mode status
+    fetch('/api/settings/development-mode')
+      .then(res => res.json())
+      .then(data => {
+        if (data.developmentMode !== undefined) {
+          setDevelopmentMode(data.developmentMode)
+        }
+      })
+      .catch(err => console.error('Error fetching development mode:', err))
   }, [router])
+
+  const handleToggleDevelopmentMode = async () => {
+    setDevModeLoading(true)
+    setDevModeMessage('')
+
+    try {
+      const res = await fetch('/api/settings/development-mode', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ developmentMode: !developmentMode }),
+      })
+
+      const data = await res.json()
+
+      if (res.ok) {
+        setDevelopmentMode(!developmentMode)
+        setDevModeMessage(`Development mode ${!developmentMode ? 'enabled' : 'disabled'} successfully!`)
+        setTimeout(() => setDevModeMessage(''), 3000)
+      } else {
+        setDevModeMessage(`Error: ${data.error || 'Failed to update'}`)
+      }
+    } catch (error) {
+      setDevModeMessage('Error updating development mode')
+    } finally {
+      setDevModeLoading(false)
+    }
+  }
 
   const fetchEnvVariables = async () => {
     try {
@@ -278,6 +318,44 @@ export default function SettingsPage() {
                 {emailMessage}
               </p>
             )}
+          </div>
+
+          {/* Development Mode Section */}
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <h2 className="text-xl font-semibold mb-4">Development Mode</h2>
+            <p className="text-gray-600 dark:text-gray-400 mb-4">
+              Enable detailed logging for debugging and troubleshooting
+            </p>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={handleToggleDevelopmentMode}
+                  disabled={devModeLoading}
+                  className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${
+                    developmentMode ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
+                  } ${devModeLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  <span
+                    className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${
+                      developmentMode ? 'translate-x-7' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {developmentMode ? 'Enabled' : 'Disabled'}
+                </span>
+              </div>
+              {devModeMessage && (
+                <p className={`text-sm ${devModeMessage.includes('Error') ? 'text-red-500' : 'text-green-500'}`}>
+                  {devModeMessage}
+                </p>
+              )}
+            </div>
+            <div className="mt-3 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded">
+              <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                ⚠️ <strong>Note:</strong> Development mode increases log verbosity. Disable in production for better performance.
+              </p>
+            </div>
           </div>
 
           {/* Environment Variables Section */}

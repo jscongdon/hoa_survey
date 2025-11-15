@@ -31,12 +31,12 @@ async function isDevelopmentMode(): Promise<boolean> {
   }
 }
 
-export function log(message: string, data?: any) {
+export function log(message: string, ...args: any[]) {
   // Use sync check - check cached value or assume true
   const devMode = cachedDevMode ?? true
   if (devMode) {
-    if (data) {
-      console.log(message, data)
+    if (args.length > 0) {
+      console.log(message, ...args)
     } else {
       console.log(message)
     }
@@ -46,10 +46,13 @@ export function log(message: string, data?: any) {
   isDevelopmentMode().catch(() => {})
 }
 
-export function error(message: string, err?: any) {
+export function error(message: string | unknown, ...args: any[]) {
   // Always log errors
-  if (err) {
-    console.error(message, err)
+  if (typeof message !== 'string') {
+    // If message is actually an error object
+    console.error('Error:', message)
+  } else if (args.length > 0) {
+    console.error(message, ...args)
   } else {
     console.error(message)
   }

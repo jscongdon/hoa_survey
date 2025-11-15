@@ -1,3 +1,4 @@
+import { log, error as logError } from '@/lib/logger'
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 
@@ -20,7 +21,7 @@ export async function GET(req: NextRequest) {
       instructions: 'Add this as JWT_SECRET environment variable in your Portainer stack configuration'
     })
   } catch (error: any) {
-    console.error('Error fetching JWT secret:', error)
+    logError('Error fetching JWT secret:', error)
     return NextResponse.json(
       { error: 'Failed to retrieve JWT secret' },
       { status: 500 }

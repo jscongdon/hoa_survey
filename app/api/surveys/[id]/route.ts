@@ -1,3 +1,4 @@
+import { log, error as logError } from '@/lib/logger'
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyToken } from '@/lib/auth/jwt';
@@ -162,7 +163,7 @@ export async function PUT(
 
     return NextResponse.json({ ok: true });
   } catch (error) {
-    console.error(error);
+    logError(error);
     return NextResponse.json({ error: 'Failed to update survey' }, { status: 500 });
   }
 }

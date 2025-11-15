@@ -1,3 +1,4 @@
+import { log, error as logError } from '@/lib/logger'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { sendEmail } from '@/lib/email/send'
@@ -147,13 +148,13 @@ export async function PUT(
         html: emailHtml,
       })
     } catch (emailError) {
-      console.error('Failed to send signature email:', emailError)
+      logError('Failed to send signature email:', emailError)
       // Continue even if email fails - response was saved successfully
     }
 
     return NextResponse.json({ success: true, response })
   } catch (error) {
-    console.error(error)
+    logError(error)
     return NextResponse.json({ error: 'Failed to submit response' }, { status: 500 })
   }
 }

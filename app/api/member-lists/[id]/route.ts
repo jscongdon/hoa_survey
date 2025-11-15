@@ -1,3 +1,4 @@
+import { log, error as logError } from '@/lib/logger'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { verifyToken } from '@/lib/auth/jwt'
@@ -76,7 +77,7 @@ export async function PUT(
 
     return NextResponse.json(list)
   } catch (error) {
-    console.error(error)
+    logError(error)
     return NextResponse.json({ error: 'Failed to update member list' }, { status: 500 })
   }
 }
@@ -112,7 +113,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error(error)
+    logError(error)
     return NextResponse.json({ error: 'Failed to delete member list' }, { status: 500 })
   }
 }

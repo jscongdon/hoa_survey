@@ -1,3 +1,4 @@
+import { log, error as logError } from '@/lib/logger'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { verifyToken } from '@/lib/auth/jwt'
@@ -47,7 +48,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ admins })
   } catch (error) {
-    console.error('Error fetching admins:', error)
+    logError('Error fetching admins:', error)
     return NextResponse.json({ error: 'Failed to fetch admins' }, { status: 500 })
   }
 }

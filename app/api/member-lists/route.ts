@@ -1,3 +1,4 @@
+import { log, error as logError } from '@/lib/logger'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { verifyToken } from '@/lib/auth/jwt'
@@ -93,7 +94,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(memberList, { status: 201 })
   } catch (error) {
-    console.error(error)
+    logError(error)
     return NextResponse.json({ error: 'Failed to create member list' }, { status: 500 })
   }
 }
