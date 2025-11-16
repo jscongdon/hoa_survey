@@ -42,9 +42,16 @@ export async function POST(request: NextRequest) {
     // Get system config for app URL
     const config = await prisma.systemConfig.findUnique({ where: { id: 'system' } })
     const isDevelopment = process.env.NODE_ENV === 'development'
-    const baseUrl = isDevelopment 
-      ? (config?.appUrl || process.env.DEVELOPMENT_URL || 'http://localhost:3000')
-      : (config?.appUrl || process.env.PRODUCTION_URL || 'http://localhost:3000')
+    let baseUrl: string;
+    if (isDevelopment) {
+      baseUrl = config?.appUrl || process.env.DEVELOPMENT_URL || 'http://localhost:3000';
+    } else {
+      baseUrl = config?.appUrl || process.env.PRODUCTION_URL || '';
+      if (!baseUrl) {
+        logError('No production URL set for password reset!');
+        return NextResponse.json({ error: 'Production URL not configured' }, { status: 500 });
+      }
+    }
 
     const resetUrl = `${baseUrl}/reset-password?token=${token}`
 

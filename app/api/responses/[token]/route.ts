@@ -114,12 +114,18 @@ export async function PUT(
 
     // Send signature request email
     try {
-      const isDevelopment = process.env.NODE_ENV === 'development'
-      const baseUrl = isDevelopment 
-        ? (process.env.DEVELOPMENT_URL || 'http://localhost:3000')
-        : (process.env.PRODUCTION_URL || 'http://localhost:3000')
-      const signatureUrl = `${baseUrl}/survey/${token}/sign/${signatureToken}`
-      const viewResponseUrl = `${baseUrl}/survey/${token}`
+      const isDevelopment = process.env.NODE_ENV === 'development';
+      let baseUrl: string;
+      if (isDevelopment) {
+        baseUrl = process.env.DEVELOPMENT_URL || 'http://localhost:3000';
+      } else {
+        baseUrl = process.env.PRODUCTION_URL || '';
+        if (!baseUrl) {
+          throw new Error('Production URL not configured');
+        }
+      }
+      const signatureUrl = `${baseUrl}/survey/${token}/sign/${signatureToken}`;
+      const viewResponseUrl = `${baseUrl}/survey/${token}`;
 
       const emailHtml = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
