@@ -21,10 +21,12 @@ GitHub Actions automatically builds Docker images for both branches:
 1. In Portainer, create a new stack named **hoa_survey_dev**
 2. Use the `portainer-stack-dev.yml` file
 3. Configure environment variables:
+
    ```yaml
    PRODUCTION_URL: https://dev-hoasurvey.yourdomain.com
    JWT_SECRET: <your-dev-jwt-secret>
    ```
+
 4. The dev container runs on port **3001** (different from production's 3000)
 5. Uses separate database: `hoasurvey-dev.db`
 
@@ -33,10 +35,12 @@ GitHub Actions automatically builds Docker images for both branches:
 1. In Portainer, create a stack named **hoa_survey**
 2. Use the `portainer-stack.yml` file
 3. Configure environment variables:
+
    ```yaml
    PRODUCTION_URL: https://hoasurvey.yourdomain.com
    JWT_SECRET: <your-production-jwt-secret>
    ```
+
 4. Runs on port **3000**
 5. Uses database: `hoasurvey.db`
 
@@ -45,6 +49,7 @@ GitHub Actions automatically builds Docker images for both branches:
 ### Making Changes
 
 1. **Create a feature branch from develop:**
+
    ```bash
    git checkout develop
    git pull origin develop
@@ -52,12 +57,14 @@ GitHub Actions automatically builds Docker images for both branches:
    ```
 
 2. **Make your changes and commit:**
+
    ```bash
    git add .
    git commit -m "Description of changes"
    ```
 
 3. **Push to GitHub:**
+
    ```bash
    git push origin feature/your-feature-name
    ```
@@ -68,9 +75,10 @@ GitHub Actions automatically builds Docker images for both branches:
    - Push to `develop` branch triggers automatic build
    - GitHub Actions builds `ghcr.io/jscongdon/hoa_survey:develop`
    - Pull and redeploy in Portainer dev stack
-   - Test thoroughly at https://dev-hoasurvey.yourdomain.com
+   - Test thoroughly at <https://dev-hoasurvey.yourdomain.com>
 
 6. **After testing, merge to production:**
+
    ```bash
    git checkout main
    git merge develop
@@ -100,14 +108,17 @@ npx prisma migrate dev
 ## Database Migrations
 
 ### Development
+
 - Migrations run automatically on container startup
 - Dev database is separate from production
 - Can test migrations safely without affecting production
 
 ### Production
+
 - Always test migrations in dev first
 - Migrations run automatically on container startup
 - Consider backing up production database before major updates:
+
   ```bash
   docker cp hoa_survey:/data/hoasurvey.db ./backup-$(date +%Y%m%d).db
   ```
@@ -117,12 +128,14 @@ npx prisma migrate dev
 If issues occur in production:
 
 1. **Quick rollback to previous image:**
+
    ```bash
    # In Portainer, edit stack and change image tag to previous SHA
    image: ghcr.io/jscongdon/hoa_survey:main-abc1234
    ```
 
 2. **Revert code and rebuild:**
+
    ```bash
    git checkout main
    git revert <commit-hash>
@@ -134,10 +147,12 @@ If issues occur in production:
 ### Development Mode Toggle
 
 Both environments have a Development Mode setting in **Settings > Development Mode**:
+
 - **Enabled**: Detailed logging for debugging
 - **Disabled**: Minimal logging for production
 
 Recommendation:
+
 - Dev environment: Keep **enabled**
 - Production: Keep **disabled** unless troubleshooting
 
@@ -154,6 +169,7 @@ Recommendation:
 ## Monitoring
 
 Check container health:
+
 ```bash
 # Development
 docker logs hoa_survey_dev --tail 100
@@ -163,4 +179,4 @@ docker logs hoa_survey --tail 100
 ```
 
 Check GitHub Actions builds:
-https://github.com/jscongdon/hoa_survey/actions
+<https://github.com/jscongdon/hoa_survey/actions>

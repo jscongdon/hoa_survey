@@ -1,3 +1,4 @@
+
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyToken } from './lib/auth/jwt-edge'
 
@@ -18,7 +19,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // Allow survey pages (public)
+  // Allow survey and invite pages (public)
   if (pathname.startsWith('/survey/') || pathname.startsWith('/invite/')) {
     return NextResponse.next()
   }
@@ -33,7 +34,7 @@ export async function middleware(request: NextRequest) {
 
   // Verify token
   const payload = await verifyToken(token)
-  if (!payload) {
+  if (!payload || !payload.adminId) {
     // Clear invalid token and redirect to login
     const response = NextResponse.redirect(new URL('/login', request.url))
     response.cookies.delete('auth-token')
