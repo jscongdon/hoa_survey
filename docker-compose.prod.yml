@@ -8,7 +8,8 @@ services:
       - DATABASE_URL=file:/data/hoasurvey.db
       - NODE_ENV=production
       - PRODUCTION_URL=https://yourdomain.com
-    volumes:
+      - LOG_LEVEL=debug
+      volumes:
       - hoasurvey-data:/data
     command: ./startup.sh
 

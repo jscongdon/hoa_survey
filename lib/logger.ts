@@ -5,6 +5,12 @@ let lastCheck = 0
 const CACHE_DURATION = 60000 // Cache for 1 minute
 
 async function isDevelopmentMode(): Promise<boolean> {
+  // Honor explicit LOG_LEVEL for temporary verbose logging
+  const envLogLevel = (process.env.LOG_LEVEL || '').toLowerCase()
+  if (envLogLevel === 'debug') {
+    return true
+  }
+
   // During setup, always enable dev mode
   if (process.env.NODE_ENV === 'development') {
     return true
@@ -33,7 +39,8 @@ async function isDevelopmentMode(): Promise<boolean> {
 
 export function log(message: string, ...args: any[]) {
   // Use sync check - check cached value or assume true
-  const devMode = cachedDevMode ?? true
+  const envLogLevel = (process.env.LOG_LEVEL || '').toLowerCase()
+  const devMode = (envLogLevel === 'debug') || (cachedDevMode ?? true)
   if (devMode) {
     if (args.length > 0) {
       console.log(message, ...args)
