@@ -5,11 +5,14 @@ import { verifyToken } from './lib/auth/jwt-edge'
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname
 
-  // Always allow API and static assets
+
+  // Always allow API and static assets (including anything in /public)
   if (
     pathname.startsWith('/api') ||
     pathname.startsWith('/_next') ||
-    pathname.startsWith('/favicon.ico')
+    pathname.startsWith('/favicon.ico') ||
+    pathname.startsWith('/hoasurvey_logo.png') ||
+    pathname.match(/^\/([a-zA-Z0-9_\-]+)\.(png|jpg|jpeg|gif|svg|webp|ico)$/)
   ) {
     return NextResponse.next()
   }
@@ -55,6 +58,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!api|_next/static|_next/image|favicon.ico).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|hoasurvey_logo.png|(?:[a-zA-Z0-9_\-]+)\.(?:png|jpg|jpeg|gif|svg|webp|ico)).*)',
   ],
 }
