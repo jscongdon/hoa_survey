@@ -1,0 +1,16 @@
+services:
+  app:
+    build: .
+    working_dir: /app
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=file:/data/hoasurvey.db
+      - NODE_ENV=production
+      - PRODUCTION_URL=https://yourdomain.com
+    volumes:
+      - hoasurvey-data:/data
+    command: ./startup.sh
+
+volumes:
+  hoasurvey-data:
