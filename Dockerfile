@@ -20,10 +20,16 @@ RUN npx prisma generate && \
 # Copy static files for standalone mode
 RUN cp -r .next/static .next/standalone/.next/static
 
+
 # Switch to standalone directory
 WORKDIR /app/.next/standalone
 
 ENV NODE_ENV=production
 EXPOSE 3000
 
-CMD ["sh", "-c", "cd /app && npx prisma migrate deploy && cd /app/.next/standalone && node server.js"]
+# Copy startup script into the image
+COPY startup.sh /app/startup.sh
+RUN chmod +x /app/startup.sh
+
+# Set startup.sh as the default command
+CMD ["/app/startup.sh"]
