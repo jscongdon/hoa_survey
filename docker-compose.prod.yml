@@ -9,7 +9,7 @@ services:
       - NODE_ENV=production
       - PRODUCTION_URL=https://yourdomain.com
       - LOG_LEVEL=debug
-      volumes:
+    volumes:
       - hoasurvey-data:/data
     command: ./startup.sh
 
