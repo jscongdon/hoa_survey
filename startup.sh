@@ -1,4 +1,7 @@
+
 #!/bin/sh
+
+cd /app
 
 
 # Warn if JWT_SECRET is unset or insecure
