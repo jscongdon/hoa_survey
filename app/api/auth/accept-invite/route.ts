@@ -18,7 +18,7 @@ export async function POST(req: Request) {
     // Activate admin: set password, clear invite token
     await prisma.admin.update({
       where: { id: admin.id },
-      data: { password: hashed, secret2FA: null }
+      data: { password: hashed, secret2FA: null, inviteExpires: null }
     })
     const jwt = signToken({ id: admin.id, email: admin.email, role: admin.role })
     return NextResponse.json({ token: jwt })

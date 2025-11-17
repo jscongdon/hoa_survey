@@ -33,6 +33,7 @@ export async function GET(request: NextRequest) {
         email: true,
         name: true,
         role: true,
+        inviteExpires: true,
         twoFactor: true,
         invitedBy: {
           select: {

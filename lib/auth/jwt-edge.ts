@@ -11,7 +11,9 @@ export async function verifyToken(token: string): Promise<JWTPayload | null> {
   try {
     const secret = process.env.JWT_SECRET;
     if (!secret || secret === 'dev-secret-change-in-production') {
-      console.log('[JWT-EDGE] JWT_SECRET not configured, skipping middleware verification');
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[JWT-EDGE] JWT_SECRET not configured, skipping middleware verification');
+      }
       return { email: '', role: 'LIMITED', adminId: '' };
     }
 

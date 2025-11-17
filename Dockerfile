@@ -1,10 +1,12 @@
-FROM node:20-alpine
+FROM node:20-bullseye-slim
 WORKDIR /app
 
-# Install dependencies
+# Install apt packages needed for Prisma (OpenSSL) and build tooling
 COPY package.json package-lock.json* ./
-RUN apk add --no-cache libc6-compat openssl wget && \
-    npm install --legacy-peer-deps
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends ca-certificates openssl wget build-essential python3 && \
+    rm -rf /var/lib/apt/lists/* && \
+    npm ci --legacy-peer-deps
 
 # Copy source
 COPY . .
