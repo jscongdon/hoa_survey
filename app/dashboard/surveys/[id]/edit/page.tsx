@@ -55,9 +55,14 @@ export default function EditSurveyPage({ params }: { params: Promise<{ id: strin
     fetch(`/api/surveys/${surveyId}`)
       .then(r => r.json())
       .then(data => {
-        console.log('[EDIT] Survey data:', data);
-        console.log('[EDIT] submittedResponses:', data.submittedResponses);
-        console.log('[EDIT] totalResponses:', data.totalResponses);
+        import('@/lib/devClient').then(async (m) => {
+          const dev = await m.isDevModeClient()
+          if (dev) {
+            console.log('[EDIT] Survey data:', data)
+            console.log('[EDIT] submittedResponses:', data.submittedResponses)
+            console.log('[EDIT] totalResponses:', data.totalResponses)
+          }
+        }).catch(() => {})
         setSurvey(data)
         setTitle(data.title)
         setDescription(data.description || '')
@@ -84,7 +89,10 @@ export default function EditSurveyPage({ params }: { params: Promise<{ id: strin
               order: typeof q.order === 'number' ? q.order : i,
             }))
           : []
-        console.log('[EDIT] Normalized questions:', normalized);
+        import('@/lib/devClient').then(async (m) => {
+          const dev = await m.isDevModeClient()
+          if (dev) console.log('[EDIT] Normalized questions:', normalized)
+        }).catch(() => {})
         setQuestions(normalized)
         // Store original data for comparison
         setOriginalData({

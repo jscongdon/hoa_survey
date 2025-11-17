@@ -16,7 +16,9 @@ export async function POST(req: Request) {
     }
     // Generate invite token
     const token = crypto.randomBytes(32).toString('hex')
-    // Store as a pending admin with invite token
+    // Store as a pending admin with invite token and expiry
+    const expiryDays = parseInt(process.env.INVITE_EXPIRY_DAYS || '7', 10)
+    const expiry = new Date(Date.now() + expiryDays * 24 * 60 * 60 * 1000)
     const admin = await prisma.admin.create({
       data: {
         email,
@@ -24,7 +26,8 @@ export async function POST(req: Request) {
         password: '',
         role: role || 'VIEW_ONLY',
         invitedById,
-        secret2FA: token // store token in secret2FA until accepted
+        secret2FA: token, // store token in secret2FA until accepted
+        inviteExpires: expiry
       }
     })
     // Send invite email
@@ -43,11 +46,11 @@ export async function POST(req: Request) {
       }
     }
     const inviteUrl = `${appUrl.replace(/\/$/, '')}/invite/${token}`
-    log(`[INVITE] Generated invite URL: ${inviteUrl} (inviter=${invitedById})`)
+    log(`[INVITE] Generated invite URL: ${inviteUrl} (inviter=${invitedById}) expires=${expiry.toISOString()}`)
     await sendEmail({
       to: email,
       subject: 'HOA Survey Admin Invite',
-      html: `<p>You have been invited as an admin. Click <a href="${inviteUrl}">here</a> to set your password and activate your account.</p>`
+      html: `<p>You have been invited as an admin. Click <a href="${inviteUrl}">here</a> to set your password and activate your account.</p><p>This invite will expire on ${expiry.toISOString()}.</p>`
     })
     return NextResponse.json({ ok: true })
   } catch (err) {

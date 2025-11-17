@@ -98,8 +98,22 @@ function LoginForm() {
       }
 
       // Small delay to ensure cookie is set before navigation
-      setTimeout(() => {
-        router.push('/dashboard');
+      import('@/lib/devClient').then(async (m) => {
+        const dev = await m.isDevModeClient()
+        if (dev) console.log('Login success response', res.status, data)
+      }).catch(() => {})
+      setTimeout(async () => {
+        try {
+          await router.push('/dashboard');
+          import('@/lib/devClient').then(async (m) => {
+            const dev = await m.isDevModeClient()
+            if (dev) console.log('Navigation to /dashboard triggered')
+          }).catch(() => {})
+        } catch (navErr) {
+          console.error('Navigation error', navErr);
+          setError('Navigation failed. Please try again.');
+          setLoading(false);
+        }
       }, 100);
     } catch (err) {
       setError('An error occurred. Please try again.');

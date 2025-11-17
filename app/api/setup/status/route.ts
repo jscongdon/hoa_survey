@@ -11,7 +11,8 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({
       setupCompleted: config?.setupCompleted || false,
-      adminExists: adminCount > 0
+      adminExists: adminCount > 0,
+      developmentMode: config?.developmentMode ?? false,
     })
   } catch (error) {
     return NextResponse.json({

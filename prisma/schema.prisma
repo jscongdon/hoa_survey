@@ -33,6 +33,7 @@ model Admin {
   role        String   @default("FULL")
   twoFactor   Boolean  @default(false)
   secret2FA   String?
+  inviteExpires DateTime?
   invitedById String?
   invitedBy   Admin?   @relation("InvitedAdmins", fields: [invitedById], references: [id])
   invites     Admin[]  @relation("InvitedAdmins")
