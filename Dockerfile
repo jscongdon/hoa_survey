@@ -18,7 +18,13 @@ RUN npx prisma generate && \
     npm run build
 
 # Copy static files for standalone mode
-RUN cp -r .next/static .next/standalone/.next/static
+RUN cp -r .next/static .next/standalone/.next/static || true
+# Ensure public assets are available to the standalone server
+RUN if [ -d public ]; then \
+            mkdir -p .next/standalone/public || true; \
+            cp -a public/. .next/standalone/public/ || true; \
+        fi
+
 
 
 # Switch to standalone directory
