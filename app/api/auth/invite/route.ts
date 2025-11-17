@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { sendEmail } from '@/lib/email/send'
 import { signToken } from '@/lib/auth/jwt'
 import crypto from 'crypto'
+import { log } from '@/lib/logger'
 
 export async function POST(req: Request) {
   try {
@@ -27,16 +28,22 @@ export async function POST(req: Request) {
       }
     })
     // Send invite email
-    let appUrl: string;
-    if (process.env.NODE_ENV === 'development') {
-      appUrl = process.env.DEVELOPMENT_URL || 'http://localhost:3000';
-    } else {
-      appUrl = process.env.PRODUCTION_URL || '';
-      if (!appUrl) {
-        return NextResponse.json({ error: 'Production URL not configured' }, { status: 500 });
+    // Prefer a configured app URL in the SystemConfig (allows correct host/port),
+    // fall back to environment variables.
+    const sys = await prisma.systemConfig.findUnique({ where: { id: 'system' } })
+    let appUrl: string | undefined = sys?.appUrl || undefined
+    if (!appUrl) {
+      if (process.env.NODE_ENV === 'development') {
+        appUrl = process.env.DEVELOPMENT_URL || 'http://localhost:3000'
+      } else {
+        appUrl = process.env.PRODUCTION_URL || ''
+        if (!appUrl) {
+          return NextResponse.json({ error: 'Production URL not configured' }, { status: 500 })
+        }
       }
     }
-    const inviteUrl = `${appUrl}/invite/${token}`
+    const inviteUrl = `${appUrl.replace(/\/$/, '')}/invite/${token}`
+    log(`[INVITE] Generated invite URL: ${inviteUrl} (inviter=${invitedById})`)
     await sendEmail({
       to: email,
       subject: 'HOA Survey Admin Invite',
