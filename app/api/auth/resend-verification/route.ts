@@ -58,7 +58,16 @@ export async function POST(request: NextRequest) {
       debug: true
     })
 
-    const appUrl = config.appUrl || 'http://localhost:3000'
+    let appUrl: string;
+    if (process.env.NODE_ENV === 'development') {
+      appUrl = config.appUrl || process.env.DEVELOPMENT_URL || 'http://localhost:3000';
+    } else {
+      appUrl = config.appUrl || process.env.PRODUCTION_URL || '';
+      if (!appUrl) {
+        logError('[RESEND-VERIFICATION] No production app URL set!');
+        return NextResponse.json({ error: 'Production URL not configured' }, { status: 500 });
+      }
+    }
     const verificationUrl = `${appUrl}/api/setup/verify?token=${verificationToken}&email=${encodeURIComponent(email)}`
 
     transporter.sendMail({

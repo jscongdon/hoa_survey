@@ -1,4 +1,13 @@
+
 #!/bin/sh
+
+cd /app
+
+
+# Warn if JWT_SECRET is unset or insecure
+if [ -z "$JWT_SECRET" ] || [ "$JWT_SECRET" = "changeme" ] || [ "$JWT_SECRET" = "dev-secret-will-be-replaced-by-setup" ]; then
+  echo "[WARN] JWT_SECRET environment variable is not set or is insecure! Edge Runtime JWT verification will fail."
+fi
 
 # Wait for database and run migrations
 npx prisma generate

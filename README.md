@@ -2,6 +2,11 @@
 
 A secure, production-ready survey management system for HOA communities built with Next.js 15, TypeScript, Prisma, and SQLite.
 
+## Documentation
+
+- [Development Workflow](./WORKFLOW.md) - Branch strategy, deployment, and development practices
+- [Docker Deployment Guide](./DOCKER-DEPLOYMENT.md) - Detailed deployment instructions
+
 ## Features
 
 - **First-Time Setup Wizard**: Guided setup for HOA configuration, SMTP settings, and admin account creation
@@ -21,17 +26,20 @@ A secure, production-ready survey management system for HOA communities built wi
 ### Docker Deployment (Recommended)
 
 1. **Clone and configure:**
-```bash
-git clone https://github.com/YOUR_USERNAME/hoa_survey.git
-cd hoa_survey
-```
+
+    ```bash
+    git clone https://github.com/YOUR_USERNAME/hoa_survey.git
+    cd hoa_survey
+    ```
 
 2. **Deploy with Docker:**
-```bash
-docker compose up -d --build
-```
+
+    ```bash
+    docker compose up -d --build
+    ```
 
 3. **Access the setup wizard:**
+  
    - Navigate to `http://localhost:3000`
    - You'll be automatically redirected to `/setup`
    - Follow the guided setup wizard

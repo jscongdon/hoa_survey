@@ -8,6 +8,7 @@ vi.mock('@/lib/prisma', () => ({
   prisma: {
     memberList: { findMany: vi.fn() },
     survey: { findUnique: vi.fn(), update: vi.fn() },
+    response: { count: vi.fn().mockResolvedValue(0) },
     question: { deleteMany: vi.fn(), create: vi.fn() },
   },
 }))

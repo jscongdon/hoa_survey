@@ -27,9 +27,15 @@ export async function POST(req: Request) {
       }
     })
     // Send invite email
-    const appUrl = process.env.NODE_ENV === 'development'
-      ? (process.env.DEVELOPMENT_URL || 'http://localhost:3000')
-      : (process.env.PRODUCTION_URL || 'http://localhost:3000')
+    let appUrl: string;
+    if (process.env.NODE_ENV === 'development') {
+      appUrl = process.env.DEVELOPMENT_URL || 'http://localhost:3000';
+    } else {
+      appUrl = process.env.PRODUCTION_URL || '';
+      if (!appUrl) {
+        return NextResponse.json({ error: 'Production URL not configured' }, { status: 500 });
+      }
+    }
     const inviteUrl = `${appUrl}/invite/${token}`
     await sendEmail({
       to: email,
