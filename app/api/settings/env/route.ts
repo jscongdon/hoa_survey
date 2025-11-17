@@ -84,6 +84,21 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { updates } = body
 
+    // Ensure numeric fields have correct types for Prisma
+    const parsedUpdates: Record<string, any> = { ...updates }
+    if (Object.prototype.hasOwnProperty.call(updates, 'smtpPort')) {
+      const raw = updates.smtpPort
+      if (raw === '' || raw === null) {
+        parsedUpdates.smtpPort = null
+      } else {
+        const n = Number(raw)
+        if (Number.isNaN(n)) {
+          return NextResponse.json({ error: 'Invalid smtpPort value; must be a number' }, { status: 400 })
+        }
+        parsedUpdates.smtpPort = Math.trunc(n)
+      }
+    }
+
     // Validate that only editable fields are being updated
     const editableKeys = EDITABLE_CONFIG_FIELDS.map(v => v.key)
     for (const key of Object.keys(updates)) {
@@ -92,10 +107,10 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Update the SystemConfig in database
+    // Update the SystemConfig in database (use parsedUpdates for correct types)
     await prisma.systemConfig.update({
       where: { id: 'system' },
-      data: updates
+      data: parsedUpdates
     })
 
     return NextResponse.json({ 

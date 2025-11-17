@@ -22,6 +22,11 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next()
   }
 
+  // Allow forgot-password and reset-password pages (public flows)
+  if (pathname === '/forgot-password' || pathname.startsWith('/reset-password')) {
+    return NextResponse.next()
+  }
+
   // Allow survey and invite pages (public)
   if (pathname.startsWith('/survey/') || pathname.startsWith('/invite/')) {
     return NextResponse.next()

@@ -11,8 +11,19 @@ fi
 
 # Wait for database and run migrations
 npx prisma generate
-npx prisma migrate deploy || true
-npx prisma db push || true
+
+echo "[startup] Running migrations (prisma migrate deploy)"
+if npx prisma migrate deploy; then
+  echo "[startup] Migrations applied"
+else
+  echo "[startup] prisma migrate deploy failed — attempting prisma db push"
+  if npx prisma db push; then
+    echo "[startup] prisma db push applied schema"
+  else
+    echo "[startup] ERROR: Both prisma migrate deploy and prisma db push failed"
+    echo "[startup] Continuing startup so you can inspect logs; the app may error if the schema is missing"
+  fi
+fi
 
 # Try to load JWT secret from database
 JWT_SECRET=$(node -e "
