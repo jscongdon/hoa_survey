@@ -152,6 +152,28 @@ export default function AdminManagementPage() {
     }
   }
 
+  const handleResetPassword = async (adminId: string) => {
+    if (!confirm('Reset this user\'s password? This will clear their current password and send them a reset link.')) return
+    try {
+      const token = typeof document !== 'undefined' ? document.cookie.split('; ').find(c => c.startsWith('auth-token='))?.split('=')[1] : ''
+      const res = await fetch('/api/auth/reset-admin-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': token ? `Bearer ${token}` : '' },
+        body: JSON.stringify({ adminId })
+      })
+      if (res.ok) {
+        alert('Password reset initiated; the user will receive an email with a reset link')
+        fetchAdmins()
+      } else {
+        const data = await res.json()
+        alert(data.error || 'Failed to reset password')
+      }
+    } catch (err) {
+      console.error('Failed to reset password', err)
+      alert('Failed to reset password')
+    }
+  }
+
   const handleUpdateRole = async (adminId: string, newRole: string) => {
     try {
       const res = await fetch(`/api/admins/${adminId}`, {
@@ -380,7 +402,7 @@ export default function AdminManagementPage() {
                   {canManageAdmins && (
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                       {admin.id !== currentAdminId && (
-                        <div className="flex gap-3">
+                        <div className="flex flex-col gap-2 items-start">
                           {admin.inviteExpires && (
                             <button
                               onClick={() => handleResendInvite(admin.id)}
@@ -389,6 +411,12 @@ export default function AdminManagementPage() {
                               Resend Invite
                             </button>
                           )}
+                          <button
+                            onClick={() => handleResetPassword(admin.id)}
+                            className="text-orange-600 dark:text-orange-400 hover:underline"
+                          >
+                            Reset Password
+                          </button>
                           <button
                             onClick={() => handleDeleteAdmin(admin.id)}
                             className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
