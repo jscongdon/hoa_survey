@@ -289,6 +289,29 @@ export default function SettingsPage() {
             >
               Manage Admin Users
             </button>
+            <div className="mt-4">
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">If you need to reset your own password, you can request a reset link to be sent to your email.</p>
+              <button
+                onClick={async () => {
+                  if (!confirm('Send a password reset email to your account? This will clear your current password.')) return
+                  try {
+                    const res = await fetch('/api/auth/reset-my-password', { method: 'POST' })
+                    if (res.ok) {
+                      alert('Reset email sent. Check your inbox.')
+                    } else {
+                      const data = await res.json()
+                      alert(data.error || 'Failed to send reset email')
+                    }
+                  } catch (err) {
+                    console.error('Failed to request password reset:', err)
+                    alert('Failed to request password reset')
+                  }
+                }}
+                className="mt-2 px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600"
+              >
+                Reset My Password
+              </button>
+            </div>
           </div>
 
           {/* Test Email Section */}
