@@ -9,6 +9,11 @@ type Question = {
   maxSelections?: number
   required?: boolean
   order: number
+  showWhen?: {
+    triggerOrder: number
+    operator: 'equals' | 'contains'
+    value: string
+  }
 }
 
 
@@ -24,7 +29,9 @@ export default function SurveyBuilder({ onChange, initialQuestions }: SurveyBuil
   const [options, setOptions] = useState('')
   const [maxSelections, setMaxSelections] = useState('')
   const [required, setRequired] = useState(false)
+  const [showWhen, setShowWhen] = useState<{ triggerOrder: number | null, operator: 'equals' | 'contains', value: string } | null>(null)
   const [editingIndex, setEditingIndex] = useState<number | null>(null)
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
   // If initialQuestions changes (e.g., when editing), update state
   React.useEffect(() => {
@@ -34,15 +41,31 @@ export default function SurveyBuilder({ onChange, initialQuestions }: SurveyBuil
   function addQuestion() {
     const opts = type.startsWith('MULTI') ? options.split(',').map(s => s.trim()).filter(Boolean) : undefined
     const maxSel = type === 'MULTI_MULTI' && maxSelections ? parseInt(maxSelections) : undefined
-    const q: Question = { type, text, options: opts, maxSelections: maxSel, required, order: questions.length }
-    try { questionSchema.parse(q) } catch { return }
+    const q: Question = { type, text, options: opts, maxSelections: maxSel, required, order: questions.length, showWhen: showWhen && showWhen.triggerOrder !== null ? { triggerOrder: showWhen.triggerOrder, operator: showWhen.operator, value: showWhen.value } : undefined }
+    try {
+      questionSchema.parse(q)
+    } catch (err: any) {
+      console.error('Question validation failed:', err?.errors ?? err)
+      setErrorMsg(err?.errors ? err.errors.map((e: any)=>e.message).join(', ') : String(err))
+      return
+    }
+    setErrorMsg(null)
     const next = [...questions, q]
     setQuestions(next)
     onChange(next)
+    // send debug payload so we can see client-side add action from server logs
+    try {
+      fetch('/api/_debug/question-add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question: q }),
+      }).catch(() => {})
+    } catch (e) { /* ignore */ }
     setText('')
     setOptions('')
     setMaxSelections('')
     setRequired(false)
+    setShowWhen(null)
   }
 
   function startEdit(idx: number) {
@@ -52,6 +75,17 @@ export default function SurveyBuilder({ onChange, initialQuestions }: SurveyBuil
     setOptions(q.options ? q.options.join(', ') : '')
     setMaxSelections(q.maxSelections ? String(q.maxSelections) : '')
     setRequired(q.required || false)
+    // handle showWhen stored as JSON string or object
+    if (q.showWhen) {
+      try {
+        const parsed = typeof q.showWhen === 'string' ? JSON.parse(q.showWhen) : q.showWhen
+        setShowWhen({ triggerOrder: parsed.triggerOrder ?? null, operator: parsed.operator ?? 'equals', value: parsed.value ?? '' })
+      } catch (e) {
+        setShowWhen(null)
+      }
+    } else {
+      setShowWhen(null)
+    }
     setEditingIndex(idx)
   }
 
@@ -59,8 +93,15 @@ export default function SurveyBuilder({ onChange, initialQuestions }: SurveyBuil
     if (editingIndex === null) return
     const opts = type.startsWith('MULTI') ? options.split(',').map(s => s.trim()).filter(Boolean) : undefined
     const maxSel = type === 'MULTI_MULTI' && maxSelections ? parseInt(maxSelections) : undefined
-    const q: Question = { type, text, options: opts, maxSelections: maxSel, required, order: editingIndex }
-    try { questionSchema.parse(q) } catch { return }
+    const q: Question = { type, text, options: opts, maxSelections: maxSel, required, order: editingIndex, showWhen: showWhen && showWhen.triggerOrder !== null ? { triggerOrder: showWhen.triggerOrder, operator: showWhen.operator, value: showWhen.value } : undefined }
+    try {
+      questionSchema.parse(q)
+    } catch (err: any) {
+      console.error('Question validation failed:', err?.errors ?? err)
+      setErrorMsg(err?.errors ? err.errors.map((e: any)=>e.message).join(', ') : String(err))
+      return
+    }
+    setErrorMsg(null)
     const next = [...questions]
     next[editingIndex] = q
     setQuestions(next)
@@ -131,6 +172,74 @@ export default function SurveyBuilder({ onChange, initialQuestions }: SurveyBuil
                   />
                   <span className="text-sm text-gray-700 dark:text-gray-300">Required question</span>
                 </label>
+                {/* Condition editor (only allow choosing earlier questions as triggers) */}
+                <div className="mt-2 p-2 border rounded bg-white dark:bg-gray-800">
+                  <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Optional condition (show when)</p>
+                  <div className="flex gap-2 items-center">
+                    {/* Trigger selector: only earlier discrete-option questions */}
+                    <select
+                      className="border p-1 rounded bg-white dark:bg-gray-800 text-sm"
+                      value={showWhen?.triggerOrder ?? ''}
+                      onChange={(e) => {
+                        const v = e.target.value === '' ? null : parseInt(e.target.value)
+                        setShowWhen(prev => ({ operator: prev?.operator ?? 'equals', value: prev?.value ?? '', triggerOrder: v }))
+                      }}
+                    >
+                      <option value="">No condition</option>
+                      {questions.map((qq, idx) => {
+                        const allowed = ['MULTI_SINGLE', 'MULTI_MULTI', 'YES_NO'].includes(qq.type)
+                        const disabled = idx >= (editingIndex ?? questions.length) || !allowed
+                        return (
+                          <option key={idx} value={idx} disabled={disabled}>{`Question ${idx + 1}`}</option>
+                        )
+                      })}
+                    </select>
+
+                    {/* Operator */}
+                    <select
+                      className="border p-1 rounded bg-white dark:bg-gray-800 text-sm"
+                      value={showWhen?.operator ?? 'equals'}
+                      onChange={e => setShowWhen(prev => ({ triggerOrder: prev?.triggerOrder ?? null, operator: e.target.value as any, value: prev?.value ?? '' }))}
+                    >
+                      <option value="equals">equals</option>
+                      <option value="contains">contains</option>
+                    </select>
+
+                    {/* Value: if trigger has options, show a dropdown of those; otherwise free text */}
+                    {typeof showWhen?.triggerOrder === 'number' && showWhen.triggerOrder !== null ? (
+                      (() => {
+                        const trg = questions[showWhen.triggerOrder]
+                        if (!trg) return (
+                          <input className="border p-1 rounded bg-white dark:bg-gray-800 text-sm" placeholder="Value" value={showWhen?.value ?? ''} onChange={e => setShowWhen(prev => ({ triggerOrder: prev?.triggerOrder ?? null, operator: prev?.operator ?? 'equals', value: e.target.value }))} />
+                        )
+                        if (trg.type === 'YES_NO') {
+                          return (
+                            <select className="border p-1 rounded bg-white dark:bg-gray-800 text-sm" value={showWhen?.value ?? ''} onChange={e => setShowWhen(prev => ({ triggerOrder: prev?.triggerOrder ?? null, operator: prev?.operator ?? 'equals', value: e.target.value }))}>
+                              <option value="">Select value</option>
+                              <option value="Yes">Yes</option>
+                              <option value="No">No</option>
+                            </select>
+                          )
+                        }
+                        if (Array.isArray(trg.options) && trg.options.length > 0) {
+                          return (
+                            <select className="border p-1 rounded bg-white dark:bg-gray-800 text-sm" value={showWhen?.value ?? ''} onChange={e => setShowWhen(prev => ({ triggerOrder: prev?.triggerOrder ?? null, operator: prev?.operator ?? 'equals', value: e.target.value }))}>
+                              <option value="">Select value</option>
+                              {trg.options.map((opt, oi) => (
+                                <option key={oi} value={opt}>{opt}</option>
+                              ))}
+                            </select>
+                          )
+                        }
+                        return (
+                          <input className="border p-1 rounded bg-white dark:bg-gray-800 text-sm" placeholder="Value" value={showWhen?.value ?? ''} onChange={e => setShowWhen(prev => ({ triggerOrder: prev?.triggerOrder ?? null, operator: prev?.operator ?? 'equals', value: e.target.value }))} />
+                        )
+                      })()
+                    ) : (
+                      <input className="border p-1 rounded bg-white dark:bg-gray-800 text-sm" placeholder="Value" value={showWhen?.value ?? ''} onChange={e => setShowWhen(prev => ({ triggerOrder: prev?.triggerOrder ?? null, operator: prev?.operator ?? 'equals', value: e.target.value }))} />
+                    )}
+                  </div>
+                </div>
                 <div className="flex gap-2">
                   <button 
                     className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700" 
@@ -147,6 +256,7 @@ export default function SurveyBuilder({ onChange, initialQuestions }: SurveyBuil
                     Delete Question
                   </button>
                 </div>
+                {errorMsg && <p className="text-sm text-red-600 mt-2">{errorMsg}</p>}
               </div>
             ) : (
               <div className="flex items-start justify-between">
@@ -161,6 +271,9 @@ export default function SurveyBuilder({ onChange, initialQuestions }: SurveyBuil
                       <span className="text-xs bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 px-2 py-0.5 rounded">Required</span>
                     )}
                   </div>
+                  {q.showWhen && (
+                    <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">Condition: show when Question {q.showWhen.triggerOrder + 1} {q.showWhen.operator} "{q.showWhen.value}"</p>
+                  )}
                   {q.options && q.options.length > 0 && (
                     <div className="mt-2 ml-4">
                       <p className="text-xs text-gray-600 dark:text-gray-400 font-medium mb-1">Options:</p>
@@ -169,6 +282,7 @@ export default function SurveyBuilder({ onChange, initialQuestions }: SurveyBuil
                           <li key={idx}>{opt}</li>
                         ))}
                       </ul>
+                      {errorMsg && <p className="text-sm text-red-600 mt-2">{errorMsg}</p>}
                     </div>
                   )}
                   {q.maxSelections && (
@@ -233,6 +347,76 @@ export default function SurveyBuilder({ onChange, initialQuestions }: SurveyBuil
           />
           <span className="text-sm text-gray-700 dark:text-gray-300">Required question</span>
         </label>
+        {/* Add condition when creating new questions - can reference earlier questions only */}
+        {questions.length > 0 && (
+          <div className="mt-2 p-2 border rounded bg-white dark:bg-gray-800">
+            <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Optional condition (show when)</p>
+            <div className="flex gap-2 items-center">
+              {/* Trigger selector: only earlier discrete-option questions */}
+              <select
+                className="border p-1 rounded bg-white dark:bg-gray-800 text-sm"
+                value={showWhen?.triggerOrder ?? ''}
+                onChange={(e) => {
+                  const v = e.target.value === '' ? null : parseInt(e.target.value)
+                  setShowWhen(prev => ({ operator: prev?.operator ?? 'equals', value: prev?.value ?? '', triggerOrder: v }))
+                }}
+              >
+                <option value="">No condition</option>
+                {questions.map((qq, idx) => {
+                  const allowed = ['MULTI_SINGLE', 'MULTI_MULTI', 'YES_NO'].includes(qq.type)
+                  const disabled = idx >= (editingIndex ?? questions.length) || !allowed
+                  return (
+                    <option key={idx} value={idx} disabled={disabled}>{`Question ${idx + 1}`}</option>
+                  )
+                })}
+              </select>
+
+              {/* Operator */}
+              <select
+                className="border p-1 rounded bg-white dark:bg-gray-800 text-sm"
+                value={showWhen?.operator ?? 'equals'}
+                onChange={e => setShowWhen(prev => ({ triggerOrder: prev?.triggerOrder ?? null, operator: e.target.value as any, value: prev?.value ?? '' }))}
+              >
+                <option value="equals">equals</option>
+                <option value="contains">contains</option>
+              </select>
+
+              {/* Value: if trigger has options, show a dropdown of those; otherwise free text */}
+              {typeof showWhen?.triggerOrder === 'number' && showWhen.triggerOrder !== null ? (
+                (() => {
+                  const trg = questions[showWhen.triggerOrder]
+                  if (!trg) return (
+                    <input className="border p-1 rounded bg-white dark:bg-gray-800 text-sm" placeholder="Value" value={showWhen?.value ?? ''} onChange={e => setShowWhen(prev => ({ triggerOrder: prev?.triggerOrder ?? null, operator: prev?.operator ?? 'equals', value: e.target.value }))} />
+                  )
+                  if (trg.type === 'YES_NO') {
+                    return (
+                      <select className="border p-1 rounded bg-white dark:bg-gray-800 text-sm" value={showWhen?.value ?? ''} onChange={e => setShowWhen(prev => ({ triggerOrder: prev?.triggerOrder ?? null, operator: prev?.operator ?? 'equals', value: e.target.value }))}>
+                        <option value="">Select value</option>
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
+                      </select>
+                    )
+                  }
+                  if (Array.isArray(trg.options) && trg.options.length > 0) {
+                    return (
+                      <select className="border p-1 rounded bg-white dark:bg-gray-800 text-sm" value={showWhen?.value ?? ''} onChange={e => setShowWhen(prev => ({ triggerOrder: prev?.triggerOrder ?? null, operator: prev?.operator ?? 'equals', value: e.target.value }))}>
+                        <option value="">Select value</option>
+                        {trg.options.map((opt, oi) => (
+                          <option key={oi} value={opt}>{opt}</option>
+                        ))}
+                      </select>
+                    )
+                  }
+                  return (
+                    <input className="border p-1 rounded bg-white dark:bg-gray-800 text-sm" placeholder="Value" value={showWhen?.value ?? ''} onChange={e => setShowWhen(prev => ({ triggerOrder: prev?.triggerOrder ?? null, operator: prev?.operator ?? 'equals', value: e.target.value }))} />
+                  )
+                })()
+              ) : (
+                <input className="border p-1 rounded bg-white dark:bg-gray-800 text-sm" placeholder="Value" value={showWhen?.value ?? ''} onChange={e => setShowWhen(prev => ({ triggerOrder: prev?.triggerOrder ?? null, operator: prev?.operator ?? 'equals', value: e.target.value }))} />
+              )}
+            </div>
+          </div>
+        )}
         <button 
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed" 
           type="button" 

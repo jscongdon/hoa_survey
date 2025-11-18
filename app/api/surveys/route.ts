@@ -111,6 +111,7 @@ export async function POST(request: NextRequest) {
               type: q.type,
               order: typeof q.order === 'number' ? q.order : i,
               options: q.options ? JSON.stringify(q.options) : null,
+              showWhen: q.showWhen ? JSON.stringify(q.showWhen) : null,
               maxSelections: q.maxSelections ? parseInt(String(q.maxSelections)) : null,
               required: q.required || false,
             },

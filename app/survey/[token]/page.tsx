@@ -24,6 +24,7 @@ interface ResponseData {
 export default function SurveyPage({ params }: { params: Promise<{ token: string }> }) {
   const [survey, setSurvey] = useState<ResponseData | null>(null);
   const [answers, setAnswers] = useState<Record<string, unknown>>({});
+  const [enabledMap, setEnabledMap] = useState<Record<string, boolean>>({});
   const [originalAnswers, setOriginalAnswers] = useState<Record<string, unknown>>({});
   const [hasChanges, setHasChanges] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -49,6 +50,13 @@ export default function SurveyPage({ params }: { params: Promise<{ token: string
         const data = await res.json();
         setSurvey(data);
         
+        // Initialize enabledMap: questions with a showWhen should start disabled
+        const initEnabledAll: Record<string, boolean> = {};
+        data.survey.questions.forEach((q: any) => {
+          initEnabledAll[q.id] = q.showWhen ? false : true;
+        });
+        setEnabledMap(initEnabledAll);
+
         // Load existing answers if they exist
         if (data.existingAnswers) {
           // Map answers to current question IDs (handle case where question IDs changed after editing)
@@ -78,6 +86,59 @@ export default function SurveyPage({ params }: { params: Promise<{ token: string
 
     fetchSurvey();
   }, [token]);
+
+  // Evaluate showWhen conditions and clear answers for disabled questions
+  useEffect(() => {
+    if (!survey) return;
+    const questions = survey.survey.questions as any[];
+
+    function evaluateEnabled(q: any, currentAnswers: Record<string, any>): boolean {
+      if (!q.showWhen) return true;
+      try {
+        const cond = typeof q.showWhen === 'string' ? JSON.parse(q.showWhen) : q.showWhen;
+        const triggerOrder = cond.triggerOrder;
+        const operator = cond.operator;
+        const expected = cond.value;
+        const trigger = questions.find(t => t.order === triggerOrder);
+        if (!trigger) return false;
+        const triggerAns = currentAnswers[trigger.id];
+        if (triggerAns === null || triggerAns === undefined || triggerAns === '') return false;
+
+        if (Array.isArray(triggerAns)) {
+          if (operator === 'equals') return triggerAns.includes(expected);
+          return triggerAns.some((a: any) => String(a).includes(String(expected)));
+        }
+
+        const asStr = String(triggerAns);
+        if (operator === 'equals') return asStr === String(expected);
+        return asStr.includes(String(expected));
+      } catch (e) {
+        return false;
+      }
+    }
+
+    // Compute new enabled map
+    const newEnabled: Record<string, boolean> = {};
+    questions.forEach((q: any) => {
+      newEnabled[q.id] = evaluateEnabled(q, answers as Record<string, any>);
+    });
+
+    // If any question becomes disabled, clear its answer
+    const cleanedAnswers = { ...answers } as Record<string, any>;
+    let changed = false;
+    Object.entries(newEnabled).forEach(([qid, isEnabled]) => {
+      if (!isEnabled && cleanedAnswers[qid] !== undefined) {
+        delete cleanedAnswers[qid];
+        changed = true;
+      }
+    });
+
+    if (changed) {
+      setAnswers(cleanedAnswers);
+    }
+
+    setEnabledMap(newEnabled);
+  }, [answers, survey]);
 
   // Detect changes in answers
   useEffect(() => {
@@ -289,7 +350,8 @@ export default function SurveyPage({ params }: { params: Promise<{ token: string
                 <div className="space-y-2">
                   {['Yes', 'No'].map((option) => {
                     const isChecked = answers[question.id] === option;
-                    const isDisabled = isClosed || survey.signed;
+                    const qEnabled = enabledMap[question.id] !== false;
+                    const isDisabled = isClosed || survey.signed || !qEnabled;
                     return (
                       <label 
                         key={option} 
@@ -333,7 +395,8 @@ export default function SurveyPage({ params }: { params: Promise<{ token: string
                     const options = typeof question.options === 'string' 
                       ? JSON.parse(question.options) 
                       : (question.options || []);
-                    const isDisabled = isClosed || survey.signed;
+                    const qEnabled = enabledMap[question.id] !== false;
+                    const isDisabled = isClosed || survey.signed || !qEnabled;
                     return options.map((option: string) => {
                       const isChecked = answers[question.id] === option;
                       return (
@@ -389,13 +452,14 @@ export default function SurveyPage({ params }: { params: Promise<{ token: string
                       return options.map((option: string) => {
                         const currentAnswers = (answers[question.id] as string[]) || [];
                         const isChecked = currentAnswers.includes(option);
-                        const isDisabled = isClosed || survey.signed || (!isChecked && question.maxSelections && currentAnswers.length >= question.maxSelections);
+                        const qEnabled = enabledMap[question.id] !== false;
+                        const isDisabled = isClosed || survey.signed || !qEnabled || (!isChecked && question.maxSelections && currentAnswers.length >= question.maxSelections);
                         
                         return (
                           <label 
                             key={option} 
                             className={`flex items-center p-3 rounded-lg border-2 transition-colors ${
-                              isChecked && (isClosed || survey.signed)
+                              isChecked && (isClosed || survey.signed || !qEnabled)
                                 ? 'border-blue-400 bg-blue-50 dark:border-blue-500 dark:bg-blue-900/30'
                                 : isChecked
                                 ? 'border-blue-500 bg-blue-50 dark:border-blue-400 dark:bg-blue-900/50'
@@ -418,7 +482,7 @@ export default function SurveyPage({ params }: { params: Promise<{ token: string
                               className="mr-3"
                             />
                             <span className={`font-medium ${
-                              isChecked && (isClosed || survey.signed)
+                              isChecked && (isClosed || survey.signed || !qEnabled)
                                 ? 'text-blue-700 dark:text-blue-300'
                                 : isChecked
                                 ? 'text-blue-600 dark:text-blue-400'
@@ -433,19 +497,25 @@ export default function SurveyPage({ params }: { params: Promise<{ token: string
               )}
 
               {question.type === 'PARAGRAPH' && (
-                <textarea
-                  value={(answers[question.id] as string) || ''}
-                  disabled={isClosed || survey.signed}
-                  onChange={(e) =>
-                    setAnswers({ ...answers, [question.id]: e.target.value })
-                  }
-                  className={`w-full px-4 py-2 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    (isClosed || survey.signed) && answers[question.id]
-                      ? 'border-blue-400 bg-blue-50 dark:border-blue-500 dark:bg-blue-900/30 text-blue-900 dark:text-blue-100'
-                      : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white'
-                  }`}
-                  rows={4}
-                ></textarea>
+                (() => {
+                  const qEnabled = enabledMap[question.id] !== false;
+                  const isDisabled = isClosed || survey.signed || !qEnabled;
+                  return (
+                    <textarea
+                      value={(answers[question.id] as string) || ''}
+                      disabled={isDisabled}
+                      onChange={(e) =>
+                        setAnswers({ ...answers, [question.id]: e.target.value })
+                      }
+                      className={`w-full px-4 py-2 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                        isDisabled && answers[question.id]
+                          ? 'border-blue-400 bg-blue-50 dark:border-blue-500 dark:bg-blue-900/30 text-blue-900 dark:text-blue-100'
+                          : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white'
+                      }`}
+                      rows={4}
+                    ></textarea>
+                  )
+                })()
               )}
 
               {question.type === 'RATING_5' && (
@@ -458,13 +528,13 @@ export default function SurveyPage({ params }: { params: Promise<{ token: string
                       <button
                         key={rating}
                         onClick={() => setAnswers({ ...answers, [question.id]: rating })}
-                        disabled={isClosed || survey.signed}
+                        disabled={isClosed || survey.signed || (enabledMap[question.id] === false)}
                         className={`w-10 h-10 rounded-lg font-bold border-2 transition-colors ${
                           isSelected && (isClosed || survey.signed)
                             ? 'bg-blue-500 dark:bg-blue-600 text-white border-blue-600 dark:border-blue-500'
                             : isSelected
                             ? 'bg-blue-500 dark:bg-blue-600 text-white border-blue-600 dark:border-blue-500'
-                            : isClosed || survey.signed
+                            : isClosed || survey.signed || (enabledMap[question.id] === false)
                             ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 border-gray-300 dark:border-gray-700 cursor-not-allowed'
                             : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
                         }`}
