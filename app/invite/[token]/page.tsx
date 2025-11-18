@@ -5,7 +5,9 @@ import { useRouter } from 'next/navigation'
 export default function AcceptInvitePage({ params }: { params: Promise<{ token: string }> }) {
   const router = useRouter()
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [status, setStatus] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
   const [token, setToken] = useState<string | null>(null)
 
   useEffect(() => {
@@ -17,8 +19,22 @@ export default function AcceptInvitePage({ params }: { params: Promise<{ token: 
   async function handleAccept(e: React.FormEvent) {
     e.preventDefault()
     if (!token) return
-    
     setStatus(null)
+    setError(null)
+
+    // Basic validation: require password and confirmation to match
+    if (!password) {
+      setError('Please enter a password')
+      return
+    }
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters')
+      return
+    }
+    if (password !== confirmPassword) {
+      setError('Passwords do not match')
+      return
+    }
     const res = await fetch('/api/auth/accept-invite', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -43,10 +59,38 @@ export default function AcceptInvitePage({ params }: { params: Promise<{ token: 
       <h1 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Accept Admin Invite</h1>
       <form className="space-y-4" onSubmit={handleAccept}>
         <div>
-          <label className="block text-sm text-gray-900 dark:text-white">Set Password</label>
-          <input className="w-full border border-gray-300 dark:border-gray-600 p-2 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white" type="password" value={password} onChange={e => setPassword(e.target.value)} />
+          <label className="block text-sm text-gray-900 dark:text-white">Password</label>
+          <input
+            className="w-full border border-gray-300 dark:border-gray-600 p-2 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+            type="password"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            aria-label="Password"
+            required
+          />
         </div>
-        <button className="px-4 py-2 bg-blue-600 text-white rounded">Activate Account</button>
+
+        <div>
+          <label className="block text-sm text-gray-900 dark:text-white">Confirm Password</label>
+          <input
+            className="w-full border border-gray-300 dark:border-gray-600 p-2 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+            type="password"
+            value={confirmPassword}
+            onChange={e => setConfirmPassword(e.target.value)}
+            aria-label="Confirm Password"
+            required
+          />
+        </div>
+
+        {error && <div className="text-sm text-red-600 dark:text-red-400">{error}</div>}
+
+        <button
+          className="px-4 py-2 bg-blue-600 text-white rounded disabled:opacity-50"
+          type="submit"
+          disabled={!password || !confirmPassword}
+        >
+          Activate Account
+        </button>
       </form>
       {status && <div className="mt-4 text-green-600 dark:text-green-400">{status}</div>}
     </main>

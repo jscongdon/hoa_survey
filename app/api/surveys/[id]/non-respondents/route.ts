@@ -42,17 +42,12 @@ export async function GET(
       },
     });
 
-    // Format the response - parse name to get first/last and lot number
+    // Format the response - include member `name` and lot number
     const formattedNonRespondents = nonRespondents.map((response) => {
-      const nameParts = response.member.name.split(' ');
-      const firstName = nameParts.slice(0, -1).join(' ') || response.member.name;
-      const lastName = nameParts[nameParts.length - 1] || '';
-      
       return {
         responseId: response.id,
         id: response.member.id,
-        firstName,
-        lastName,
+        name: response.member.name,
         lotNumber: response.member.lot,
       };
     });

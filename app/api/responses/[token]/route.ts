@@ -25,21 +25,47 @@ export async function GET(
   const now = new Date()
   const isClosed = response.survey.closesAt && now > response.survey.closesAt
   
-  // Convert answers array to object with questionId as key
-  const existingAnswers = response.submittedAt && response.answers.length > 0
-    ? response.answers.reduce((acc, answer) => {
-        // Parse arrays stored as JSON strings
+  // Load latest answers explicitly to avoid any timing/serialization issues
+  let existingAnswers: Record<string, any> | null = null
+  if (response.submittedAt) {
+    const answersRows = await prisma.answer.findMany({
+      where: { responseId: response.id },
+      orderBy: { createdAt: 'asc' },
+    })
+
+    if (answersRows && answersRows.length > 0) {
+      existingAnswers = answersRows.reduce((acc: Record<string, any>, answer: any) => {
         try {
           acc[answer.questionId] = JSON.parse(answer.value)
         } catch {
           acc[answer.questionId] = answer.value
         }
         return acc
-      }, {} as Record<string, any>)
+      }, {})
+    }
+  }
+
+  // Parse survey questions options and showWhen for client consumption
+  const parsedSurvey = response.survey
+    ? {
+        ...response.survey,
+        questions: response.survey.questions.map((q: any) => ({
+          id: q.id,
+          surveyId: q.surveyId,
+          type: q.type,
+          text: q.text,
+          order: q.order,
+          options: q.options ? JSON.parse(q.options) : undefined,
+          showWhen: q.showWhen ? JSON.parse(q.showWhen) : undefined,
+          maxSelections: q.maxSelections || undefined,
+          required: q.required || false,
+        })),
+      }
     : null
 
   return NextResponse.json({
     ...response,
+    survey: parsedSurvey,
     isClosed,
     existingAnswers,
     signed: response.signed,
@@ -53,7 +79,11 @@ export async function PUT(
 ) {
   try {
     const body = await request.json()
-    const { answers } = body
+    // Defensive: ensure answers is always an object to avoid runtime errors
+    let answers = body?.answers
+    if (!answers || typeof answers !== 'object') {
+      answers = {}
+    }
     const { token } = await params
 
     // Check if survey is still open
@@ -87,16 +117,61 @@ export async function PUT(
       where: { responseId: existingResponse.id },
     })
 
-    // Create new answer records
-    const answerData = Object.entries(answers)
+    // Load survey questions (ordered) so we can evaluate any showWhen conditions
+    const surveyWithQuestions = await prisma.survey.findUnique({
+      where: { id: existingResponse.surveyId },
+      include: { questions: { orderBy: { order: 'asc' } } },
+    })
+
+    const questions = surveyWithQuestions?.questions ?? []
+
+    // Helper: determine if a question should be considered enabled given submitted answers
+    function isQuestionEnabled(q: any, submittedAnswers: Record<string, any>): boolean {
+      if (!q.showWhen) return true
+      try {
+        const cond = typeof q.showWhen === 'string' ? JSON.parse(q.showWhen) : q.showWhen
+        const triggerOrder = cond.triggerOrder
+        const operator = cond.operator
+        const expected = cond.value
+        // Find trigger question by order
+        const trigger = questions.find(t => t.order === triggerOrder)
+        if (!trigger) return false
+        const triggerAns = submittedAnswers[trigger.id]
+        if (triggerAns === null || triggerAns === undefined || triggerAns === '') return false
+
+        // Normalize answers for comparison
+        if (Array.isArray(triggerAns)) {
+          if (operator === 'equals') {
+            return triggerAns.includes(expected)
+          }
+          // contains on an array -> treat as includes
+          return triggerAns.some((a: any) => String(a).includes(String(expected)))
+        }
+
+        const asStr = String(triggerAns)
+        if (operator === 'equals') return asStr === String(expected)
+        return asStr.includes(String(expected))
+      } catch (e) {
+        return false
+      }
+    }
+
+    // Filter out answers for questions that are disabled by showWhen
+    const allowedAnswerEntries = Object.entries(answers)
       .filter(([, value]) => {
-        // Skip empty values
+        // Skip empty values up-front
         if (value === null || value === undefined || value === '') return false
         if (Array.isArray(value) && value.length === 0) return false
         return true
       })
+      .filter(([questionId]) => {
+        // Find question object for this id
+        const q = questions.find(q2 => q2.id === questionId)
+        // If question not found in survey, skip it
+        if (!q) return false
+        return isQuestionEnabled(q, answers)
+      })
       .map(([questionId, value]) => ({
-        responseId: existingResponse.id,
         questionId,
         value: typeof value === 'object' ? JSON.stringify(value) : String(value),
       }))
@@ -105,7 +180,7 @@ export async function PUT(
       where: { token },
       data: {
         answers: {
-          create: answerData,
+          create: allowedAnswerEntries,
         },
         submittedAt: new Date(),
         signatureToken,

@@ -33,6 +33,7 @@ model Admin {
   role        String   @default("FULL")
   twoFactor   Boolean  @default(false)
   secret2FA   String?
+  inviteExpires DateTime?
   invitedById String?
   invitedBy   Admin?   @relation("InvitedAdmins", fields: [invitedById], references: [id])
   invites     Admin[]  @relation("InvitedAdmins")
@@ -69,6 +70,7 @@ model Survey {
   memberList     MemberList @relation(fields: [memberListId], references: [id])
   questions      Question[]
   responses      Response[]
+  initialSentAt  DateTime? // When the initial notice was sent to recipients
   showLive       Boolean    @default(false)
   showAfterClose Boolean    @default(true)
   minResponses   Int?       // Minimum number of responses needed (optional)
@@ -84,6 +86,8 @@ model Question {
   text          String
   // JSON content stored as string (use JSON.parse/stringify in application code)
   options       String?
+  // Conditional display rules stored as JSON string (e.g. { triggerOrder: 0, operator: "equals", value: "Yes" })
+  showWhen      String?
   maxSelections Int?     // For MULTI_MULTI questions: max number of options that can be selected
   required      Boolean  @default(false) // Whether this question must be answered
   order         Int

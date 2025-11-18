@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { formatDateTime } from '@/lib/dateFormatter'
 import { useRouter } from 'next/navigation';
 
 interface Admin {
@@ -13,6 +14,7 @@ interface Admin {
     name: string | null;
     email: string;
   } | null;
+  inviteExpires?: string | null;
 }
 
 export default function AdminManagementPage() {
@@ -28,8 +30,13 @@ export default function AdminManagementPage() {
   const [currentAdminRole, setCurrentAdminRole] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchAdmins();
-    fetchCurrentAdmin();
+    // Load both current admin and admins list, then clear loading to avoid
+    // a race where the UI renders before we know the current admin's role.
+    (async () => {
+      setLoading(true)
+      await Promise.all([fetchAdmins(), fetchCurrentAdmin()])
+      setLoading(false)
+    })()
   }, []);
 
   const fetchCurrentAdmin = async () => {
@@ -39,6 +46,10 @@ export default function AdminManagementPage() {
         const data = await res.json();
         setCurrentAdminId(data.adminId);
         setCurrentAdminRole(data.role);
+        import('@/lib/devClient').then(async (m) => {
+          const dev = await m.isDevModeClient()
+          if (dev) console.log('[AdminPage] fetchCurrentAdmin ->', { adminId: data.adminId, role: data.role })
+        }).catch(() => {})
       }
     } catch (error) {
       console.error('Failed to fetch current admin:', error);
@@ -51,13 +62,15 @@ export default function AdminManagementPage() {
       if (res.ok) {
         const data = await res.json();
         setAdmins(data.admins);
+        import('@/lib/devClient').then(async (m) => {
+          const dev = await m.isDevModeClient()
+          if (dev) console.log('[AdminPage] fetchAdmins -> got', data.admins.length, 'admins')
+        }).catch(() => {})
       } else if (res.status === 401) {
         router.push('/login');
       }
     } catch (error) {
       console.error('Failed to fetch admins:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -115,6 +128,52 @@ export default function AdminManagementPage() {
     }
   };
 
+  const handleResendInvite = async (adminId: string) => {
+    if (!confirm('Resend invite to this user?')) return
+    try {
+      // Use Bearer token from cookie by asking server to use auth-token cookie isn't
+      // available to fetch; we will read auth cookie via document.cookie and send as Bearer.
+      const token = typeof document !== 'undefined' ? document.cookie.split('; ').find(c => c.startsWith('auth-token='))?.split('=')[1] : ''
+      const res = await fetch('/api/auth/resend-invite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': token ? `Bearer ${token}` : '' },
+        body: JSON.stringify({ adminId })
+      })
+      if (res.ok) {
+        alert('Invite resent')
+        fetchAdmins()
+      } else {
+        const data = await res.json()
+        alert(data.error || 'Failed to resend invite')
+      }
+    } catch (err) {
+      console.error('Failed to resend invite', err)
+      alert('Failed to resend invite')
+    }
+  }
+
+  const handleResetPassword = async (adminId: string) => {
+    if (!confirm('Reset this user\'s password? This will clear their current password and send them a reset link.')) return
+    try {
+      const token = typeof document !== 'undefined' ? document.cookie.split('; ').find(c => c.startsWith('auth-token='))?.split('=')[1] : ''
+      const res = await fetch('/api/auth/reset-admin-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': token ? `Bearer ${token}` : '' },
+        body: JSON.stringify({ adminId })
+      })
+      if (res.ok) {
+        alert('Password reset initiated; the user will receive an email with a reset link')
+        fetchAdmins()
+      } else {
+        const data = await res.json()
+        alert(data.error || 'Failed to reset password')
+      }
+    } catch (err) {
+      console.error('Failed to reset password', err)
+      alert('Failed to reset password')
+    }
+  }
+
   const handleUpdateRole = async (adminId: string, newRole: string) => {
     try {
       const res = await fetch(`/api/admins/${adminId}`, {
@@ -168,6 +227,7 @@ export default function AdminManagementPage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-8">
       <div className="max-w-6xl mx-auto">
+        
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Admin Management</h1>
@@ -297,7 +357,12 @@ export default function AdminManagementPage() {
                     )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                    {admin.email}
+                    <div>{admin.email}</div>
+                    {admin.inviteExpires && (
+                      <div className="text-xs text-yellow-700 dark:text-yellow-300 mt-1">
+                        Pending invite — expires {formatDateTime(admin.inviteExpires)}
+                      </div>
+                    )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     {canManageAdmins && admin.id !== currentAdminId ? (
@@ -337,12 +402,28 @@ export default function AdminManagementPage() {
                   {canManageAdmins && (
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                       {admin.id !== currentAdminId && (
-                        <button
-                          onClick={() => handleDeleteAdmin(admin.id)}
-                          className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
-                        >
-                          Delete
-                        </button>
+                        <div className="flex flex-col gap-2 items-start">
+                          {admin.inviteExpires && (
+                            <button
+                              onClick={() => handleResendInvite(admin.id)}
+                              className="text-blue-600 dark:text-blue-400 hover:underline"
+                            >
+                              Resend Invite
+                            </button>
+                          )}
+                          <button
+                            onClick={() => handleResetPassword(admin.id)}
+                            className="text-orange-600 dark:text-orange-400 hover:underline"
+                          >
+                            Reset Password
+                          </button>
+                          <button
+                            onClick={() => handleDeleteAdmin(admin.id)}
+                            className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
+                          >
+                            Delete
+                          </button>
+                        </div>
                       )}
                     </td>
                   )}
