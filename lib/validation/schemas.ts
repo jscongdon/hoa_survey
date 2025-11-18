@@ -28,6 +28,12 @@ export const surveySchema = z.object({
     type: z.string(),
     options: z.array(z.string()).optional(),
     maxSelections: z.number().int().positive().optional(),
+    // Optional conditional display rule
+    showWhen: z.object({
+      triggerOrder: z.number().int().nonnegative(),
+      operator: z.enum(['equals', 'contains']),
+      value: z.string(),
+    }).optional(),
     required: z.boolean().optional(),
     order: z.number().int(),
   })),
@@ -49,6 +55,11 @@ export const questionSchema = z.object({
   text: z.string().min(1, 'Question text is required'),
   options: z.array(z.string()).optional(),
   maxSelections: z.number().int().positive().optional(),
+  showWhen: z.object({
+    triggerOrder: z.number().int().nonnegative(),
+    operator: z.enum(['equals', 'contains']),
+    value: z.string(),
+  }).optional(),
   required: z.boolean().optional(),
   order: z.number(),
 })

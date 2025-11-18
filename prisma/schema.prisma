@@ -85,6 +85,8 @@ model Question {
   text          String
   // JSON content stored as string (use JSON.parse/stringify in application code)
   options       String?
+  // Conditional display rules stored as JSON string (e.g. { triggerOrder: 0, operator: "equals", value: "Yes" })
+  showWhen      String?
   maxSelections Int?     // For MULTI_MULTI questions: max number of options that can be selected
   required      Boolean  @default(false) // Whether this question must be answered
   order         Int

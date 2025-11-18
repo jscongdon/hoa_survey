@@ -41,6 +41,7 @@ export async function GET(
     text: q.text,
     order: q.order,
     options: q.options ? JSON.parse(q.options) : undefined,
+    showWhen: q.showWhen ? JSON.parse(q.showWhen) : undefined,
     maxSelections: q.maxSelections || undefined,
     required: q.required || false,
   }));
@@ -153,6 +154,7 @@ export async function PUT(
               type: q.type,
               order: typeof q.order === 'number' ? q.order : i,
               options: q.options ? JSON.stringify(q.options) : null,
+              showWhen: q.showWhen ? JSON.stringify(q.showWhen) : null,
               maxSelections: q.maxSelections ? parseInt(String(q.maxSelections)) : null,
               required: q.required || false,
             },
