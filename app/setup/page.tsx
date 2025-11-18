@@ -1,112 +1,112 @@
- 'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import PageHeader from '@/components/PageHeader'
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import PageHeader from "@/components/PageHeader";
 
-type Step = 'welcome' | 'hoa' | 'smtp' | 'test-email' | 'admin' | 'verify'
+type Step = "welcome" | "hoa" | "smtp" | "test-email" | "admin" | "verify";
 
 export default function SetupWizard() {
-  const router = useRouter()
-  const [step, setStep] = useState<Step>('welcome')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
+  const router = useRouter();
+  const [step, setStep] = useState<Step>("welcome");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   // HOA Configuration
-  const [hoaName, setHoaName] = useState('')
-  const [hoaLogoUrl, setHoaLogoUrl] = useState('')
-  const [appUrl, setAppUrl] = useState('')
+  const [hoaName, setHoaName] = useState("");
+  const [hoaLogoUrl, setHoaLogoUrl] = useState("");
+  const [appUrl, setAppUrl] = useState("");
 
   // SMTP Configuration
-  const [smtpHost, setSmtpHost] = useState('')
-  const [smtpPort, setSmtpPort] = useState('587')
-  const [smtpUser, setSmtpUser] = useState('')
-  const [smtpPass, setSmtpPass] = useState('')
-  const [smtpFrom, setSmtpFrom] = useState('')
+  const [smtpHost, setSmtpHost] = useState("");
+  const [smtpPort, setSmtpPort] = useState("587");
+  const [smtpUser, setSmtpUser] = useState("");
+  const [smtpPass, setSmtpPass] = useState("");
+  const [smtpFrom, setSmtpFrom] = useState("");
 
   // Admin Configuration
-  const [adminEmail, setAdminEmail] = useState('')
-  const [adminPassword, setAdminPassword] = useState('')
-  const [adminName, setAdminName] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
+  const [adminEmail, setAdminEmail] = useState("");
+  const [adminPassword, setAdminPassword] = useState("");
+  const [adminName, setAdminName] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   // Test email
-  const [testEmail, setTestEmail] = useState('')
-  const [emailTested, setEmailTested] = useState(false)
+  const [testEmail, setTestEmail] = useState("");
+  const [emailTested, setEmailTested] = useState(false);
 
   useEffect(() => {
     // Don't check status if we're on the verify step
-    if (step === 'verify') {
-      return
+    if (step === "verify") {
+      return;
     }
 
     // Check if setup is already complete or if admin exists
-    fetch('/api/setup/status')
-      .then(res => res.json())
-      .then(data => {
+    fetch("/api/setup/status")
+      .then((res) => res.json())
+      .then((data) => {
         if (data.setupCompleted) {
-          router.push('/login')
+          router.push("/login");
         } else if (data.adminExists) {
           // Admin created but not verified yet
-          router.push('/login?pending=verification')
+          router.push("/login?pending=verification");
         }
       })
-      .catch(() => {})
-  }, [router, step])
+      .catch(() => {});
+  }, [router, step]);
 
   const handleTestEmail = async () => {
-    setLoading(true)
-    setError('')
-    setSuccess('')
+    setLoading(true);
+    setError("");
+    setSuccess("");
 
     try {
-      const res = await fetch('/api/setup/test-email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/setup/test-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           smtpHost,
           smtpPort: parseInt(smtpPort),
           smtpUser,
           smtpPass,
           smtpFrom,
-          testEmail
-        })
-      })
+          testEmail,
+        }),
+      });
 
-      const data = await res.json()
+      const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.error || 'Failed to send test email')
+        throw new Error(data.error || "Failed to send test email");
       }
 
-      setSuccess('Test email sent successfully! Check your inbox.')
-      setEmailTested(true)
+      setSuccess("Test email sent successfully! Check your inbox.");
+      setEmailTested(true);
     } catch (err: any) {
-      setError(err.message)
+      setError(err.message);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleCreateAdmin = async () => {
     if (adminPassword !== confirmPassword) {
-      setError('Passwords do not match')
-      return
+      setError("Passwords do not match");
+      return;
     }
 
     if (adminPassword.length < 8) {
-      setError('Password must be at least 8 characters')
-      return
+      setError("Password must be at least 8 characters");
+      return;
     }
 
-    setLoading(true)
-    setError('')
+    setLoading(true);
+    setError("");
 
     try {
-      const res = await fetch('/api/setup/complete', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/setup/complete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           hoaName,
           hoaLogoUrl,
@@ -118,47 +118,78 @@ export default function SetupWizard() {
           smtpFrom,
           adminEmail,
           adminPassword,
-          adminName
-        })
-      })
+          adminName,
+        }),
+      });
 
-      const data = await res.json()
+      const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.error || 'Setup failed')
+        throw new Error(data.error || "Setup failed");
       }
 
-      setStep('verify')
+      setStep("verify");
     } catch (err: any) {
-      setError(err.message)
+      setError(err.message);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
       <div className="max-w-2xl w-full bg-white dark:bg-gray-800 rounded-lg shadow-xl p-8">
-        <PageHeader title={
-          step === 'welcome' ? 'Welcome to HOA Survey' :
-          step === 'hoa' ? 'HOA Configuration' :
-          step === 'smtp' ? 'SMTP Configuration' :
-          step === 'test-email' ? 'Test Email' :
-          step === 'admin' ? 'Create Admin' :
-          'Verify'
-        } />
+        <PageHeader
+          title={
+            step === "welcome"
+              ? "Welcome to HOA Survey"
+              : step === "hoa"
+                ? "HOA Configuration"
+                : step === "smtp"
+                  ? "SMTP Configuration"
+                  : step === "test-email"
+                    ? "Test Email"
+                    : step === "admin"
+                      ? "Create Admin"
+                      : "Verify"
+          }
+        />
 
         {/* Progress Steps */}
         <div className="mb-8">
           <div className="flex justify-between items-center">
-            {(['welcome', 'hoa', 'smtp', 'test-email', 'admin', 'verify'] as Step[]).map((s, i) => (
+            {(
+              [
+                "welcome",
+                "hoa",
+                "smtp",
+                "test-email",
+                "admin",
+                "verify",
+              ] as Step[]
+            ).map((s, i) => (
               <div key={s} className="flex items-center">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold
-                  ${step === s ? 'bg-blue-600 text-white' : 
-                    ['welcome', 'hoa', 'smtp', 'test-email', 'admin'].indexOf(step) > i ? 'bg-green-600 text-white' : 'bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400'}`}>
+                <div
+                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold
+                  ${
+                    step === s
+                      ? "bg-blue-600 text-white"
+                      : [
+                            "welcome",
+                            "hoa",
+                            "smtp",
+                            "test-email",
+                            "admin",
+                          ].indexOf(step) > i
+                        ? "bg-green-600 text-white"
+                        : "bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400"
+                  }`}
+                >
                   {i + 1}
                 </div>
-                {i < 5 && <div className="w-8 h-1 bg-gray-300 dark:bg-gray-600 mx-2" />}
+                {i < 5 && (
+                  <div className="w-8 h-1 bg-gray-300 dark:bg-gray-600 mx-2" />
+                )}
               </div>
             ))}
           </div>
@@ -177,10 +208,11 @@ export default function SetupWizard() {
         )}
 
         {/* Welcome Step */}
-        {step === 'welcome' && (
+        {step === "welcome" && (
           <div>
             <p className="text-gray-600 dark:text-gray-300 mb-6">
-              Let's get your survey system set up! This wizard will guide you through:
+              Let's get your survey system set up! This wizard will guide you
+              through:
             </p>
             <ul className="list-disc list-inside space-y-2 text-gray-600 dark:text-gray-300 mb-8">
               <li>HOA branding configuration</li>
@@ -189,7 +221,7 @@ export default function SetupWizard() {
               <li>Email verification for security</li>
             </ul>
             <button
-              onClick={() => setStep('hoa')}
+              onClick={() => setStep("hoa")}
               className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 font-semibold"
             >
               Get Started
@@ -198,13 +230,15 @@ export default function SetupWizard() {
         )}
 
         {/* HOA Configuration Step */}
-        {step === 'hoa' && (
+        {step === "hoa" && (
           <div>
-            <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">HOA Configuration</h2>
+            <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">
+              HOA Configuration
+            </h2>
             <p className="text-gray-600 dark:text-gray-300 mb-6">
               Configure your HOA's branding information
             </p>
-            
+
             <div className="space-y-4 mb-6">
               <div>
                 <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-white">
@@ -213,7 +247,7 @@ export default function SetupWizard() {
                 <input
                   type="text"
                   value={hoaName}
-                  onChange={e => setHoaName(e.target.value)}
+                  onChange={(e) => setHoaName(e.target.value)}
                   className="w-full border border-gray-300 dark:border-gray-600 p-3 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   placeholder="e.g., Sunset Ridge HOA"
                   required
@@ -227,7 +261,7 @@ export default function SetupWizard() {
                 <input
                   type="text"
                   value={hoaLogoUrl}
-                  onChange={e => setHoaLogoUrl(e.target.value)}
+                  onChange={(e) => setHoaLogoUrl(e.target.value)}
                   className="w-full border border-gray-300 dark:border-gray-600 p-3 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   placeholder="/logo.png"
                 />
@@ -243,7 +277,7 @@ export default function SetupWizard() {
                 <input
                   type="url"
                   value={appUrl}
-                  onChange={e => setAppUrl(e.target.value)}
+                  onChange={(e) => setAppUrl(e.target.value)}
                   className="w-full border border-gray-300 dark:border-gray-600 p-3 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   placeholder="https://hoasurvey.foxpointva.com"
                   required
@@ -256,13 +290,13 @@ export default function SetupWizard() {
 
             <div className="flex gap-4">
               <button
-                onClick={() => setStep('welcome')}
+                onClick={() => setStep("welcome")}
                 className="flex-1 bg-gray-300 dark:bg-gray-600 text-gray-900 dark:text-white py-3 rounded-lg hover:bg-gray-400 dark:hover:bg-gray-500"
               >
                 Back
               </button>
               <button
-                onClick={() => setStep('smtp')}
+                onClick={() => setStep("smtp")}
                 disabled={!hoaName || !appUrl}
                 className="flex-1 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
               >
@@ -273,13 +307,16 @@ export default function SetupWizard() {
         )}
 
         {/* SMTP Configuration Step */}
-        {step === 'smtp' && (
+        {step === "smtp" && (
           <div>
-            <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Email Server Configuration</h2>
+            <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">
+              Email Server Configuration
+            </h2>
             <p className="text-gray-600 dark:text-gray-300 mb-6">
-              Configure your SMTP server for sending survey invitations and reminders
+              Configure your SMTP server for sending survey invitations and
+              reminders
             </p>
-            
+
             <div className="space-y-4 mb-6">
               <div>
                 <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-white">
@@ -288,7 +325,7 @@ export default function SetupWizard() {
                 <input
                   type="text"
                   value={smtpHost}
-                  onChange={e => setSmtpHost(e.target.value)}
+                  onChange={(e) => setSmtpHost(e.target.value)}
                   className="w-full border border-gray-300 dark:border-gray-600 p-3 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   placeholder="smtp.example.com"
                   required
@@ -302,7 +339,7 @@ export default function SetupWizard() {
                 <input
                   type="number"
                   value={smtpPort}
-                  onChange={e => setSmtpPort(e.target.value)}
+                  onChange={(e) => setSmtpPort(e.target.value)}
                   className="w-full border border-gray-300 dark:border-gray-600 p-3 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   placeholder="587"
                   required
@@ -316,7 +353,7 @@ export default function SetupWizard() {
                 <input
                   type="text"
                   value={smtpUser}
-                  onChange={e => setSmtpUser(e.target.value)}
+                  onChange={(e) => setSmtpUser(e.target.value)}
                   className="w-full border border-gray-300 dark:border-gray-600 p-3 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   placeholder="your-email@example.com"
                   required
@@ -330,7 +367,7 @@ export default function SetupWizard() {
                 <input
                   type="password"
                   value={smtpPass}
-                  onChange={e => setSmtpPass(e.target.value)}
+                  onChange={(e) => setSmtpPass(e.target.value)}
                   className="w-full border border-gray-300 dark:border-gray-600 p-3 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   placeholder="••••••••"
                   required
@@ -344,7 +381,7 @@ export default function SetupWizard() {
                 <input
                   type="email"
                   value={smtpFrom}
-                  onChange={e => setSmtpFrom(e.target.value)}
+                  onChange={(e) => setSmtpFrom(e.target.value)}
                   className="w-full border border-gray-300 dark:border-gray-600 p-3 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   placeholder="noreply@yourhoa.com"
                   required
@@ -354,14 +391,16 @@ export default function SetupWizard() {
 
             <div className="flex gap-4">
               <button
-                onClick={() => setStep('hoa')}
+                onClick={() => setStep("hoa")}
                 className="flex-1 bg-gray-300 dark:bg-gray-600 text-gray-900 dark:text-white py-3 rounded-lg hover:bg-gray-400 dark:hover:bg-gray-500"
               >
                 Back
               </button>
               <button
-                onClick={() => setStep('test-email')}
-                disabled={!smtpHost || !smtpPort || !smtpUser || !smtpPass || !smtpFrom}
+                onClick={() => setStep("test-email")}
+                disabled={
+                  !smtpHost || !smtpPort || !smtpUser || !smtpPass || !smtpFrom
+                }
                 className="flex-1 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
               >
                 Next
@@ -371,13 +410,15 @@ export default function SetupWizard() {
         )}
 
         {/* Test Email Step */}
-        {step === 'test-email' && (
+        {step === "test-email" && (
           <div>
-            <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Test Email Configuration</h2>
+            <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">
+              Test Email Configuration
+            </h2>
             <p className="text-gray-600 dark:text-gray-300 mb-6">
               Let's verify your email settings work correctly
             </p>
-            
+
             <div className="space-y-4 mb-6">
               <div>
                 <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-white">
@@ -386,7 +427,7 @@ export default function SetupWizard() {
                 <input
                   type="email"
                   value={testEmail}
-                  onChange={e => setTestEmail(e.target.value)}
+                  onChange={(e) => setTestEmail(e.target.value)}
                   className="w-full border border-gray-300 dark:border-gray-600 p-3 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   placeholder="your-email@example.com"
                   required
@@ -398,36 +439,38 @@ export default function SetupWizard() {
                 disabled={loading || !testEmail}
                 className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
               >
-                {loading ? 'Sending...' : 'Send Test Email'}
+                {loading ? "Sending..." : "Send Test Email"}
               </button>
             </div>
 
             <div className="flex gap-4">
               <button
-                onClick={() => setStep('smtp')}
+                onClick={() => setStep("smtp")}
                 className="flex-1 bg-gray-300 dark:bg-gray-600 text-gray-900 dark:text-white py-3 rounded-lg hover:bg-gray-400 dark:hover:bg-gray-500"
               >
                 Back
               </button>
               <button
-                onClick={() => setStep('admin')}
+                onClick={() => setStep("admin")}
                 disabled={!emailTested}
                 className="flex-1 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
               >
-                {emailTested ? 'Next' : 'Test Email First'}
+                {emailTested ? "Next" : "Test Email First"}
               </button>
             </div>
           </div>
         )}
 
         {/* Admin Account Step */}
-        {step === 'admin' && (
+        {step === "admin" && (
           <div>
-            <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Create Administrator Account</h2>
+            <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">
+              Create Administrator Account
+            </h2>
             <p className="text-gray-600 dark:text-gray-300 mb-6">
               Create your main administrator account with full access
             </p>
-            
+
             <div className="space-y-4 mb-6">
               <div>
                 <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-white">
@@ -436,7 +479,7 @@ export default function SetupWizard() {
                 <input
                   type="text"
                   value={adminName}
-                  onChange={e => setAdminName(e.target.value)}
+                  onChange={(e) => setAdminName(e.target.value)}
                   className="w-full border border-gray-300 dark:border-gray-600 p-3 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   placeholder="John Doe"
                   required
@@ -450,7 +493,7 @@ export default function SetupWizard() {
                 <input
                   type="email"
                   value={adminEmail}
-                  onChange={e => setAdminEmail(e.target.value)}
+                  onChange={(e) => setAdminEmail(e.target.value)}
                   className="w-full border border-gray-300 dark:border-gray-600 p-3 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   placeholder="admin@yourhoa.com"
                   required
@@ -467,7 +510,7 @@ export default function SetupWizard() {
                 <input
                   type="password"
                   value={adminPassword}
-                  onChange={e => setAdminPassword(e.target.value)}
+                  onChange={(e) => setAdminPassword(e.target.value)}
                   className="w-full border border-gray-300 dark:border-gray-600 p-3 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   placeholder="••••••••"
                   required
@@ -481,7 +524,7 @@ export default function SetupWizard() {
                 <input
                   type="password"
                   value={confirmPassword}
-                  onChange={e => setConfirmPassword(e.target.value)}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
                   className="w-full border border-gray-300 dark:border-gray-600 p-3 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   placeholder="••••••••"
                   required
@@ -491,44 +534,53 @@ export default function SetupWizard() {
 
             <div className="flex gap-4">
               <button
-                onClick={() => setStep('test-email')}
+                onClick={() => setStep("test-email")}
                 className="flex-1 bg-gray-300 dark:bg-gray-600 text-gray-900 dark:text-white py-3 rounded-lg hover:bg-gray-400 dark:hover:bg-gray-500"
               >
                 Back
               </button>
               <button
                 onClick={handleCreateAdmin}
-                disabled={loading || !adminName || !adminEmail || !adminPassword || !confirmPassword}
+                disabled={
+                  loading ||
+                  !adminName ||
+                  !adminEmail ||
+                  !adminPassword ||
+                  !confirmPassword
+                }
                 className="flex-1 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
               >
-                {loading ? 'Creating...' : 'Complete Setup'}
+                {loading ? "Creating..." : "Complete Setup"}
               </button>
             </div>
           </div>
         )}
 
         {/* Verification Step */}
-        {step === 'verify' && (
+        {step === "verify" && (
           <div className="text-center">
             <div className="w-16 h-16 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
               <span className="text-3xl">✓</span>
             </div>
-            <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Check Your Email</h2>
+            <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">
+              Check Your Email
+            </h2>
             <p className="text-gray-600 dark:text-gray-300 mb-6">
               We've sent a verification link to <strong>{adminEmail}</strong>
             </p>
             <p className="text-gray-600 dark:text-gray-300 mb-8">
-              Click the link in your email to verify your account and gain full administrator access.
-              You can close this page.
+              Click the link in your email to verify your account and gain full
+              administrator access. You can close this page.
             </p>
             <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded">
               <p className="text-sm text-blue-800 dark:text-blue-200">
-                💡 Tip: Check your spam folder if you don't see the email within a few minutes.
+                💡 Tip: Check your spam folder if you don't see the email within
+                a few minutes.
               </p>
             </div>
           </div>
         )}
       </div>
     </div>
-  )
+  );
 }

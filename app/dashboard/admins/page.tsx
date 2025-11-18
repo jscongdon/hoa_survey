@@ -1,9 +1,9 @@
- 'use client';
+"use client";
 
-import React, { useEffect, useState } from 'react';
-import PageHeader from '@/components/PageHeader';
-import { formatDateTime } from '@/lib/dateFormatter'
-import { useRouter } from 'next/navigation';
+import React, { useEffect, useState } from "react";
+import PageHeader from "@/components/PageHeader";
+import { formatDateTime } from "@/lib/dateFormatter";
+import { useRouter } from "next/navigation";
 
 interface Admin {
   id: string;
@@ -23,9 +23,9 @@ export default function AdminManagementPage() {
   const [admins, setAdmins] = useState<Admin[]>([]);
   const [loading, setLoading] = useState(true);
   const [showInviteForm, setShowInviteForm] = useState(false);
-  const [inviteEmail, setInviteEmail] = useState('');
-  const [inviteName, setInviteName] = useState('');
-  const [inviteRole, setInviteRole] = useState('VIEW_ONLY');
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteName, setInviteName] = useState("");
+  const [inviteRole, setInviteRole] = useState("VIEW_ONLY");
   const [inviting, setInviting] = useState(false);
   const [currentAdminId, setCurrentAdminId] = useState<string | null>(null);
   const [currentAdminRole, setCurrentAdminRole] = useState<string | null>(null);
@@ -34,44 +34,57 @@ export default function AdminManagementPage() {
     // Load both current admin and admins list, then clear loading to avoid
     // a race where the UI renders before we know the current admin's role.
     (async () => {
-      setLoading(true)
-      await Promise.all([fetchAdmins(), fetchCurrentAdmin()])
-      setLoading(false)
-    })()
+      setLoading(true);
+      await Promise.all([fetchAdmins(), fetchCurrentAdmin()]);
+      setLoading(false);
+    })();
   }, []);
 
   const fetchCurrentAdmin = async () => {
     try {
-      const res = await fetch('/api/auth/me');
+      const res = await fetch("/api/auth/me");
       if (res.ok) {
         const data = await res.json();
         setCurrentAdminId(data.adminId);
         setCurrentAdminRole(data.role);
-        import('@/lib/devClient').then(async (m) => {
-          const dev = await m.isDevModeClient()
-          if (dev) console.log('[AdminPage] fetchCurrentAdmin ->', { adminId: data.adminId, role: data.role })
-        }).catch(() => {})
+        import("@/lib/devClient")
+          .then(async (m) => {
+            const dev = await m.isDevModeClient();
+            if (dev)
+              console.log("[AdminPage] fetchCurrentAdmin ->", {
+                adminId: data.adminId,
+                role: data.role,
+              });
+          })
+          .catch(() => {});
       }
     } catch (error) {
-      console.error('Failed to fetch current admin:', error);
+      console.error("Failed to fetch current admin:", error);
     }
   };
 
   const fetchAdmins = async () => {
     try {
-      const res = await fetch('/api/admins');
+      const res = await fetch("/api/admins");
       if (res.ok) {
         const data = await res.json();
         setAdmins(data.admins);
-        import('@/lib/devClient').then(async (m) => {
-          const dev = await m.isDevModeClient()
-          if (dev) console.log('[AdminPage] fetchAdmins -> got', data.admins.length, 'admins')
-        }).catch(() => {})
+        import("@/lib/devClient")
+          .then(async (m) => {
+            const dev = await m.isDevModeClient();
+            if (dev)
+              console.log(
+                "[AdminPage] fetchAdmins -> got",
+                data.admins.length,
+                "admins"
+              );
+          })
+          .catch(() => {});
       } else if (res.status === 401) {
-        router.push('/login');
+        router.push("/login");
       }
     } catch (error) {
-      console.error('Failed to fetch admins:', error);
+      console.error("Failed to fetch admins:", error);
     }
   };
 
@@ -80,9 +93,9 @@ export default function AdminManagementPage() {
     setInviting(true);
 
     try {
-      const res = await fetch('/api/auth/invite', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/auth/invite", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: inviteEmail,
           name: inviteName,
@@ -93,93 +106,118 @@ export default function AdminManagementPage() {
 
       if (res.ok) {
         setShowInviteForm(false);
-        setInviteEmail('');
-        setInviteName('');
-        setInviteRole('VIEW_ONLY');
+        setInviteEmail("");
+        setInviteName("");
+        setInviteRole("VIEW_ONLY");
         fetchAdmins();
       } else {
         const data = await res.json();
-        alert(data.error || 'Failed to send invite');
+        alert(data.error || "Failed to send invite");
       }
     } catch (error) {
-      console.error('Failed to send invite:', error);
-      alert('Failed to send invite');
+      console.error("Failed to send invite:", error);
+      alert("Failed to send invite");
     } finally {
       setInviting(false);
     }
   };
 
   const handleDeleteAdmin = async (adminId: string) => {
-    if (!confirm('Are you sure you want to delete this admin user?')) return;
+    if (!confirm("Are you sure you want to delete this admin user?")) return;
 
     try {
       const res = await fetch(`/api/admins/${adminId}`, {
-        method: 'DELETE',
+        method: "DELETE",
       });
 
       if (res.ok) {
         fetchAdmins();
       } else {
         const data = await res.json();
-        alert(data.error || 'Failed to delete admin');
+        alert(data.error || "Failed to delete admin");
       }
     } catch (error) {
-      console.error('Failed to delete admin:', error);
-      alert('Failed to delete admin');
+      console.error("Failed to delete admin:", error);
+      alert("Failed to delete admin");
     }
   };
 
   const handleResendInvite = async (adminId: string) => {
-    if (!confirm('Resend invite to this user?')) return
+    if (!confirm("Resend invite to this user?")) return;
     try {
       // Use Bearer token from cookie by asking server to use auth-token cookie isn't
       // available to fetch; we will read auth cookie via document.cookie and send as Bearer.
-      const token = typeof document !== 'undefined' ? document.cookie.split('; ').find(c => c.startsWith('auth-token='))?.split('=')[1] : ''
-      const res = await fetch('/api/auth/resend-invite', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': token ? `Bearer ${token}` : '' },
-        body: JSON.stringify({ adminId })
-      })
+      const token =
+        typeof document !== "undefined"
+          ? document.cookie
+              .split("; ")
+              .find((c) => c.startsWith("auth-token="))
+              ?.split("=")[1]
+          : "";
+      const res = await fetch("/api/auth/resend-invite", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token ? `Bearer ${token}` : "",
+        },
+        body: JSON.stringify({ adminId }),
+      });
       if (res.ok) {
-        alert('Invite resent')
-        fetchAdmins()
+        alert("Invite resent");
+        fetchAdmins();
       } else {
-        const data = await res.json()
-        alert(data.error || 'Failed to resend invite')
+        const data = await res.json();
+        alert(data.error || "Failed to resend invite");
       }
     } catch (err) {
-      console.error('Failed to resend invite', err)
-      alert('Failed to resend invite')
+      console.error("Failed to resend invite", err);
+      alert("Failed to resend invite");
     }
-  }
+  };
 
   const handleResetPassword = async (adminId: string) => {
-    if (!confirm('Reset this user\'s password? This will clear their current password and send them a reset link.')) return
+    if (
+      !confirm(
+        "Reset this user's password? This will clear their current password and send them a reset link."
+      )
+    )
+      return;
     try {
-      const token = typeof document !== 'undefined' ? document.cookie.split('; ').find(c => c.startsWith('auth-token='))?.split('=')[1] : ''
-      const res = await fetch('/api/auth/reset-admin-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': token ? `Bearer ${token}` : '' },
-        body: JSON.stringify({ adminId })
-      })
+      const token =
+        typeof document !== "undefined"
+          ? document.cookie
+              .split("; ")
+              .find((c) => c.startsWith("auth-token="))
+              ?.split("=")[1]
+          : "";
+      const res = await fetch("/api/auth/reset-admin-password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token ? `Bearer ${token}` : "",
+        },
+        body: JSON.stringify({ adminId }),
+      });
       if (res.ok) {
-        alert('Password reset initiated; the user will receive an email with a reset link')
-        fetchAdmins()
+        alert(
+          "Password reset initiated; the user will receive an email with a reset link"
+        );
+        fetchAdmins();
       } else {
-        const data = await res.json()
-        alert(data.error || 'Failed to reset password')
+        const data = await res.json();
+        alert(data.error || "Failed to reset password");
       }
     } catch (err) {
-      console.error('Failed to reset password', err)
-      alert('Failed to reset password')
+      console.error("Failed to reset password", err);
+      alert("Failed to reset password");
     }
-  }
+  };
 
   const handleUpdateRole = async (adminId: string, newRole: string) => {
     try {
       const res = await fetch(`/api/admins/${adminId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ role: newRole }),
       });
 
@@ -187,19 +225,19 @@ export default function AdminManagementPage() {
         fetchAdmins();
       } else {
         const data = await res.json();
-        alert(data.error || 'Failed to update role');
+        alert(data.error || "Failed to update role");
       }
     } catch (error) {
-      console.error('Failed to update role:', error);
-      alert('Failed to update role');
+      console.error("Failed to update role:", error);
+      alert("Failed to update role");
     }
   };
 
   const handleToggle2FA = async (adminId: string, currentState: boolean) => {
     try {
       const res = await fetch(`/api/admins/${adminId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ twoFactor: !currentState }),
       });
 
@@ -207,45 +245,48 @@ export default function AdminManagementPage() {
         fetchAdmins();
       } else {
         const data = await res.json();
-        alert(data.error || 'Failed to update 2FA setting');
+        alert(data.error || "Failed to update 2FA setting");
       }
     } catch (error) {
-      console.error('Failed to update 2FA:', error);
-      alert('Failed to update 2FA setting');
+      console.error("Failed to update 2FA:", error);
+      alert("Failed to update 2FA setting");
     }
   };
 
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-8">
-        <div className="text-center text-gray-900 dark:text-white">Loading...</div>
+        <div className="text-center text-gray-900 dark:text-white">
+          Loading...
+        </div>
       </div>
     );
   }
 
-  const canManageAdmins = currentAdminRole === 'FULL';
+  const canManageAdmins = currentAdminRole === "FULL";
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-8">
-      <div className="max-w-6xl mx-auto">
-        
-        <PageHeader title="Admin Management" subtitle="You can manage admins you've invited and their invitees" actions={(
-          canManageAdmins ? (
-            <button
-              onClick={() => setShowInviteForm(true)}
-              className="px-6 py-3 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white rounded-lg font-semibold transition-colors"
-            >
-              Invite Admin
-            </button>
-          ) : (
-            <button
-              onClick={() => router.push('/dashboard')}
-              className="text-blue-600 dark:text-blue-400 hover:underline"
-            >
-              ← Back to Dashboard
-            </button>
-          )
-        )} />
+    <div className="p-8">
+      <div className="max-w-4xl mx-auto">
+        <PageHeader
+          title="Admin Management"
+          actions={
+            <div>
+              <button
+                onClick={() => setShowInviteForm(true)}
+                className="px-4 py-2 bg-blue-500 dark:bg-blue-500 dark:hover:bg-blue-500 text-white rounded font-semibold transition-colors"
+              >
+                Invite Admin
+              </button>
+              <button
+                onClick={() => router.push("/dashboard")}
+                className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+              >
+                Back to Dashboard
+              </button>
+            </div>
+          }
+        />
 
         {showInviteForm && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -296,9 +337,9 @@ export default function AdminManagementPage() {
                     type="button"
                     onClick={() => {
                       setShowInviteForm(false);
-                      setInviteEmail('');
-                      setInviteName('');
-                      setInviteRole('VIEW_ONLY');
+                      setInviteEmail("");
+                      setInviteName("");
+                      setInviteRole("VIEW_ONLY");
                     }}
                     className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                   >
@@ -309,7 +350,7 @@ export default function AdminManagementPage() {
                     disabled={inviting}
                     className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {inviting ? 'Sending...' : 'Send Invite'}
+                    {inviting ? "Sending..." : "Send Invite"}
                   </button>
                 </div>
               </form>
@@ -347,16 +388,19 @@ export default function AdminManagementPage() {
               {admins.map((admin) => (
                 <tr key={admin.id}>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                    {admin.name || 'N/A'}
+                    {admin.name || "N/A"}
                     {admin.id === currentAdminId && (
-                      <span className="ml-2 text-xs text-blue-600 dark:text-blue-400">(You)</span>
+                      <span className="ml-2 text-xs text-blue-600 dark:text-blue-400">
+                        (You)
+                      </span>
                     )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                     <div>{admin.email}</div>
                     {admin.inviteExpires && (
                       <div className="text-xs text-yellow-700 dark:text-yellow-300 mt-1">
-                        Pending invite — expires {formatDateTime(admin.inviteExpires)}
+                        Pending invite — expires{" "}
+                        {formatDateTime(admin.inviteExpires)}
                       </div>
                     )}
                   </td>
@@ -364,19 +408,23 @@ export default function AdminManagementPage() {
                     {canManageAdmins && admin.id !== currentAdminId ? (
                       <select
                         value={admin.role}
-                        onChange={(e) => handleUpdateRole(admin.id, e.target.value)}
+                        onChange={(e) =>
+                          handleUpdateRole(admin.id, e.target.value)
+                        }
                         className="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
                       >
                         <option value="VIEW_ONLY">View Only</option>
                         <option value="FULL">Full Access</option>
                       </select>
                     ) : (
-                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                        admin.role === 'FULL'
-                          ? 'bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200'
-                          : 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200'
-                      }`}>
-                        {admin.role === 'FULL' ? 'Full Access' : 'View Only'}
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                          admin.role === "FULL"
+                            ? "bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200"
+                            : "bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200"
+                        }`}
+                      >
+                        {admin.role === "FULL" ? "Full Access" : "View Only"}
                       </span>
                     )}
                   </td>
@@ -385,15 +433,17 @@ export default function AdminManagementPage() {
                       onClick={() => handleToggle2FA(admin.id, admin.twoFactor)}
                       className={`px-3 py-1 rounded text-xs font-semibold ${
                         admin.twoFactor
-                          ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
-                          : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
+                          ? "bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200"
+                          : "bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200"
                       }`}
                     >
-                      {admin.twoFactor ? 'Enabled' : 'Disabled'}
+                      {admin.twoFactor ? "Enabled" : "Disabled"}
                     </button>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                    {admin.invitedBy ? `${admin.invitedBy.name || admin.invitedBy.email}` : 'N/A'}
+                    {admin.invitedBy
+                      ? `${admin.invitedBy.name || admin.invitedBy.email}`
+                      : "N/A"}
                   </td>
                   {canManageAdmins && (
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
@@ -432,7 +482,8 @@ export default function AdminManagementPage() {
         {!canManageAdmins && (
           <div className="mt-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg p-4">
             <p className="text-yellow-800 dark:text-yellow-200 text-sm">
-              You have view-only access. Contact a full admin to manage admin users.
+              You have view-only access. Contact a full admin to manage admin
+              users.
             </p>
           </div>
         )}

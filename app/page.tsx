@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import { useRouter } from 'next/navigation';
-import React, { useEffect } from 'react';
-import PageHeader from '@/components/PageHeader';
+import { useRouter } from "next/navigation";
+import React, { useEffect } from "react";
+import PageHeader from "@/components/PageHeader";
 
 export default function Home() {
   const router = useRouter();
 
   useEffect(() => {
     // Redirect to dashboard or setup/login based on middleware logic
-    router.push('/dashboard');
+    router.push("/dashboard");
   }, [router]);
 
   return (

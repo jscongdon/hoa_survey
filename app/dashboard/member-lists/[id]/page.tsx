@@ -1,8 +1,8 @@
- 'use client';
+"use client";
 
-import React, { useEffect, useState } from 'react';
-import PageHeader from '@/components/PageHeader';
-import { useRouter } from 'next/navigation';
+import React, { useEffect, useState } from "react";
+import PageHeader from "@/components/PageHeader";
+import { useRouter } from "next/navigation";
 
 interface Member {
   id: string;
@@ -19,26 +19,30 @@ interface MemberListDetail {
   members: Member[];
 }
 
-export default function MemberListDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default function MemberListDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const [id, setId] = useState<string | null>(null);
   const router = useRouter();
   const [list, setList] = useState<MemberListDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingMember, setEditingMember] = useState<Member>({
-    id: '',
-    lot: '',
-    name: '',
-    email: '',
-    address: '',
+    id: "",
+    lot: "",
+    name: "",
+    email: "",
+    address: "",
   });
   const [isAdding, setIsAdding] = useState(false);
   const [newMember, setNewMember] = useState<Member>({
-    id: '',
-    lot: '',
-    name: '',
-    email: '',
-    address: '',
+    id: "",
+    lot: "",
+    name: "",
+    email: "",
+    address: "",
   });
 
   useEffect(() => {
@@ -48,7 +52,9 @@ export default function MemberListDetailPage({ params }: { params: Promise<{ id:
       if (!active) return;
       setId(p.id);
     })();
-    return () => { active = false };
+    return () => {
+      active = false;
+    };
   }, [params]);
 
   useEffect(() => {
@@ -57,7 +63,7 @@ export default function MemberListDetailPage({ params }: { params: Promise<{ id:
       try {
         const res = await fetch(`/api/member-lists/${id}`);
         if (!res.ok) {
-          console.error('Failed to fetch list');
+          console.error("Failed to fetch list");
           router.back();
           return;
         }
@@ -81,39 +87,39 @@ export default function MemberListDetailPage({ params }: { params: Promise<{ id:
 
   const cancelEdit = () => {
     setEditingId(null);
-    setEditingMember({ id: '', lot: '', name: '', email: '', address: '' });
+    setEditingMember({ id: "", lot: "", name: "", email: "", address: "" });
   };
 
   const startAdd = () => {
     setIsAdding(true);
-    setNewMember({ id: '', lot: '', name: '', email: '', address: '' });
+    setNewMember({ id: "", lot: "", name: "", email: "", address: "" });
   };
 
   const cancelAdd = () => {
     setIsAdding(false);
-    setNewMember({ id: '', lot: '', name: '', email: '', address: '' });
+    setNewMember({ id: "", lot: "", name: "", email: "", address: "" });
   };
 
   const saveAdd = async () => {
     if (!list) return;
-    
+
     // Validate required fields
     if (!newMember.lot || !newMember.name || !newMember.email) {
-      alert('Lot, name, and email are required');
+      alert("Lot, name, and email are required");
       return;
     }
-    
+
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(newMember.email)) {
-      alert('Please enter a valid email address');
+      alert("Please enter a valid email address");
       return;
     }
-    
+
     try {
       const res = await fetch(`/api/member-lists/${list.id}/members`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           lot: newMember.lot,
           name: newMember.name,
@@ -135,19 +141,22 @@ export default function MemberListDetailPage({ params }: { params: Promise<{ id:
       });
       cancelAdd();
     } catch (error) {
-      console.error('Failed to add member:', error);
-      alert('Failed to add member');
+      console.error("Failed to add member:", error);
+      alert("Failed to add member");
     }
   };
 
   const deleteMember = async (memberId: string) => {
     if (!list) return;
-    if (!window.confirm('Are you sure you want to delete this member?')) return;
-    
+    if (!window.confirm("Are you sure you want to delete this member?")) return;
+
     try {
-      const res = await fetch(`/api/member-lists/${list.id}/members/${memberId}`, {
-        method: 'DELETE',
-      });
+      const res = await fetch(
+        `/api/member-lists/${list.id}/members/${memberId}`,
+        {
+          method: "DELETE",
+        }
+      );
 
       if (!res.ok) {
         const error = await res.json();
@@ -160,34 +169,37 @@ export default function MemberListDetailPage({ params }: { params: Promise<{ id:
         members: list.members.filter((m) => m.id !== memberId),
       });
     } catch (error) {
-      console.error('Failed to delete member:', error);
-      alert('Failed to delete member');
+      console.error("Failed to delete member:", error);
+      alert("Failed to delete member");
     }
   };
 
   const saveEdit = async () => {
     if (!editingId || !list) return;
-    
+
     // Validate email format
     if (editingMember.email && editingMember.email.trim()) {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(editingMember.email)) {
-        alert('Please enter a valid email address');
+        alert("Please enter a valid email address");
         return;
       }
     }
-    
+
     try {
-      const res = await fetch(`/api/member-lists/${list.id}/members/${editingId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          lot: editingMember.lot,
-          name: editingMember.name,
-          email: editingMember.email,
-          address: editingMember.address,
-        }),
-      });
+      const res = await fetch(
+        `/api/member-lists/${list.id}/members/${editingId}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            lot: editingMember.lot,
+            name: editingMember.name,
+            email: editingMember.email,
+            address: editingMember.address,
+          }),
+        }
+      );
 
       if (!res.ok) {
         const error = await res.json();
@@ -198,12 +210,14 @@ export default function MemberListDetailPage({ params }: { params: Promise<{ id:
       const updatedMember = await res.json();
       setList({
         ...list,
-        members: list.members.map((m) => (m.id === editingId ? updatedMember : m)),
+        members: list.members.map((m) =>
+          m.id === editingId ? updatedMember : m
+        ),
       });
       cancelEdit();
     } catch (error) {
-      console.error('Failed to update member:', error);
-      alert('Failed to update member');
+      console.error("Failed to update member:", error);
+      alert("Failed to update member");
     }
   };
 
@@ -212,28 +226,46 @@ export default function MemberListDetailPage({ params }: { params: Promise<{ id:
 
   return (
     <div>
-      <PageHeader title={list.name} actions={(
-        <div className="flex gap-2">
-          <button
-            onClick={startAdd}
-            disabled={isAdding}
-            className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
-          >
-            ➕ Add Member
-          </button>
-          <button onClick={() => router.push('/dashboard/member-lists')} className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600">← Back</button>
-        </div>
-      )} />
+      <PageHeader
+        title={list.name}
+        actions={
+          <div className="flex gap-2">
+            <button
+              onClick={startAdd}
+              disabled={isAdding}
+              className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
+            >
+              ➕ Add Member
+            </button>
+            <button
+              onClick={() => router.push("/dashboard/member-lists")}
+              className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
+            >
+              ← Back
+            </button>
+          </div>
+        }
+      />
 
       <div className="bg-white dark:bg-gray-900 rounded-lg shadow overflow-hidden">
         <table className="w-full">
           <thead className="bg-gray-100 dark:bg-gray-800">
             <tr>
-              <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">Lot</th>
-              <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">Name</th>
-              <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">Email</th>
-              <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">Address</th>
-              <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900 dark:text-white">Actions</th>
+              <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">
+                Lot
+              </th>
+              <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">
+                Name
+              </th>
+              <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">
+                Email
+              </th>
+              <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">
+                Address
+              </th>
+              <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900 dark:text-white">
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -243,8 +275,10 @@ export default function MemberListDetailPage({ params }: { params: Promise<{ id:
                   <input
                     type="text"
                     placeholder="Lot Number *"
-                    value={newMember.lot || ''}
-                    onChange={(e) => setNewMember({ ...newMember, lot: e.target.value })}
+                    value={newMember.lot || ""}
+                    onChange={(e) =>
+                      setNewMember({ ...newMember, lot: e.target.value })
+                    }
                     className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                   />
                 </td>
@@ -252,8 +286,10 @@ export default function MemberListDetailPage({ params }: { params: Promise<{ id:
                   <input
                     type="text"
                     placeholder="Name *"
-                    value={newMember.name || ''}
-                    onChange={(e) => setNewMember({ ...newMember, name: e.target.value })}
+                    value={newMember.name || ""}
+                    onChange={(e) =>
+                      setNewMember({ ...newMember, name: e.target.value })
+                    }
                     className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                   />
                 </td>
@@ -261,8 +297,10 @@ export default function MemberListDetailPage({ params }: { params: Promise<{ id:
                   <input
                     type="email"
                     placeholder="Email *"
-                    value={newMember.email || ''}
-                    onChange={(e) => setNewMember({ ...newMember, email: e.target.value })}
+                    value={newMember.email || ""}
+                    onChange={(e) =>
+                      setNewMember({ ...newMember, email: e.target.value })
+                    }
                     className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                   />
                 </td>
@@ -270,8 +308,10 @@ export default function MemberListDetailPage({ params }: { params: Promise<{ id:
                   <input
                     type="text"
                     placeholder="Address"
-                    value={newMember.address || ''}
-                    onChange={(e) => setNewMember({ ...newMember, address: e.target.value })}
+                    value={newMember.address || ""}
+                    onChange={(e) =>
+                      setNewMember({ ...newMember, address: e.target.value })
+                    }
                     className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                   />
                 </td>
@@ -294,13 +334,21 @@ export default function MemberListDetailPage({ params }: { params: Promise<{ id:
               </tr>
             )}
             {list.members.map((m) => (
-              <tr key={m.id} className="border-t border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+              <tr
+                key={m.id}
+                className="border-t border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+              >
                 <td className="px-6 py-4 text-gray-900 dark:text-white">
                   {editingId === m.id ? (
                     <input
                       type="text"
-                      value={editingMember.lot || ''}
-                      onChange={(e) => setEditingMember({ ...editingMember, lot: e.target.value })}
+                      value={editingMember.lot || ""}
+                      onChange={(e) =>
+                        setEditingMember({
+                          ...editingMember,
+                          lot: e.target.value,
+                        })
+                      }
                       className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                     />
                   ) : (
@@ -311,8 +359,13 @@ export default function MemberListDetailPage({ params }: { params: Promise<{ id:
                   {editingId === m.id ? (
                     <input
                       type="text"
-                      value={editingMember.name || ''}
-                      onChange={(e) => setEditingMember({ ...editingMember, name: e.target.value })}
+                      value={editingMember.name || ""}
+                      onChange={(e) =>
+                        setEditingMember({
+                          ...editingMember,
+                          name: e.target.value,
+                        })
+                      }
                       className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                     />
                   ) : (
@@ -323,8 +376,13 @@ export default function MemberListDetailPage({ params }: { params: Promise<{ id:
                   {editingId === m.id ? (
                     <input
                       type="email"
-                      value={editingMember.email || ''}
-                      onChange={(e) => setEditingMember({ ...editingMember, email: e.target.value })}
+                      value={editingMember.email || ""}
+                      onChange={(e) =>
+                        setEditingMember({
+                          ...editingMember,
+                          email: e.target.value,
+                        })
+                      }
                       className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                     />
                   ) : (
@@ -335,8 +393,13 @@ export default function MemberListDetailPage({ params }: { params: Promise<{ id:
                   {editingId === m.id ? (
                     <input
                       type="text"
-                      value={editingMember.address || ''}
-                      onChange={(e) => setEditingMember({ ...editingMember, address: e.target.value })}
+                      value={editingMember.address || ""}
+                      onChange={(e) =>
+                        setEditingMember({
+                          ...editingMember,
+                          address: e.target.value,
+                        })
+                      }
                       className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                     />
                   ) : (

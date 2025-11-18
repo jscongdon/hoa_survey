@@ -1,7 +1,7 @@
-import { log, error as logError } from '@/lib/logger'
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { verifyToken } from '@/lib/auth/jwt';
+import { log, error as logError } from "@/lib/logger";
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { verifyToken } from "@/lib/auth/jwt";
 
 export async function PUT(
   req: NextRequest,
@@ -9,16 +9,16 @@ export async function PUT(
 ) {
   try {
     // Verify authentication
-    let adminId = req.headers.get('x-admin-id');
-    
+    let adminId = req.headers.get("x-admin-id");
+
     if (!adminId) {
-      const token = req.cookies.get('auth-token')?.value;
+      const token = req.cookies.get("auth-token")?.value;
       if (!token) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
       const payload = await verifyToken(token as string);
       if (!payload?.adminId) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
       adminId = payload.adminId;
     }
@@ -31,7 +31,10 @@ export async function PUT(
     if (email && email.trim()) {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(email)) {
-        return NextResponse.json({ error: 'Invalid email format' }, { status: 400 });
+        return NextResponse.json(
+          { error: "Invalid email format" },
+          { status: 400 }
+        );
       }
     }
 
@@ -42,12 +45,15 @@ export async function PUT(
     });
 
     if (!member) {
-      return NextResponse.json({ error: 'Member not found' }, { status: 404 });
+      return NextResponse.json({ error: "Member not found" }, { status: 404 });
     }
 
     const belongsToList = member.lists.some((list) => list.id === id);
     if (!belongsToList) {
-      return NextResponse.json({ error: 'Member does not belong to this list' }, { status: 400 });
+      return NextResponse.json(
+        { error: "Member does not belong to this list" },
+        { status: 400 }
+      );
     }
 
     // Update the member
@@ -63,9 +69,9 @@ export async function PUT(
 
     return NextResponse.json(updatedMember);
   } catch (error) {
-    logError('[MEMBER_UPDATE]', error);
+    logError("[MEMBER_UPDATE]", error);
     return NextResponse.json(
-      { error: 'Failed to update member' },
+      { error: "Failed to update member" },
       { status: 500 }
     );
   }
@@ -77,16 +83,16 @@ export async function DELETE(
 ) {
   try {
     // Verify authentication
-    let adminId = req.headers.get('x-admin-id');
-    
+    let adminId = req.headers.get("x-admin-id");
+
     if (!adminId) {
-      const token = req.cookies.get('auth-token')?.value;
+      const token = req.cookies.get("auth-token")?.value;
       if (!token) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
       const payload = await verifyToken(token as string);
       if (!payload?.adminId) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
       adminId = payload.adminId;
     }
@@ -100,12 +106,15 @@ export async function DELETE(
     });
 
     if (!member) {
-      return NextResponse.json({ error: 'Member not found' }, { status: 404 });
+      return NextResponse.json({ error: "Member not found" }, { status: 404 });
     }
 
     const belongsToList = member.lists.some((list) => list.id === id);
     if (!belongsToList) {
-      return NextResponse.json({ error: 'Member does not belong to this list' }, { status: 400 });
+      return NextResponse.json(
+        { error: "Member does not belong to this list" },
+        { status: 400 }
+      );
     }
 
     // Delete all responses for this member in surveys associated with this list
@@ -142,9 +151,9 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    logError('[MEMBER_DELETE]', error);
+    logError("[MEMBER_DELETE]", error);
     return NextResponse.json(
-      { error: 'Failed to delete member' },
+      { error: "Failed to delete member" },
       { status: 500 }
     );
   }

@@ -1,16 +1,20 @@
+/* stylelint: disable at-rule-no-unknown -- Tailwind @apply and @tailwind rules */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
-  html, body, #__next {
+  html,
+  body,
+  #__next {
     height: 100%;
   }
 
   body {
     @apply bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 text-slate-900 dark:text-white;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-      'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    font-family:
+      -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+      "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
       sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -42,6 +46,17 @@
   }
 }
 
+/* Also support toggling dark mode via the `dark` class on the <html> element */
+/* Scope to `html.dark` (and `:root.dark` for safety) so other nested `.dark` classes
+   don't accidentally flip variables for just parts of the page. */
+html.dark,
+:root.dark {
+  --surface: 17 24 39; /* gray-900 */
+  --surface-2: 30 41 59;
+  --text-primary: 255 255 255;
+  --muted: 148 163 184;
+}
+
 @layer components {
   /* Primary and secondary content containers for consistent layout */
   .primary-container {
@@ -59,7 +74,11 @@
   }
 
   .theme-accent {
-    background: linear-gradient(90deg, rgba(var(--color-primary),1), rgba(var(--color-accent),1));
+    background: linear-gradient(
+      90deg,
+      rgba(var(--color-primary), 1),
+      rgba(var(--color-accent), 1)
+    );
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -75,8 +94,31 @@
   .primary-container .page-header {
     margin: -1.5rem -1.5rem 1rem -1.5rem;
     padding: 1.25rem 1.5rem;
-    border-bottom: 1px solid rgba(var(--muted)/0.08);
+    border-bottom: 1px solid rgb(var(--muted) / 0.08);
     background-color: transparent;
+  }
+
+  /* Standardize spacing between action items in page header */
+  .primary-container .page-header .page-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  /* Fallback: ensure nested action elements also receive spacing */
+  .primary-container .page-header .page-header-actions * + * {
+    margin-left: 5px;
+  }
+
+  /* Ensure action buttons match */
+  .primary-container .page-header .page-header-actions > button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    padding: 0.75rem 1rem; /* tailwind: py-3 px-4 */
+    min-height: 48px;
+    line-height: 1;
   }
 
   .primary-container .page-header h1 {
@@ -94,14 +136,16 @@
   .card-shadow {
     @apply shadow-lg hover:shadow-xl transition-shadow duration-300;
   }
-  
+
   /* Button animations */
   .btn-animate {
     @apply transform hover:scale-105 active:scale-95 transition-transform duration-150;
   }
-  
+
   /* Input focus styles */
-  input:focus, select:focus, textarea:focus {
+  input:focus,
+  select:focus,
+  textarea:focus {
     @apply ring-2 ring-blue-500 ring-opacity-50 outline-none;
   }
 }
@@ -111,7 +155,7 @@
   .transition-smooth {
     @apply transition-all duration-300 ease-in-out;
   }
-  
+
   /* Text gradient */
   .text-gradient {
     @apply bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent;

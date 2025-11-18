@@ -1,46 +1,55 @@
-import { NextRequest, NextResponse } from 'next/server'
-import prisma from '@/lib/prisma'
-import nodemailer from 'nodemailer'
-import crypto from 'crypto'
-import { log, error as logError } from '@/lib/logger'
+import { NextRequest, NextResponse } from "next/server";
+import prisma from "@/lib/prisma";
+import nodemailer from "nodemailer";
+import crypto from "crypto";
+import { log, error as logError } from "@/lib/logger";
 
 export async function POST(request: NextRequest) {
   try {
-    const { email } = await request.json()
+    const { email } = await request.json();
 
     if (!email) {
-      return NextResponse.json({ error: 'Email required' }, { status: 400 })
+      return NextResponse.json({ error: "Email required" }, { status: 400 });
     }
 
-    log('[RESEND-VERIFICATION] Request for:', email)
+    log("[RESEND-VERIFICATION] Request for:", email);
 
     // Check if admin exists and is unverified
     const admin = await prisma.admin.findUnique({
-      where: { email }
-    })
+      where: { email },
+    });
 
     if (!admin) {
-      return NextResponse.json({ error: 'Admin account not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: "Admin account not found" },
+        { status: 404 }
+      );
     }
 
-    if (admin.role !== 'LIMITED') {
-      return NextResponse.json({ error: 'Account is already verified' }, { status: 400 })
+    if (admin.role !== "LIMITED") {
+      return NextResponse.json(
+        { error: "Account is already verified" },
+        { status: 400 }
+      );
     }
 
     // Get system config for SMTP settings
     const config = await prisma.systemConfig.findUnique({
-      where: { id: 'system' }
-    })
+      where: { id: "system" },
+    });
 
     if (!config || !config.smtpHost || !config.smtpUser || !config.smtpPass) {
-      logError('[RESEND-VERIFICATION] SMTP not configured')
-      return NextResponse.json({ error: 'Email system not configured' }, { status: 500 })
+      logError("[RESEND-VERIFICATION] SMTP not configured");
+      return NextResponse.json(
+        { error: "Email system not configured" },
+        { status: 500 }
+      );
     }
 
     // Generate new verification token
-    const verificationToken = crypto.randomBytes(32).toString('hex')
+    const verificationToken = crypto.randomBytes(32).toString("hex");
 
-    log('[RESEND-VERIFICATION] Sending verification email')
+    log("[RESEND-VERIFICATION] Sending verification email");
 
     // Send verification email asynchronously
     const transporter = nodemailer.createTransport({
@@ -52,29 +61,34 @@ export async function POST(request: NextRequest) {
       socketTimeout: 120000,
       auth: {
         user: config.smtpUser,
-        pass: config.smtpPass
+        pass: config.smtpPass,
       },
       logger: true,
-      debug: true
-    })
+      debug: true,
+    });
 
     let appUrl: string;
-    if (process.env.NODE_ENV === 'development') {
-      appUrl = config.appUrl || process.env.DEVELOPMENT_URL || 'http://localhost:3000';
+    if (process.env.NODE_ENV === "development") {
+      appUrl =
+        config.appUrl || process.env.DEVELOPMENT_URL || "http://localhost:3000";
     } else {
-      appUrl = config.appUrl || process.env.PRODUCTION_URL || '';
+      appUrl = config.appUrl || process.env.PRODUCTION_URL || "";
       if (!appUrl) {
-        logError('[RESEND-VERIFICATION] No production app URL set!');
-        return NextResponse.json({ error: 'Production URL not configured' }, { status: 500 });
+        logError("[RESEND-VERIFICATION] No production app URL set!");
+        return NextResponse.json(
+          { error: "Production URL not configured" },
+          { status: 500 }
+        );
       }
     }
-    const verificationUrl = `${appUrl}/api/setup/verify?token=${verificationToken}&email=${encodeURIComponent(email)}`
+    const verificationUrl = `${appUrl}/api/setup/verify?token=${verificationToken}&email=${encodeURIComponent(email)}`;
 
-    transporter.sendMail({
-      from: config.smtpFrom || config.smtpUser,
-      to: email,
-      subject: `${config.hoaName} - Verify Your Administrator Account`,
-      html: `
+    transporter
+      .sendMail({
+        from: config.smtpFrom || config.smtpUser,
+        to: email,
+        subject: `${config.hoaName} - Verify Your Administrator Account`,
+        html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h2 style="color: #2563eb;">Verify Your Account</h2>
           <p>Click the button below to verify your administrator account:</p>
@@ -93,31 +107,33 @@ export async function POST(request: NextRequest) {
             If you didn't request this, please ignore this email.
           </p>
         </div>
-      `
-    }).then(info => {
-      log('[RESEND-VERIFICATION] Email sent:', info.messageId)
-    }).catch(emailErr => {
-      logError('[RESEND-VERIFICATION] Failed to send email:', emailErr)
-    })
+      `,
+      })
+      .then((info) => {
+        log("[RESEND-VERIFICATION] Email sent:", info.messageId);
+      })
+      .catch((emailErr) => {
+        logError("[RESEND-VERIFICATION] Failed to send email:", emailErr);
+      });
 
     // Store verification token
-    global.pendingVerifications = global.pendingVerifications || new Map()
+    global.pendingVerifications = global.pendingVerifications || new Map();
     global.pendingVerifications.set(verificationToken, {
       email,
-      expires: Date.now() + 3600000 // 1 hour
-    })
+      expires: Date.now() + 3600000, // 1 hour
+    });
 
-    log('[RESEND-VERIFICATION] Verification email queued')
+    log("[RESEND-VERIFICATION] Verification email queued");
 
-    return NextResponse.json({ 
-      success: true, 
-      message: 'Verification email sent. Please check your inbox.' 
-    })
+    return NextResponse.json({
+      success: true,
+      message: "Verification email sent. Please check your inbox.",
+    });
   } catch (error: any) {
-    logError('[RESEND-VERIFICATION] Error:', error)
+    logError("[RESEND-VERIFICATION] Error:", error);
     return NextResponse.json(
-      { error: 'Failed to send verification email' },
+      { error: "Failed to send verification email" },
       { status: 500 }
-    )
+    );
   }
 }

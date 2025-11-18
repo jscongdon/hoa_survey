@@ -4,10 +4,10 @@
  */
 export function formatDate(isoString: string): string {
   const date = new Date(isoString);
-  return date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
+  return date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
   });
 }
 
@@ -17,12 +17,12 @@ export function formatDate(isoString: string): string {
  */
 export function formatDateTime(isoString: string): string {
   const date = new Date(isoString);
-  return date.toLocaleString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
+  return date.toLocaleString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
   });
 }
 
@@ -30,8 +30,10 @@ export function formatDateTime(isoString: string): string {
  * Convert UTC date to local datetime-local format for datetime-local inputs.
  * Returns empty string if input is null/undefined.
  */
-export function toLocalDatetimeString(utcDateString: string | null | undefined): string {
-  if (!utcDateString) return '';
+export function toLocalDatetimeString(
+  utcDateString: string | null | undefined
+): string {
+  if (!utcDateString) return "";
   const date = new Date(utcDateString);
   const offset = date.getTimezoneOffset();
   const localDate = new Date(date.getTime() - offset * 60 * 1000);

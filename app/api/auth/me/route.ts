@@ -1,18 +1,18 @@
-import { log, error as logError } from '@/lib/logger'
-import { NextRequest, NextResponse } from 'next/server'
-import { verifyToken } from '@/lib/auth/jwt'
-import { prisma } from '@/lib/prisma'
+import { log, error as logError } from "@/lib/logger";
+import { NextRequest, NextResponse } from "next/server";
+import { verifyToken } from "@/lib/auth/jwt";
+import { prisma } from "@/lib/prisma";
 
 export async function GET(request: NextRequest) {
   try {
-    const token = request.cookies.get('auth-token')?.value
+    const token = request.cookies.get("auth-token")?.value;
     if (!token) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const payload = await verifyToken(token)
+    const payload = await verifyToken(token);
     if (!payload?.adminId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const admin = await prisma.admin.findUnique({
@@ -23,20 +23,23 @@ export async function GET(request: NextRequest) {
         name: true,
         role: true,
       },
-    })
+    });
 
     if (!admin) {
-      return NextResponse.json({ error: 'Admin not found' }, { status: 404 })
+      return NextResponse.json({ error: "Admin not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       adminId: admin.id,
       email: admin.email,
       name: admin.name,
       role: admin.role,
-    })
+    });
   } catch (error) {
-    logError('Error fetching current admin:', error)
-    return NextResponse.json({ error: 'Failed to fetch admin info' }, { status: 500 })
+    logError("Error fetching current admin:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch admin info" },
+      { status: 500 }
+    );
   }
 }

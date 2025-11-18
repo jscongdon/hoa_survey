@@ -1,20 +1,34 @@
-import { NextRequest, NextResponse } from 'next/server'
-import nodemailer from 'nodemailer'
-import { log, error as logError } from '@/lib/logger'
+import { NextRequest, NextResponse } from "next/server";
+import nodemailer from "nodemailer";
+import { log, error as logError } from "@/lib/logger";
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json()
-    const { smtpHost, smtpPort, smtpUser, smtpPass, smtpFrom, testEmail } = body
+    const body = await req.json();
+    const { smtpHost, smtpPort, smtpUser, smtpPass, smtpFrom, testEmail } =
+      body;
 
-    log('[TEST-EMAIL] Received request:', { smtpHost, smtpPort, smtpUser, smtpFrom, testEmail })
+    log("[TEST-EMAIL] Received request:", {
+      smtpHost,
+      smtpPort,
+      smtpUser,
+      smtpFrom,
+      testEmail,
+    });
 
-    if (!smtpHost || !smtpPort || !smtpUser || !smtpPass || !smtpFrom || !testEmail) {
-      log('[TEST-EMAIL] Missing required fields')
+    if (
+      !smtpHost ||
+      !smtpPort ||
+      !smtpUser ||
+      !smtpPass ||
+      !smtpFrom ||
+      !testEmail
+    ) {
+      log("[TEST-EMAIL] Missing required fields");
       return NextResponse.json(
-        { error: 'All SMTP fields are required' },
+        { error: "All SMTP fields are required" },
         { status: 400 }
-      )
+      );
     }
 
     // Create transporter
@@ -27,43 +41,49 @@ export async function POST(req: NextRequest) {
       socketTimeout: 120000, // 2 minutes for actual sending
       auth: {
         user: smtpUser,
-        pass: smtpPass
+        pass: smtpPass,
       },
       logger: true, // Enable debug logging
-      debug: true
-    }
-    
-    log('[TEST-EMAIL] Transport config:', { ...transportConfig, auth: { user: smtpUser, pass: '***' }, logger: false, debug: false })
-    
-    const transporter = nodemailer.createTransport(transportConfig)
+      debug: true,
+    };
 
-    log('[TEST-EMAIL] Verifying connection...')
-    
+    log("[TEST-EMAIL] Transport config:", {
+      ...transportConfig,
+      auth: { user: smtpUser, pass: "***" },
+      logger: false,
+      debug: false,
+    });
+
+    const transporter = nodemailer.createTransport(transportConfig);
+
+    log("[TEST-EMAIL] Verifying connection...");
+
     try {
       // Verify connection
-      await transporter.verify()
-      log('[TEST-EMAIL] Connection verified successfully')
+      await transporter.verify();
+      log("[TEST-EMAIL] Connection verified successfully");
     } catch (verifyErr: any) {
-      logError('[TEST-EMAIL] Connection verification failed:', verifyErr)
+      logError("[TEST-EMAIL] Connection verification failed:", verifyErr);
       return NextResponse.json(
-        { 
-          error: 'SMTP connection failed',
+        {
+          error: "SMTP connection failed",
           details: verifyErr.message,
-          code: verifyErr.code 
+          code: verifyErr.code,
         },
         { status: 500 }
-      )
+      );
     }
 
-    log('[TEST-EMAIL] Sending test email...')
-    
+    log("[TEST-EMAIL] Sending test email...");
+
     try {
       // Send test email - don't wait for full completion, just fire it off
-      transporter.sendMail({
-        from: smtpFrom,
-        to: testEmail,
-        subject: 'HOA Survey - Email Configuration Test',
-        html: `
+      transporter
+        .sendMail({
+          from: smtpFrom,
+          to: testEmail,
+          subject: "HOA Survey - Email Configuration Test",
+          html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <h2 style="color: #2563eb;">Email Configuration Successful!</h2>
             <p>Your SMTP settings are working correctly.</p>
@@ -73,35 +93,37 @@ export async function POST(req: NextRequest) {
               This is an automated test email from HOA Survey setup wizard.
             </p>
           </div>
-        `
-      }).then(info => {
-        log('[TEST-EMAIL] Email sent successfully:', info.messageId)
-      }).catch(sendErr => {
-        logError('[TEST-EMAIL] Email send failed (async):', sendErr)
-      })
-      
+        `,
+        })
+        .then((info) => {
+          log("[TEST-EMAIL] Email sent successfully:", info.messageId);
+        })
+        .catch((sendErr) => {
+          logError("[TEST-EMAIL] Email send failed (async):", sendErr);
+        });
+
       // Return success immediately after queuing
-      log('[TEST-EMAIL] Email queued successfully')
+      log("[TEST-EMAIL] Email queued successfully");
     } catch (sendErr: any) {
-      logError('[TEST-EMAIL] Email send failed:', sendErr)
+      logError("[TEST-EMAIL] Email send failed:", sendErr);
       return NextResponse.json(
-        { 
-          error: 'Failed to send email',
+        {
+          error: "Failed to send email",
           details: sendErr.message,
-          code: sendErr.code 
+          code: sendErr.code,
         },
         { status: 500 }
-      )
+      );
     }
 
-    log('[TEST-EMAIL] Success!')
+    log("[TEST-EMAIL] Success!");
 
-    return NextResponse.json({ success: true })
+    return NextResponse.json({ success: true });
   } catch (err: any) {
-    logError('[TEST-EMAIL] Unexpected error:', err)
+    logError("[TEST-EMAIL] Unexpected error:", err);
     return NextResponse.json(
-      { error: err.message || 'Failed to send test email', details: err.code },
+      { error: err.message || "Failed to send test email", details: err.code },
       { status: 500 }
-    )
+    );
   }
 }

@@ -1,102 +1,115 @@
-import { SignJWT, jwtVerify } from 'jose'
-import { log, error as logError } from '@/lib/logger'
+import { SignJWT, jwtVerify } from "jose";
+import { log, error as logError } from "@/lib/logger";
 
 // Single shared cache for JWT secret
-let cachedSecret: string | null = null
-let secretPromise: Promise<string> | null = null
+let cachedSecret: string | null = null;
+let secretPromise: Promise<string> | null = null;
 
 // Helper to detect if we're in Edge Runtime
 function isEdgeRuntime(): boolean {
-  return process.env.NEXT_RUNTIME === 'edge'
+  return process.env.NEXT_RUNTIME === "edge";
 }
 
 async function getJWTSecret(): Promise<string> {
   // In Edge Runtime (middleware), we MUST use environment variable
   if (isEdgeRuntime()) {
-    const envSecret = process.env.JWT_SECRET
-    if (envSecret && envSecret !== 'dev-secret-will-be-replaced-by-setup' && envSecret.length > 0) {
-      return envSecret
+    const envSecret = process.env.JWT_SECRET;
+    if (
+      envSecret &&
+      envSecret !== "dev-secret-will-be-replaced-by-setup" &&
+      envSecret.length > 0
+    ) {
+      return envSecret;
     }
-    logError('[JWT] Edge Runtime but no valid JWT_SECRET in environment!')
-    return 'dev-secret-change-in-production'
+    logError("[JWT] Edge Runtime but no valid JWT_SECRET in environment!");
+    return "dev-secret-change-in-production";
   }
 
   // In Node.js Runtime (API routes), prefer database over env var
   // If we have a cached secret, use it
   if (cachedSecret) {
-    log('[JWT] Using cached secret from database, length:', cachedSecret.length)
-    return cachedSecret
+    log(
+      "[JWT] Using cached secret from database, length:",
+      cachedSecret.length
+    );
+    return cachedSecret;
   }
 
   // If a fetch is already in progress, wait for it
   if (secretPromise) {
-    log('[JWT] Waiting for in-progress database fetch')
-    return secretPromise
+    log("[JWT] Waiting for in-progress database fetch");
+    return secretPromise;
   }
 
   // Start a new fetch - try database (for API routes that can use Prisma)
   secretPromise = (async () => {
     try {
       // Lazy load prisma only in Node.js runtime
-      const { default: prisma } = await import('@/lib/prisma')
-      
+      const { default: prisma } = await import("@/lib/prisma");
+
       const config = await prisma.systemConfig.findUnique({
-        where: { id: 'system' }
-      })
+        where: { id: "system" },
+      });
 
       if (config?.jwtSecret) {
-        log('[JWT] Loaded secret from database successfully, length:', config.jwtSecret.length)
-        cachedSecret = config.jwtSecret
-        return config.jwtSecret
+        log(
+          "[JWT] Loaded secret from database successfully, length:",
+          config.jwtSecret.length
+        );
+        cachedSecret = config.jwtSecret;
+        return config.jwtSecret;
       }
-      
-      log('[JWT] No config found in database, using fallback')
+
+      log("[JWT] No config found in database, using fallback");
     } catch (error) {
-      logError('[JWT] Failed to load secret from database:', error)
+      logError("[JWT] Failed to load secret from database:", error);
     }
 
     // Fallback to dev secret (should only happen before setup)
-    const fallbackSecret = 'dev-secret-change-in-production'
-    cachedSecret = fallbackSecret
-    return fallbackSecret
-  })()
+    const fallbackSecret = "dev-secret-change-in-production";
+    cachedSecret = fallbackSecret;
+    return fallbackSecret;
+  })();
 
   try {
-    return await secretPromise
+    return await secretPromise;
   } finally {
-    secretPromise = null
+    secretPromise = null;
   }
 }
 
-const EXPIRY = '24h'
+const EXPIRY = "24h";
 
 export interface JWTPayload {
-  id?: string
-  adminId?: string
-  email: string
-  role: string
+  id?: string;
+  adminId?: string;
+  email: string;
+  role: string;
 }
 
 export async function signToken(payload: Record<string, any>): Promise<string> {
-  const secret = await getJWTSecret()
-  const SECRET = new TextEncoder().encode(secret)
-  
+  const secret = await getJWTSecret();
+  const SECRET = new TextEncoder().encode(secret);
+
   const token = await new SignJWT(payload)
-    .setProtectedHeader({ alg: 'HS256' })
+    .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime(EXPIRY)
-    .sign(SECRET)
-  return token
+    .sign(SECRET);
+  return token;
 }
 
 export async function verifyToken(token: string): Promise<JWTPayload | null> {
   try {
-    const secret = await getJWTSecret()
-    const SECRET = new TextEncoder().encode(secret)
-    const verified = await jwtVerify(token, SECRET)
-    return verified.payload as any as JWTPayload
+    const secret = await getJWTSecret();
+    const SECRET = new TextEncoder().encode(secret);
+    const verified = await jwtVerify(token, SECRET);
+    return verified.payload as any as JWTPayload;
   } catch (error) {
-    logError('[JWT] Token verification failed:', error instanceof Error ? error.message : 'Unknown error')
-    return null
+    logError(
+      "[JWT] Token verification failed:",
+      error instanceof Error ? error.message : "Unknown error"
+    );
+    return null;
   }
 }

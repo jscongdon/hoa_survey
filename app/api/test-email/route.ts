@@ -1,47 +1,49 @@
-import { log, error as logError } from '@/lib/logger'
-import { NextRequest, NextResponse } from 'next/server';
-import { verifyToken } from '@/lib/auth/jwt';
-import nodemailer from 'nodemailer';
+import { log, error as logError } from "@/lib/logger";
+import { NextRequest, NextResponse } from "next/server";
+import { verifyToken } from "@/lib/auth/jwt";
+import nodemailer from "nodemailer";
 
 export async function POST(request: NextRequest) {
   // Verify admin authentication
-  let adminId = request.headers.get('x-admin-id');
+  let adminId = request.headers.get("x-admin-id");
   if (!adminId) {
-    const token = request.cookies.get('auth-token')?.value;
+    const token = request.cookies.get("auth-token")?.value;
     if (!token) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
     const payload = await verifyToken(token as string);
     if (!payload?.adminId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
     adminId = payload.adminId;
   }
 
   try {
     const body = await request.json();
-    const { testEmail, smtpHost, smtpPort, smtpUser, smtpPass, smtpFrom } = body;
+    const { testEmail, smtpHost, smtpPort, smtpUser, smtpPass, smtpFrom } =
+      body;
 
-    if (!testEmail || !testEmail.includes('@')) {
+    if (!testEmail || !testEmail.includes("@")) {
       return NextResponse.json(
-        { error: 'Valid test email address required' },
+        { error: "Valid test email address required" },
         { status: 400 }
       );
     }
 
     // Use provided SMTP settings or fall back to environment variables
     const host = smtpHost || process.env.SMTP_HOST;
-    const port = smtpPort || process.env.SMTP_PORT || '587';
+    const port = smtpPort || process.env.SMTP_PORT || "587";
     const user = smtpUser || process.env.SMTP_USER;
     const pass = smtpPass || process.env.SMTP_PASS;
-    const from = smtpFrom || process.env.SMTP_FROM || 'noreply@hoa.local';
+    const from = smtpFrom || process.env.SMTP_FROM || "noreply@hoa.local";
 
     // Check if SMTP settings are available
     if (!host || !user || !pass) {
       return NextResponse.json(
-        { 
-          error: 'SMTP settings not configured',
-          details: 'Please provide SMTP settings or set them in environment variables'
+        {
+          error: "SMTP settings not configured",
+          details:
+            "Please provide SMTP settings or set them in environment variables",
         },
         { status: 400 }
       );
@@ -51,7 +53,7 @@ export async function POST(request: NextRequest) {
     const transporter = nodemailer.createTransport({
       host,
       port: parseInt(port, 10),
-      secure: port === '465',
+      secure: port === "465",
       auth: {
         user,
         pass,
@@ -65,7 +67,7 @@ export async function POST(request: NextRequest) {
     await transporter.sendMail({
       from,
       to: testEmail,
-      subject: 'HOA Survey System - SMTP Test',
+      subject: "HOA Survey System - SMTP Test",
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
           <h2 style="color: #3b82f6;">✅ SMTP Configuration Test</h2>
@@ -104,25 +106,26 @@ From: ${from}
       },
     });
   } catch (error: any) {
-    logError('SMTP test error:', error);
-    
-    let errorMessage = 'Failed to send test email';
-    let details = error.message || 'Unknown error';
+    logError("SMTP test error:", error);
+
+    let errorMessage = "Failed to send test email";
+    let details = error.message || "Unknown error";
 
     // Provide specific error messages for common issues
-    if (error.code === 'EAUTH') {
-      errorMessage = 'Authentication failed';
-      details = 'Invalid SMTP username or password';
-    } else if (error.code === 'ECONNECTION' || error.code === 'ETIMEDOUT') {
-      errorMessage = 'Connection failed';
-      details = 'Could not connect to SMTP server. Check host and port settings.';
-    } else if (error.code === 'EENVELOPE') {
-      errorMessage = 'Invalid sender or recipient';
-      details = 'Check SMTP_FROM and recipient email addresses';
+    if (error.code === "EAUTH") {
+      errorMessage = "Authentication failed";
+      details = "Invalid SMTP username or password";
+    } else if (error.code === "ECONNECTION" || error.code === "ETIMEDOUT") {
+      errorMessage = "Connection failed";
+      details =
+        "Could not connect to SMTP server. Check host and port settings.";
+    } else if (error.code === "EENVELOPE") {
+      errorMessage = "Invalid sender or recipient";
+      details = "Check SMTP_FROM and recipient email addresses";
     }
 
     return NextResponse.json(
-      { 
+      {
         error: errorMessage,
         details,
         code: error.code,

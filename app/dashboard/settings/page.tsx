@@ -1,263 +1,280 @@
- 'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import PageHeader from '@/components/PageHeader'
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import PageHeader from "@/components/PageHeader";
 
 interface EnvVariable {
-  key: string
-  label: string
-  type: string
-  category: string
+  key: string;
+  label: string;
+  type: string;
+  category: string;
 }
 
 export default function SettingsPage() {
-  const router = useRouter()
-  const [currentAdminRole, setCurrentAdminRole] = useState<string | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [testEmailAddress, setTestEmailAddress] = useState('')
-  const [sendingEmail, setSendingEmail] = useState(false)
-  const [emailMessage, setEmailMessage] = useState('')
-  const [envVariables, setEnvVariables] = useState<EnvVariable[]>([])
-  const [envValues, setEnvValues] = useState<Record<string, string>>({})
-  const [envLoading, setEnvLoading] = useState(false)
-  const [envMessage, setEnvMessage] = useState('')
-  const [showEnvSection, setShowEnvSection] = useState(false)
-  const [restarting, setRestarting] = useState(false)
-  const [restartMessage, setRestartMessage] = useState('')
-  const [restartStatus, setRestartStatus] = useState<'idle' | 'restarting' | 'checking' | 'complete'>('idle')
-  const [developmentMode, setDevelopmentMode] = useState(false)
-  const [devModeLoading, setDevModeLoading] = useState(false)
-  const [devModeMessage, setDevModeMessage] = useState('')
+  const router = useRouter();
+  const [currentAdminRole, setCurrentAdminRole] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [testEmailAddress, setTestEmailAddress] = useState("");
+  const [sendingEmail, setSendingEmail] = useState(false);
+  const [emailMessage, setEmailMessage] = useState("");
+  const [envVariables, setEnvVariables] = useState<EnvVariable[]>([]);
+  const [envValues, setEnvValues] = useState<Record<string, string>>({});
+  const [envLoading, setEnvLoading] = useState(false);
+  const [envMessage, setEnvMessage] = useState("");
+  const [showEnvSection, setShowEnvSection] = useState(false);
+  const [restarting, setRestarting] = useState(false);
+  const [restartMessage, setRestartMessage] = useState("");
+  const [restartStatus, setRestartStatus] = useState<
+    "idle" | "restarting" | "checking" | "complete"
+  >("idle");
+  const [developmentMode, setDevelopmentMode] = useState(false);
+  const [devModeLoading, setDevModeLoading] = useState(false);
+  const [devModeMessage, setDevModeMessage] = useState("");
 
   useEffect(() => {
     const fetchAdminRole = async () => {
       try {
-        const res = await fetch('/api/auth/me')
+        const res = await fetch("/api/auth/me");
         if (res.ok) {
-          const data = await res.json()
-          setCurrentAdminRole(data.role)
-          if (data.role !== 'FULL') {
-            router.push('/dashboard')
+          const data = await res.json();
+          setCurrentAdminRole(data.role);
+          if (data.role !== "FULL") {
+            router.push("/dashboard");
           }
         }
       } catch (error) {
-        console.error('Error fetching admin role:', error)
+        console.error("Error fetching admin role:", error);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
-    fetchAdminRole()
-    
+    };
+    fetchAdminRole();
+
     // Fetch development mode status
-    fetch('/api/settings/development-mode')
-      .then(res => res.json())
-      .then(data => {
+    fetch("/api/settings/development-mode")
+      .then((res) => res.json())
+      .then((data) => {
         if (data.developmentMode !== undefined) {
-          setDevelopmentMode(data.developmentMode)
+          setDevelopmentMode(data.developmentMode);
         }
       })
-      .catch(err => console.error('Error fetching development mode:', err))
-  }, [router])
+      .catch((err) => console.error("Error fetching development mode:", err));
+  }, [router]);
 
   const handleToggleDevelopmentMode = async () => {
-    setDevModeLoading(true)
-    setDevModeMessage('')
+    setDevModeLoading(true);
+    setDevModeMessage("");
 
     try {
-      const res = await fetch('/api/settings/development-mode', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/settings/development-mode", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ developmentMode: !developmentMode }),
-      })
+      });
 
-      const data = await res.json()
+      const data = await res.json();
 
       if (res.ok) {
-        setDevelopmentMode(!developmentMode)
-        setDevModeMessage(`Development mode ${!developmentMode ? 'enabled' : 'disabled'} successfully!`)
-        setTimeout(() => setDevModeMessage(''), 3000)
+        setDevelopmentMode(!developmentMode);
+        setDevModeMessage(
+          `Development mode ${!developmentMode ? "enabled" : "disabled"} successfully!`
+        );
+        setTimeout(() => setDevModeMessage(""), 3000);
       } else {
-        setDevModeMessage(`Error: ${data.error || 'Failed to update'}`)
+        setDevModeMessage(`Error: ${data.error || "Failed to update"}`);
       }
     } catch (error) {
-      setDevModeMessage('Error updating development mode')
+      setDevModeMessage("Error updating development mode");
     } finally {
-      setDevModeLoading(false)
+      setDevModeLoading(false);
     }
-  }
+  };
 
   const fetchEnvVariables = async () => {
     try {
-      const res = await fetch('/api/settings/env')
+      const res = await fetch("/api/settings/env");
       if (res.ok) {
-        const data = await res.json()
-        setEnvVariables(data.variables)
-        setEnvValues(data.values)
+        const data = await res.json();
+        setEnvVariables(data.variables);
+        setEnvValues(data.values);
       }
     } catch (error) {
-      console.error('Error fetching env variables:', error)
+      console.error("Error fetching env variables:", error);
     }
-  }
+  };
 
   const handleUpdateEnv = async () => {
-    setEnvLoading(true)
-    setEnvMessage('')
+    setEnvLoading(true);
+    setEnvMessage("");
 
     try {
-      const res = await fetch('/api/settings/env', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/settings/env", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ updates: envValues }),
-      })
+      });
 
-      const data = await res.json()
+      const data = await res.json();
 
       if (res.ok) {
-        setEnvMessage(data.message || 'Environment variables updated successfully!')
+        setEnvMessage(
+          data.message || "Environment variables updated successfully!"
+        );
       } else {
-        setEnvMessage(`Error: ${data.error || 'Failed to update'}`)
+        setEnvMessage(`Error: ${data.error || "Failed to update"}`);
       }
     } catch (error) {
-      setEnvMessage('Error updating environment variables')
+      setEnvMessage("Error updating environment variables");
     } finally {
-      setEnvLoading(false)
+      setEnvLoading(false);
     }
-  }
+  };
 
   const handleRestartApplication = async () => {
-    if (!confirm('This will restart the application. Continue?')) {
-      return
+    if (!confirm("This will restart the application. Continue?")) {
+      return;
     }
 
-    setRestarting(true)
-    setRestartMessage('Initiating restart...')
-    setRestartStatus('restarting')
+    setRestarting(true);
+    setRestartMessage("Initiating restart...");
+    setRestartStatus("restarting");
 
     try {
-      const res = await fetch('/api/settings/restart', {
-        method: 'POST',
-      })
+      const res = await fetch("/api/settings/restart", {
+        method: "POST",
+      });
 
-      const data = await res.json()
+      const data = await res.json();
 
       if (res.ok && data.success) {
-        setRestartMessage('Application is restarting. Waiting for it to come back online...')
-        setRestartStatus('restarting')
-        
+        setRestartMessage(
+          "Application is restarting. Waiting for it to come back online..."
+        );
+        setRestartStatus("restarting");
+
         // Wait 3 seconds before starting to check
         setTimeout(() => {
-          checkApplicationStatus()
-        }, 3000)
+          checkApplicationStatus();
+        }, 3000);
       } else {
-        setRestartMessage(data.message || data.error || 'Failed to restart')
-        setRestartStatus('idle')
-        setRestarting(false)
+        setRestartMessage(data.message || data.error || "Failed to restart");
+        setRestartStatus("idle");
+        setRestarting(false);
       }
     } catch (error) {
-      setRestartMessage('Error restarting application. Please restart manually.')
-      setRestartStatus('idle')
-      setRestarting(false)
+      setRestartMessage(
+        "Error restarting application. Please restart manually."
+      );
+      setRestartStatus("idle");
+      setRestarting(false);
     }
-  }
+  };
 
   const checkApplicationStatus = async () => {
-    setRestartMessage('Checking application status...')
-    setRestartStatus('checking')
-    
-    let attempts = 0
-    const maxAttempts = 30 // 30 attempts over ~30 seconds
-    
+    setRestartMessage("Checking application status...");
+    setRestartStatus("checking");
+
+    let attempts = 0;
+    const maxAttempts = 30; // 30 attempts over ~30 seconds
+
     const checkInterval = setInterval(async () => {
-      attempts++
-      
+      attempts++;
+
       try {
         // Try to fetch the dashboard or a lightweight endpoint
-        const response = await fetch('/api/auth/me', {
-          method: 'GET',
-          cache: 'no-cache',
-        })
-        
+        const response = await fetch("/api/auth/me", {
+          method: "GET",
+          cache: "no-cache",
+        });
+
         if (response.ok) {
           // Application is back online
-          clearInterval(checkInterval)
-          setRestartMessage('✓ Application restarted successfully!')
-          setRestartStatus('complete')
-          
+          clearInterval(checkInterval);
+          setRestartMessage("✓ Application restarted successfully!");
+          setRestartStatus("complete");
+
           // Show success message for 3 seconds then reload
           setTimeout(() => {
-            window.location.reload()
-          }, 3000)
+            window.location.reload();
+          }, 3000);
         }
       } catch (error) {
         // Still down, keep checking
         if (attempts >= maxAttempts) {
-          clearInterval(checkInterval)
-          setRestartMessage('Application is taking longer than expected. Please refresh the page manually.')
-          setRestartStatus('idle')
-          setRestarting(false)
+          clearInterval(checkInterval);
+          setRestartMessage(
+            "Application is taking longer than expected. Please refresh the page manually."
+          );
+          setRestartStatus("idle");
+          setRestarting(false);
         }
       }
-    }, 1000) // Check every second
-  }
+    }, 1000); // Check every second
+  };
 
   const handleTestEmail = async () => {
     if (!testEmailAddress) {
-      setEmailMessage('Please enter an email address')
-      return
+      setEmailMessage("Please enter an email address");
+      return;
     }
 
-    setSendingEmail(true)
-    setEmailMessage('')
+    setSendingEmail(true);
+    setEmailMessage("");
 
     try {
-      const res = await fetch('/api/test-email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/test-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: testEmailAddress }),
-      })
+      });
 
       if (res.ok) {
-        setEmailMessage('Test email sent successfully!')
-        setTestEmailAddress('')
+        setEmailMessage("Test email sent successfully!");
+        setTestEmailAddress("");
       } else {
-        const data = await res.json()
-        setEmailMessage(`Error: ${data.error || 'Failed to send email'}`)
+        const data = await res.json();
+        setEmailMessage(`Error: ${data.error || "Failed to send email"}`);
       }
     } catch (error) {
-      setEmailMessage('Error sending test email')
+      setEmailMessage("Error sending test email");
     } finally {
-      setSendingEmail(false)
+      setSendingEmail(false);
     }
-  }
+  };
 
   if (loading) {
     return (
       <div className="p-8">
-        <div className="text-center text-gray-900 dark:text-white">Loading...</div>
+        <div className="text-center text-gray-900 dark:text-white">
+          Loading...
+        </div>
       </div>
-    )
+    );
   }
 
-  if (currentAdminRole !== 'FULL') {
+  if (currentAdminRole !== "FULL") {
     return (
       <div className="p-8">
         <p className="text-gray-500">Access denied. Redirecting...</p>
       </div>
-    )
+    );
   }
 
   return (
     <div className="p-8">
       <div className="max-w-4xl mx-auto">
-        <PageHeader title="Settings" actions={(
-          <button
-            onClick={() => router.push('/dashboard')}
-            className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
-          >
-            Back to Dashboard
-          </button>
-        )} />
+        <PageHeader
+          title="Settings"
+          actions={
+            <button
+              onClick={() => router.push("/dashboard")}
+              className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+            >
+              Back to Dashboard
+            </button>
+          }
+        />
 
         <div className="space-y-6">
           {/* Member Lists Section */}
@@ -267,7 +284,7 @@ export default function SettingsPage() {
               Manage member lists for surveys
             </p>
             <button
-              onClick={() => router.push('/dashboard/member-lists')}
+              onClick={() => router.push("/dashboard/member-lists")}
               className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600"
             >
               Manage Member Lists
@@ -281,30 +298,41 @@ export default function SettingsPage() {
               Manage admin users, roles, and permissions
             </p>
             <p className="text-sm text-gray-500 dark:text-gray-500 mb-4">
-              You can manage admins you've invited and their invitees (but not who invited you)
+              You can manage admins you've invited and their invitees (but not
+              who invited you)
             </p>
             <button
-              onClick={() => router.push('/dashboard/admins')}
+              onClick={() => router.push("/dashboard/admins")}
               className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
             >
               Manage Admin Users
             </button>
             <div className="mt-4">
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">If you need to reset your own password, you can request a reset link to be sent to your email.</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                If you need to reset your own password, you can request a reset
+                link to be sent to your email.
+              </p>
               <button
                 onClick={async () => {
-                  if (!confirm('Send a password reset email to your account? This will clear your current password.')) return
+                  if (
+                    !confirm(
+                      "Send a password reset email to your account? This will clear your current password."
+                    )
+                  )
+                    return;
                   try {
-                    const res = await fetch('/api/auth/reset-my-password', { method: 'POST' })
+                    const res = await fetch("/api/auth/reset-my-password", {
+                      method: "POST",
+                    });
                     if (res.ok) {
-                      alert('Reset email sent. Check your inbox.')
+                      alert("Reset email sent. Check your inbox.");
                     } else {
-                      const data = await res.json()
-                      alert(data.error || 'Failed to send reset email')
+                      const data = await res.json();
+                      alert(data.error || "Failed to send reset email");
                     }
                   } catch (err) {
-                    console.error('Failed to request password reset:', err)
-                    alert('Failed to request password reset')
+                    console.error("Failed to request password reset:", err);
+                    alert("Failed to request password reset");
                   }
                 }}
                 className="mt-2 px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600"
@@ -318,7 +346,8 @@ export default function SettingsPage() {
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
             <h2 className="text-xl font-semibold mb-4">Email Configuration</h2>
             <p className="text-gray-600 dark:text-gray-400 mb-4">
-              Send a test email to verify email configuration is working correctly
+              Send a test email to verify email configuration is working
+              correctly
             </p>
             <div className="flex gap-2">
               <input
@@ -333,11 +362,13 @@ export default function SettingsPage() {
                 disabled={sendingEmail}
                 className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 disabled:bg-gray-400"
               >
-                {sendingEmail ? 'Sending...' : 'Send Test Email'}
+                {sendingEmail ? "Sending..." : "Send Test Email"}
               </button>
             </div>
             {emailMessage && (
-              <p className={`mt-2 ${emailMessage.includes('Error') ? 'text-red-500' : 'text-green-500'}`}>
+              <p
+                className={`mt-2 ${emailMessage.includes("Error") ? "text-red-500" : "text-green-500"}`}
+              >
                 {emailMessage}
               </p>
             )}
@@ -355,28 +386,33 @@ export default function SettingsPage() {
                   onClick={handleToggleDevelopmentMode}
                   disabled={devModeLoading}
                   className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${
-                    developmentMode ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
-                  } ${devModeLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    developmentMode
+                      ? "bg-blue-600"
+                      : "bg-gray-300 dark:bg-gray-600"
+                  } ${devModeLoading ? "opacity-50 cursor-not-allowed" : ""}`}
                 >
                   <span
                     className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${
-                      developmentMode ? 'translate-x-7' : 'translate-x-1'
+                      developmentMode ? "translate-x-7" : "translate-x-1"
                     }`}
                   />
                 </button>
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  {developmentMode ? 'Enabled' : 'Disabled'}
+                  {developmentMode ? "Enabled" : "Disabled"}
                 </span>
               </div>
               {devModeMessage && (
-                <p className={`text-sm ${devModeMessage.includes('Error') ? 'text-red-500' : 'text-green-500'}`}>
+                <p
+                  className={`text-sm ${devModeMessage.includes("Error") ? "text-red-500" : "text-green-500"}`}
+                >
                   {devModeMessage}
                 </p>
               )}
             </div>
             <div className="mt-3 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded">
               <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                ⚠️ <strong>Note:</strong> Development mode increases log verbosity. Disable in production for better performance.
+                ⚠️ <strong>Note:</strong> Development mode increases log
+                verbosity. Disable in production for better performance.
               </p>
             </div>
           </div>
@@ -392,14 +428,14 @@ export default function SettingsPage() {
               </div>
               <button
                 onClick={() => {
-                  setShowEnvSection(!showEnvSection)
+                  setShowEnvSection(!showEnvSection);
                   if (!showEnvSection && envVariables.length === 0) {
-                    fetchEnvVariables()
+                    fetchEnvVariables();
                   }
                 }}
                 className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
               >
-                {showEnvSection ? 'Hide' : 'Show'} Settings
+                {showEnvSection ? "Hide" : "Show"} Settings
               </button>
             </div>
 
@@ -409,9 +445,11 @@ export default function SettingsPage() {
                   <p className="text-gray-500">Loading...</p>
                 ) : (
                   <>
-                    {['Email', 'Application', 'Branding'].map(category => {
-                      const categoryVars = envVariables.filter(v => v.category === category)
-                      if (categoryVars.length === 0) return null
+                    {["Email", "Application", "Branding"].map((category) => {
+                      const categoryVars = envVariables.filter(
+                        (v) => v.category === category
+                      );
+                      if (categoryVars.length === 0) return null;
 
                       return (
                         <div key={category} className="mb-6">
@@ -419,18 +457,20 @@ export default function SettingsPage() {
                             {category}
                           </h3>
                           <div className="space-y-3">
-                            {categoryVars.map(variable => (
+                            {categoryVars.map((variable) => (
                               <div key={variable.key}>
                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                   {variable.label}
                                 </label>
                                 <input
                                   type={variable.type}
-                                  value={envValues[variable.key] || ''}
-                                  onChange={(e) => setEnvValues({
-                                    ...envValues,
-                                    [variable.key]: e.target.value
-                                  })}
+                                  value={envValues[variable.key] || ""}
+                                  onChange={(e) =>
+                                    setEnvValues({
+                                      ...envValues,
+                                      [variable.key]: e.target.value,
+                                    })
+                                  }
                                   className="w-full px-4 py-2 border rounded dark:bg-gray-700 dark:border-gray-600"
                                   placeholder={variable.label}
                                 />
@@ -438,7 +478,7 @@ export default function SettingsPage() {
                             ))}
                           </div>
                         </div>
-                      )
+                      );
                     })}
 
                     <div className="flex items-center gap-4 mt-6 pt-6 border-t dark:border-gray-700">
@@ -447,47 +487,96 @@ export default function SettingsPage() {
                         disabled={envLoading || restarting}
                         className="px-6 py-2 bg-green-500 text-white rounded hover:bg-green-600 disabled:bg-gray-400"
                       >
-                        {envLoading ? 'Saving...' : 'Save Changes'}
+                        {envLoading ? "Saving..." : "Save Changes"}
                       </button>
                       <button
                         onClick={handleRestartApplication}
                         disabled={restarting}
                         className="px-6 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 disabled:bg-gray-400 flex items-center gap-2"
                       >
-                        {restartStatus === 'restarting' && (
-                          <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        {restartStatus === "restarting" && (
+                          <svg
+                            className="animate-spin h-4 w-4"
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                          >
+                            <circle
+                              className="opacity-25"
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              strokeWidth="4"
+                            ></circle>
+                            <path
+                              className="opacity-75"
+                              fill="currentColor"
+                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                            ></path>
                           </svg>
                         )}
-                        {restartStatus === 'checking' && (
-                          <svg className="animate-pulse h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        {restartStatus === "checking" && (
+                          <svg
+                            className="animate-pulse h-4 w-4"
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
                           </svg>
                         )}
-                        {restartStatus === 'complete' && (
-                          <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        {restartStatus === "complete" && (
+                          <svg
+                            className="h-4 w-4"
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M5 13l4 4L19 7"
+                            />
                           </svg>
                         )}
-                        {restartStatus === 'idle' && '🔄'}
-                        {restarting ? (restartStatus === 'checking' ? 'Waiting...' : 'Restarting...') : 'Restart Application'}
+                        {restartStatus === "idle" && "🔄"}
+                        {restarting
+                          ? restartStatus === "checking"
+                            ? "Waiting..."
+                            : "Restarting..."
+                          : "Restart Application"}
                       </button>
                     </div>
-                    
+
                     {(envMessage || restartMessage) && (
                       <div className="mt-4">
                         {envMessage && (
-                          <p className={`text-sm ${envMessage.includes('Error') ? 'text-red-500' : 'text-green-500'}`}>
+                          <p
+                            className={`text-sm ${envMessage.includes("Error") ? "text-red-500" : "text-green-500"}`}
+                          >
                             {envMessage}
                           </p>
                         )}
                         {restartMessage && (
-                          <p className={`text-sm ${
-                            restartStatus === 'complete' ? 'text-green-600 font-semibold' :
-                            restartMessage.includes('Error') || restartMessage.includes('Failed') ? 'text-red-500' : 
-                            'text-blue-500'
-                          }`}>
+                          <p
+                            className={`text-sm ${
+                              restartStatus === "complete"
+                                ? "text-green-600 font-semibold"
+                                : restartMessage.includes("Error") ||
+                                    restartMessage.includes("Failed")
+                                  ? "text-red-500"
+                                  : "text-blue-500"
+                            }`}
+                          >
                             {restartMessage}
                           </p>
                         )}
@@ -496,7 +585,9 @@ export default function SettingsPage() {
 
                     <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded">
                       <p className="text-sm text-blue-800 dark:text-blue-200">
-                        💡 <strong>Tip:</strong> After saving changes, click "Restart Application" to apply the new settings immediately.
+                        💡 <strong>Tip:</strong> After saving changes, click
+                        "Restart Application" to apply the new settings
+                        immediately.
                       </p>
                     </div>
                   </>
@@ -507,5 +598,5 @@ export default function SettingsPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

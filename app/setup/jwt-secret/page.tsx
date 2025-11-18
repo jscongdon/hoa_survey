@@ -1,26 +1,26 @@
- 'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import PageHeader from '@/components/PageHeader';
+import { useEffect, useState } from "react";
+import PageHeader from "@/components/PageHeader";
 
 export default function JWTSecretPage() {
-  const [jwtSecret, setJwtSecret] = useState<string>('');
+  const [jwtSecret, setJwtSecret] = useState<string>("");
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string>('');
+  const [error, setError] = useState<string>("");
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    fetch('/api/setup/jwt-secret')
-      .then(res => res.json())
-      .then(data => {
+    fetch("/api/setup/jwt-secret")
+      .then((res) => res.json())
+      .then((data) => {
         if (data.jwtSecret) {
           setJwtSecret(data.jwtSecret);
         } else {
-          setError(data.error || 'Failed to load JWT secret');
+          setError(data.error || "Failed to load JWT secret");
         }
       })
-      .catch(err => {
-        setError('Failed to load JWT secret');
+      .catch((err) => {
+        setError("Failed to load JWT secret");
       })
       .finally(() => {
         setLoading(false);
@@ -52,14 +52,17 @@ export default function JWTSecretPage() {
           <>
             <div className="mb-6">
               <p className="text-gray-700 dark:text-gray-300 mb-4">
-                For Docker deployments, you need to add the JWT_SECRET as an environment variable.
+                For Docker deployments, you need to add the JWT_SECRET as an
+                environment variable.
               </p>
               <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded p-4 mb-4">
                 <p className="text-yellow-800 dark:text-yellow-200 font-semibold mb-2">
-                  ⚠️ Important: This secret is required for authentication to work
+                  ⚠️ Important: This secret is required for authentication to
+                  work
                 </p>
                 <p className="text-yellow-700 dark:text-yellow-300 text-sm">
-                  Without this environment variable set in your container, you will not be able to log in.
+                  Without this environment variable set in your container, you
+                  will not be able to log in.
                 </p>
               </div>
             </div>
@@ -79,7 +82,7 @@ export default function JWTSecretPage() {
                   onClick={handleCopy}
                   className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
                 >
-                  {copied ? '✓ Copied' : 'Copy'}
+                  {copied ? "✓ Copied" : "Copy"}
                 </button>
               </div>
             </div>
@@ -92,20 +95,29 @@ export default function JWTSecretPage() {
                 <li>Go to your Portainer dashboard</li>
                 <li>Select your stack (hoa_survey)</li>
                 <li>Click "Editor"</li>
-                <li>Add the following line under the <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">environment:</code> section:</li>
+                <li>
+                  Add the following line under the{" "}
+                  <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">
+                    environment:
+                  </code>{" "}
+                  section:
+                </li>
                 <li className="ml-6">
                   <code className="bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded block mt-1">
                     - JWT_SECRET={jwtSecret.substring(0, 20)}...
                   </code>
                 </li>
                 <li>Click "Update the stack"</li>
-                <li>The container will restart with the new environment variable</li>
+                <li>
+                  The container will restart with the new environment variable
+                </li>
               </ol>
             </div>
 
             <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded p-4">
               <p className="text-blue-800 dark:text-blue-200 text-sm">
-                💡 Tip: Keep this secret secure and never commit it to your repository.
+                💡 Tip: Keep this secret secure and never commit it to your
+                repository.
               </p>
             </div>
           </>
