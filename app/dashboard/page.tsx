@@ -13,6 +13,7 @@ interface Survey {
   totalRecipients: number;
   submittedCount: number;
   minResponses?: number;
+  initialSentAt?: string | null;
 }
 
 export default function DashboardPage() {
@@ -20,6 +21,7 @@ export default function DashboardPage() {
   const [surveys, setSurveys] = useState<Survey[]>([]);
   const [loading, setLoading] = useState(true);
   const [reminderStatus, setReminderStatus] = useState<{ [key: string]: string }>({});
+  const [initialSendStatus, setInitialSendStatus] = useState<{ [key: string]: string }>({});
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [showNonRespondents, setShowNonRespondents] = useState<{ [key: string]: boolean }>({});
   const [nonRespondents, setNonRespondents] = useState<{ [key: string]: any[] }>({});
@@ -65,6 +67,47 @@ export default function DashboardPage() {
       setReminderStatus({ ...reminderStatus, [surveyId]: 'Error sending reminders' });
       setTimeout(() => {
         setReminderStatus((prev) => {
+          const next = { ...prev };
+          delete next[surveyId];
+          return next;
+        });
+      }, 3000);
+    }
+  };
+
+  const handleSendInitial = async (surveyId: string) => {
+    setInitialSendStatus({ ...initialSendStatus, [surveyId]: 'Sending...' });
+    try {
+      const res = await fetch(`/api/surveys/${surveyId}/send-initial`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+      if (res.ok) {
+        setInitialSendStatus({ ...initialSendStatus, [surveyId]: 'Initial notices sent' });
+        // update local state so button hides
+        setSurveys((prev) => prev.map((s) => s.id === surveyId ? { ...s, initialSentAt: new Date().toISOString() } : s));
+        setTimeout(() => {
+          setInitialSendStatus((prev) => {
+            const next = { ...prev };
+            delete next[surveyId];
+            return next;
+          });
+        }, 3000);
+      } else {
+        const data = await res.json();
+        setInitialSendStatus({ ...initialSendStatus, [surveyId]: data?.error || 'Failed to send initial notices' });
+        setTimeout(() => {
+          setInitialSendStatus((prev) => {
+            const next = { ...prev };
+            delete next[surveyId];
+            return next;
+          });
+        }, 3000);
+      }
+    } catch (error) {
+      setInitialSendStatus({ ...initialSendStatus, [surveyId]: 'Error sending initial notices' });
+      setTimeout(() => {
+        setInitialSendStatus((prev) => {
           const next = { ...prev };
           delete next[surveyId];
           return next;
@@ -434,22 +477,37 @@ export default function DashboardPage() {
                     style={{ width: `${survey.responseRate}%` }}
                   ></div>
                 </div>
-                <div className="flex gap-3">
-                  <button 
-                    onClick={() => handleSendReminder(survey.id)}
-                    disabled={!!reminderStatus[survey.id]}
-                    className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
-                  >
-                    Remind Non-Respondents
-                  </button>
+                <div className="flex flex-col gap-3">
+                  {currentAdminRole === 'FULL' && !survey.initialSentAt && (
+                    <button
+                      onClick={() => handleSendInitial(survey.id)}
+                      disabled={!!initialSendStatus[survey.id]}
+                      className="w-full px-4 py-2 text-sm bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                    >
+                      {initialSendStatus[survey.id] ? initialSendStatus[survey.id] : 'Send Initial Notices'}
+                    </button>
+                  )}
+
+                  {survey.initialSentAt && (
+                    <>
+                      <button 
+                        onClick={() => handleSendReminder(survey.id)}
+                        disabled={!!reminderStatus[survey.id]}
+                        className="w-full px-4 py-2 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                      >
+                        Remind Non-Respondents
+                      </button>
+
+                      <button 
+                        onClick={() => toggleNonRespondents(survey.id)}
+                        disabled={loadingNonRespondents[survey.id]}
+                        className="w-full px-4 py-2 text-sm bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                      >
+                        {loadingNonRespondents[survey.id] ? 'Loading...' : 'Remind Non-Respondent'}
+                      </button>
+                    </>
+                  )}
                 </div>
-                <button 
-                  onClick={() => toggleNonRespondents(survey.id)}
-                  disabled={loadingNonRespondents[survey.id]}
-                  className="w-full mt-2 px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-sm"
-                >
-                  {loadingNonRespondents[survey.id] ? 'Loading...' : 'Remind Non-Respondent'}
-                </button>
                 {showNonRespondents[survey.id] && nonRespondents[survey.id] && (
                   <div className="mt-2 border border-gray-300 dark:border-gray-700 rounded-lg p-3 bg-gray-50 dark:bg-gray-800">
                     {nonRespondents[survey.id].length === 0 ? (
