@@ -70,6 +70,7 @@ model Survey {
   memberList     MemberList @relation(fields: [memberListId], references: [id])
   questions      Question[]
   responses      Response[]
+  initialSentAt  DateTime? // When the initial notice was sent to recipients
   showLive       Boolean    @default(false)
   showAfterClose Boolean    @default(true)
   minResponses   Int?       // Minimum number of responses needed (optional)
