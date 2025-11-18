@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, FormEvent, useEffect, Suspense } from 'react';
+import PageHeader from '@/components/PageHeader';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 function LoginForm() {
@@ -125,9 +126,7 @@ function LoginForm() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
       <div className="max-w-md w-full bg-white dark:bg-gray-800 p-8 rounded-lg shadow-md">
-        <h1 className="text-3xl font-bold text-center text-gray-900 dark:text-white mb-8">
-          HOA Survey
-        </h1>
+        <PageHeader title="HOA Survey" />
 
         {success && (
           <div className="mb-4 p-3 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-200 rounded">

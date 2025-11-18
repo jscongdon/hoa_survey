@@ -1,7 +1,8 @@
-'use client';
+ 'use client';
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import PageHeader from '@/components/PageHeader';
 
 interface QuestionStats {
   questionId: string;
@@ -126,17 +127,16 @@ export default function SurveyResultsPage({
   if (!data) return <div className="p-8 text-center text-gray-900 dark:text-white">Survey not found</div>;
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-8">
-      <div className="max-w-6xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{data.survey.title}</h1>
+    <div className="p-8">
+    <div  className="max-w-4xl mx-auto">
+        <PageHeader title={data.survey.title} actions={(
           <button
             onClick={() => router.push('/dashboard')}
-            className="px-4 py-2 bg-gray-300 dark:bg-gray-700 text-gray-900 dark:text-white rounded hover:bg-gray-400 dark:hover:bg-gray-600"
+            className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
           >
-            ← Back to Dashboard
+            Back to Dashboard
           </button>
-        </div>
+        )} />
 
         {data.survey.description && (
           <div className="bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-700 rounded-lg p-4 mb-6">

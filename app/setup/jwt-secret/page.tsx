@@ -1,6 +1,7 @@
-'use client';
+ 'use client';
 
 import { useEffect, useState } from 'react';
+import PageHeader from '@/components/PageHeader';
 
 export default function JWTSecretPage() {
   const [jwtSecret, setJwtSecret] = useState<string>('');
@@ -35,9 +36,7 @@ export default function JWTSecretPage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
       <div className="max-w-3xl w-full bg-white dark:bg-gray-800 rounded-lg shadow-xl p-8">
-        <h1 className="text-3xl font-bold mb-6 text-gray-900 dark:text-white">
-          JWT Secret Configuration
-        </h1>
+        <PageHeader title="JWT Secret Configuration" />
 
         {loading && (
           <p className="text-gray-600 dark:text-gray-300">Loading...</p>

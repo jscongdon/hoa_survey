@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import React, { useEffect } from 'react';
+import PageHeader from '@/components/PageHeader';
 
 export default function Home() {
   const router = useRouter();
@@ -14,7 +15,7 @@ export default function Home() {
   return (
     <main className="min-h-screen flex items-center justify-center">
       <div className="max-w-xl p-8">
-        <h1 className="text-3xl font-bold">HOA Survey</h1>
+        <PageHeader title="HOA Survey" />
         <p className="mt-4 text-slate-600">Loading...</p>
       </div>
     </main>

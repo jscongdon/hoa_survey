@@ -1,6 +1,7 @@
-'use client';
+ 'use client';
 
 import React, { useEffect, useState } from 'react';
+import PageHeader from '@/components/PageHeader';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { formatDate } from '@/lib/dateFormatter';
@@ -166,17 +167,14 @@ export default function MemberListsPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-          Member Lists
-        </h1>
+      <PageHeader title="Member Lists" actions={(
         <button
           onClick={() => setShowUpload(!showUpload)}
           className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 font-medium"
         >
           {showUpload ? 'Cancel' : '+ Create New List'}
         </button>
-      </div>
+      )} />
 
       {showUpload && (
         <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-6 mb-8">

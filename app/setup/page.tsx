@@ -1,7 +1,8 @@
-'use client'
+ 'use client'
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import PageHeader from '@/components/PageHeader'
 
 type Step = 'welcome' | 'hoa' | 'smtp' | 'test-email' | 'admin' | 'verify'
 
@@ -138,6 +139,15 @@ export default function SetupWizard() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
       <div className="max-w-2xl w-full bg-white dark:bg-gray-800 rounded-lg shadow-xl p-8">
+        <PageHeader title={
+          step === 'welcome' ? 'Welcome to HOA Survey' :
+          step === 'hoa' ? 'HOA Configuration' :
+          step === 'smtp' ? 'SMTP Configuration' :
+          step === 'test-email' ? 'Test Email' :
+          step === 'admin' ? 'Create Admin' :
+          'Verify'
+        } />
+
         {/* Progress Steps */}
         <div className="mb-8">
           <div className="flex justify-between items-center">
@@ -169,7 +179,6 @@ export default function SetupWizard() {
         {/* Welcome Step */}
         {step === 'welcome' && (
           <div>
-            <h1 className="text-3xl font-bold mb-4 text-gray-900 dark:text-white">Welcome to HOA Survey</h1>
             <p className="text-gray-600 dark:text-gray-300 mb-6">
               Let's get your survey system set up! This wizard will guide you through:
             </p>

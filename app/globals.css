@@ -21,7 +21,75 @@
   }
 }
 
+:root {
+  /* Theme color variables */
+  --color-primary: 59 130 246; /* blue-500 rgb components */
+  --color-primary-600: 37 99 235;
+  --color-accent: 139 92 246; /* purple-600 */
+  --surface: 255 255 255; /* light surface */
+  --surface-2: 247 250 252;
+  --text-primary: 15 23 42; /* slate-900 */
+  --muted: 107 114 128;
+  --radius: 0.5rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --surface: 17 24 39; /* gray-900 */
+    --surface-2: 30 41 59;
+    --text-primary: 255 255 255;
+    --muted: 148 163 184;
+  }
+}
+
 @layer components {
+  /* Primary and secondary content containers for consistent layout */
+  .primary-container {
+    @apply bg-white dark:bg-gray-900 rounded-xl p-6 sm:p-8 shadow-sm;
+    background-color: rgb(var(--surface));
+    color: rgb(var(--text-primary));
+    border-radius: var(--radius);
+  }
+
+  .secondary-container {
+    @apply bg-gray-50 dark:bg-gray-800 rounded-lg p-4 sm:p-6 shadow-sm;
+    background-color: rgb(var(--surface-2));
+    color: rgb(var(--text-primary));
+    border-radius: calc(var(--radius) - 0.125rem);
+  }
+
+  .theme-accent {
+    background: linear-gradient(90deg, rgba(var(--color-primary),1), rgba(var(--color-accent),1));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .btn-primary-theme {
+    background-color: rgb(var(--color-primary));
+    color: white;
+  }
+
+  /* Page header inside the primary container */
+  /* Use descendant selector so header styling applies regardless of nesting */
+  .primary-container .page-header {
+    margin: -1.5rem -1.5rem 1rem -1.5rem;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid rgba(var(--muted)/0.08);
+    background-color: transparent;
+  }
+
+  .primary-container .page-header h1 {
+    font-size: 1.875rem; /* 3xl */
+    line-height: 2.25rem;
+    margin: 0;
+  }
+
+  .primary-container .page-header p {
+    margin: 0.25rem 0 0;
+    color: rgb(var(--muted));
+  }
+
   /* Card shadows with animation */
   .card-shadow {
     @apply shadow-lg hover:shadow-xl transition-shadow duration-300;

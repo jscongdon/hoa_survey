@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import SurveyBuilder from '@/components/SurveyBuilder'
+import PageHeader from '@/components/PageHeader'
 import { toLocalDatetimeString } from '@/lib/dateFormatter'
 
 export default function EditSurveyPage({ params }: { params: Promise<{ id: string }> }) {
@@ -182,18 +183,25 @@ export default function EditSurveyPage({ params }: { params: Promise<{ id: strin
   if (!survey) return <div className="p-8">Loading...</div>
 
   return (
-    <main className="max-w-2xl mx-auto p-8">
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-bold">Edit Survey</h1>
-        <button
-          type="button"
-          onClick={() => router.push('/dashboard')}
-          className="px-4 py-2 bg-gray-300 text-gray-900 rounded hover:bg-gray-400"
-        >
-          ← Back to Dashboard
-        </button>
-      </div>
-      <form className="space-y-4" onSubmit={handleUpdate}>
+    <div className="p-8">
+    <div  className="max-w-4xl mx-auto">
+      <PageHeader
+        title="Edit Survey"
+        actions={
+          <div>
+            <button
+            onClick={() => router.push('/dashboard')}
+            className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+          >
+            Back to Dashboard
+          </button>
+          </div>
+        }
+      />
+
+      <div className="space-y-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+          <form className="space-y-4" onSubmit={handleUpdate}>
         <div>
           <label className="block text-sm mb-1 text-gray-900 dark:text-white">Member List</label>
           <div className="flex items-start gap-2">
@@ -346,8 +354,11 @@ export default function EditSurveyPage({ params }: { params: Promise<{ id: strin
         >
           Update Survey
         </button>
-      </form>
-      {status && <div className="mt-4 text-green-600">{status}</div>}
-    </main>
+          </form>
+          {status && <div className="mt-4 text-green-600">{status}</div>}
+        </div>
+      </div>
+    </div>
+    </div>
   )
 }

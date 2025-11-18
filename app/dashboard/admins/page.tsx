@@ -1,6 +1,7 @@
-'use client';
+ 'use client';
 
 import React, { useEffect, useState } from 'react';
+import PageHeader from '@/components/PageHeader';
 import { formatDateTime } from '@/lib/dateFormatter'
 import { useRouter } from 'next/navigation';
 
@@ -228,28 +229,23 @@ export default function AdminManagementPage() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-8">
       <div className="max-w-6xl mx-auto">
         
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Admin Management</h1>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-              You can manage admins you've invited and their invitees
-            </p>
-            <button
-              onClick={() => router.push('/dashboard')}
-              className="text-blue-600 dark:text-blue-400 hover:underline mt-2"
-            >
-              ← Back to Dashboard
-            </button>
-          </div>
-          {canManageAdmins && (
+        <PageHeader title="Admin Management" subtitle="You can manage admins you've invited and their invitees" actions={(
+          canManageAdmins ? (
             <button
               onClick={() => setShowInviteForm(true)}
               className="px-6 py-3 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white rounded-lg font-semibold transition-colors"
             >
               Invite Admin
             </button>
-          )}
-        </div>
+          ) : (
+            <button
+              onClick={() => router.push('/dashboard')}
+              className="text-blue-600 dark:text-blue-400 hover:underline"
+            >
+              ← Back to Dashboard
+            </button>
+          )
+        )} />
 
         {showInviteForm && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">

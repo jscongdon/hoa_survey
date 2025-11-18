@@ -1,7 +1,8 @@
-'use client';
+ 'use client';
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import PageHeader from '@/components/PageHeader';
 
 export default function TestEmailPage() {
   const router = useRouter();
@@ -53,17 +54,14 @@ export default function TestEmailPage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-8">
       <div className="max-w-2xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Test Email (SMTP) Settings
-          </h1>
+        <PageHeader title="Test Email (SMTP) Settings" actions={(
           <button
             onClick={() => router.push('/dashboard')}
             className="px-4 py-2 bg-gray-300 text-gray-900 rounded hover:bg-gray-400"
           >
             ← Back to Dashboard
           </button>
-        </div>
+        )} />
 
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
           <p className="text-gray-600 dark:text-gray-300 mb-6">

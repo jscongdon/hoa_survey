@@ -1,6 +1,7 @@
 "use client"
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import PageHeader from '@/components/PageHeader'
 
 export default function AcceptInvitePage({ params }: { params: Promise<{ token: string }> }) {
   const router = useRouter()
@@ -56,7 +57,7 @@ export default function AcceptInvitePage({ params }: { params: Promise<{ token: 
 
   return (
     <main className="max-w-md mx-auto p-8">
-      <h1 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Accept Admin Invite</h1>
+      <PageHeader title="Accept Admin Invite" />
       <form className="space-y-4" onSubmit={handleAccept}>
         <div>
           <label className="block text-sm text-gray-900 dark:text-white">Password</label>

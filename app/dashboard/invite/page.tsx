@@ -1,5 +1,6 @@
 "use client"
 import React, { useState } from 'react'
+import PageHeader from '@/components/PageHeader'
 
 export default function InviteAdminPage() {
   const [email, setEmail] = useState('')
@@ -20,7 +21,7 @@ export default function InviteAdminPage() {
 
   return (
     <main className="max-w-md mx-auto p-8">
-      <h1 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Invite New Admin</h1>
+      <PageHeader title="Invite New Admin" />
       <form className="space-y-4" onSubmit={handleInvite}>
         <div>
           <label className="block text-sm text-gray-900 dark:text-white">Name</label>

@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import SurveyBuilder from '@/components/SurveyBuilder';
+import PageHeader from '@/components/PageHeader';
 
 interface MemberList {
   id: string;
@@ -87,12 +88,19 @@ export default function CreateSurveyPage() {
   };
 
   return (
-    <div>
-      <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-8">
-        Create New Survey
-      </h1>
+    <div className="p-8">
+    <div  className="max-w-4xl mx-auto">
+      <PageHeader title="Create New Survey" actions={(
+          <button
+            onClick={() => router.push('/dashboard')}
+            className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+          >
+            Back to Dashboard
+          </button>
+        )}/>
 
-      <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-6 max-w-2xl">
+      <div className="max-w-4xl mx-auto">
+        <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-6">
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -251,7 +259,9 @@ export default function CreateSurveyPage() {
             </button>
           </div>
         </form>
+        </div>
       </div>
+    </div>
     </div>
   );
 }

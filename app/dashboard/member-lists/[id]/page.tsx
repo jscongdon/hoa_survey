@@ -1,6 +1,7 @@
-'use client';
+ 'use client';
 
 import React, { useEffect, useState } from 'react';
+import PageHeader from '@/components/PageHeader';
 import { useRouter } from 'next/navigation';
 
 interface Member {
@@ -211,8 +212,7 @@ export default function MemberListDetailPage({ params }: { params: Promise<{ id:
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{list.name}</h1>
+      <PageHeader title={list.name} actions={(
         <div className="flex gap-2">
           <button
             onClick={startAdd}
@@ -223,7 +223,7 @@ export default function MemberListDetailPage({ params }: { params: Promise<{ id:
           </button>
           <button onClick={() => router.push('/dashboard/member-lists')} className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600">← Back</button>
         </div>
-      </div>
+      )} />
 
       <div className="bg-white dark:bg-gray-900 rounded-lg shadow overflow-hidden">
         <table className="w-full">

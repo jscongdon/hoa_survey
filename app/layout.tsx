@@ -35,11 +35,13 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="min-h-screen flex flex-col">
+      <body className="min-h-screen flex flex-col bg-[rgba(var(--surface-2)/0.4)]">
         <Header />
         <main className="flex-1 p-4 sm:p-6 lg:p-8">
           <div className="max-w-7xl mx-auto">
-            {children}
+            <div className="primary-container">
+              {children}
+            </div>
           </div>
         </main>
         <Footer />

@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { formatDate } from '@/lib/dateFormatter';
+import PageHeader from '@/components/PageHeader';
 
 interface Survey {
   id: string;
@@ -344,45 +345,39 @@ export default function DashboardPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-              Dashboard
-            </h1>
-            {adminEmail && (
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                Logged in as: {adminEmail}
-              </p>
+      <PageHeader
+        title="Dashboard"
+        subtitle={adminEmail ? `Logged in as: ${adminEmail}` : undefined}
+        actions={
+          <div className="flex flex-col items-end gap-2">
+            {currentAdminRole === 'FULL' && (
+              <button
+                onClick={() => router.push('/dashboard/surveys/create')}
+                className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 font-medium"
+              >
+                ➕ Create Survey
+              </button>
             )}
+            <div className="flex items-center gap-3">
+              {currentAdminRole === 'FULL' && (
+                <span
+                  onClick={() => router.push('/dashboard/settings')}
+                  className="text-2xl cursor-pointer hover:opacity-70 transition-opacity"
+                  title="Settings"
+                >
+                  ⚙️
+                </span>
+              )}
+              <button
+                onClick={handleLogout}
+                className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 font-medium"
+              >
+                🚪 Logout
+              </button>
+            </div>
           </div>
-          {currentAdminRole === 'FULL' && (
-            <span
-              onClick={() => router.push('/dashboard/settings')}
-              className="text-3xl cursor-pointer hover:opacity-70 transition-opacity"
-              title="Settings"
-            >
-              ⚙️
-            </span>
-          )}
-        </div>
-        <div className="flex flex-col gap-2 items-end">
-          {currentAdminRole === 'FULL' && (
-            <button
-              onClick={() => router.push('/dashboard/surveys/create')}
-              className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 font-medium"
-            >
-              ➕ Create Survey
-            </button>
-          )}
-          <button
-            onClick={handleLogout}
-            className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 font-medium"
-          >
-            🚪 Logout
-          </button>
-        </div>
-      </div>
+        }
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         {surveys
