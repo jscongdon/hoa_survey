@@ -25,18 +25,25 @@ export async function GET(
   const now = new Date()
   const isClosed = response.survey.closesAt && now > response.survey.closesAt
   
-  // Convert answers array to object with questionId as key
-  const existingAnswers = response.submittedAt && response.answers.length > 0
-    ? response.answers.reduce((acc, answer) => {
-        // Parse arrays stored as JSON strings
+  // Load latest answers explicitly to avoid any timing/serialization issues
+  let existingAnswers: Record<string, any> | null = null
+  if (response.submittedAt) {
+    const answersRows = await prisma.answer.findMany({
+      where: { responseId: response.id },
+      orderBy: { createdAt: 'asc' },
+    })
+
+    if (answersRows && answersRows.length > 0) {
+      existingAnswers = answersRows.reduce((acc: Record<string, any>, answer: any) => {
         try {
           acc[answer.questionId] = JSON.parse(answer.value)
         } catch {
           acc[answer.questionId] = answer.value
         }
         return acc
-      }, {} as Record<string, any>)
-    : null
+      }, {})
+    }
+  }
 
   // Parse survey questions options and showWhen for client consumption
   const parsedSurvey = response.survey
@@ -72,7 +79,11 @@ export async function PUT(
 ) {
   try {
     const body = await request.json()
-    const { answers } = body
+    // Defensive: ensure answers is always an object to avoid runtime errors
+    let answers = body?.answers
+    if (!answers || typeof answers !== 'object') {
+      answers = {}
+    }
     const { token } = await params
 
     // Check if survey is still open
@@ -161,7 +172,6 @@ export async function PUT(
         return isQuestionEnabled(q, answers)
       })
       .map(([questionId, value]) => ({
-        responseId: existingResponse.id,
         questionId,
         value: typeof value === 'object' ? JSON.stringify(value) : String(value),
       }))
