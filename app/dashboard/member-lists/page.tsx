@@ -1,10 +1,10 @@
-"use client";
+ 'use client';
 
-import React, { useEffect, useState } from "react";
-import PageHeader from "@/components/PageHeader";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { formatDate } from "@/lib/dateFormatter";
+import React, { useEffect, useState } from 'react';
+import PageHeader from '@/components/PageHeader';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { formatDate } from '@/lib/dateFormatter';
 
 interface MemberList {
   id: string;
@@ -21,19 +21,19 @@ export default function MemberListsPage() {
   const [lists, setLists] = useState<MemberList[]>([]);
   const [loading, setLoading] = useState(true);
   const [showUpload, setShowUpload] = useState(false);
-  const [newListName, setNewListName] = useState("");
+  const [newListName, setNewListName] = useState('');
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editingName, setEditingName] = useState("");
+  const [editingName, setEditingName] = useState('');
 
   useEffect(() => {
     const fetchLists = async () => {
       try {
-        const res = await fetch("/api/member-lists");
+        const res = await fetch('/api/member-lists');
         const data = await res.json();
         if (!res.ok) {
-          console.error("Failed to fetch member lists:", data);
+          console.error('Failed to fetch member lists:', data);
           setLists([]);
         } else if (Array.isArray(data)) {
           setLists(data);
@@ -41,7 +41,7 @@ export default function MemberListsPage() {
           setLists([]);
         }
       } catch (error) {
-        console.error("Failed to fetch member lists:", error);
+        console.error('Failed to fetch member lists:', error);
       } finally {
         setLoading(false);
       }
@@ -53,20 +53,20 @@ export default function MemberListsPage() {
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newListName.trim()) {
-      alert("Please enter a list name");
+      alert('Please enter a list name');
       return;
     }
 
     setUploading(true);
     try {
       const formData = new FormData();
-      formData.append("name", newListName);
+      formData.append('name', newListName);
       if (csvFile) {
-        formData.append("csv", csvFile);
+        formData.append('csv', csvFile);
       }
 
-      const res = await fetch("/api/member-lists", {
-        method: "POST",
+      const res = await fetch('/api/member-lists', {
+        method: 'POST',
         body: formData,
       });
 
@@ -81,39 +81,32 @@ export default function MemberListsPage() {
         // Ensure the list has the expected structure
         const listWithDefaults = {
           ...newList,
-          _count: newList._count || {
-            members: newList.members?.length || 0,
-            surveys: 0,
-          },
+          _count: newList._count || { members: newList.members?.length || 0, surveys: 0 }
         };
         setLists([listWithDefaults, ...lists]);
-        setNewListName("");
+        setNewListName('');
         setCsvFile(null);
         setShowUpload(false);
       } else {
-        alert("Unexpected response from server");
-        console.error("Invalid response:", newList);
+        alert('Unexpected response from server');
+        console.error('Invalid response:', newList);
       }
     } catch (error) {
-      console.error("Failed to upload member list:", error);
-      alert("Failed to upload member list");
+      console.error('Failed to upload member list:', error);
+      alert('Failed to upload member list');
     } finally {
       setUploading(false);
     }
   };
 
   const handleDelete = async (id: string, name: string) => {
-    if (
-      !confirm(
-        `Are you sure you want to delete "${name}"? This action cannot be undone.`
-      )
-    ) {
+    if (!confirm(`Are you sure you want to delete "${name}"? This action cannot be undone.`)) {
       return;
     }
 
     try {
       const res = await fetch(`/api/member-lists/${id}`, {
-        method: "DELETE",
+        method: 'DELETE',
       });
 
       if (!res.ok) {
@@ -124,8 +117,8 @@ export default function MemberListsPage() {
 
       setLists(lists.filter((l) => l.id !== id));
     } catch (error) {
-      console.error("Failed to delete member list:", error);
-      alert("Failed to delete member list");
+      console.error('Failed to delete member list:', error);
+      alert('Failed to delete member list');
     }
   };
 
@@ -136,14 +129,14 @@ export default function MemberListsPage() {
 
   const handleEditSave = async (id: string) => {
     if (!editingName.trim()) {
-      alert("List name cannot be empty");
+      alert('List name cannot be empty');
       return;
     }
 
     try {
       const res = await fetch(`/api/member-lists/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: editingName }),
       });
 
@@ -154,20 +147,18 @@ export default function MemberListsPage() {
       }
 
       const updatedList = await res.json();
-      setLists(
-        lists.map((l) => (l.id === id ? { ...l, name: updatedList.name } : l))
-      );
+      setLists(lists.map((l) => (l.id === id ? { ...l, name: updatedList.name } : l)));
       setEditingId(null);
-      setEditingName("");
+      setEditingName('');
     } catch (error) {
-      console.error("Failed to update member list:", error);
-      alert("Failed to update member list");
+      console.error('Failed to update member list:', error);
+      alert('Failed to update member list');
     }
   };
 
   const handleEditCancel = () => {
     setEditingId(null);
-    setEditingName("");
+    setEditingName('');
   };
 
   if (loading) {
@@ -176,23 +167,18 @@ export default function MemberListsPage() {
 
   return (
     <div>
-      <PageHeader
-        title="Member Lists"
-        actions={
-          <button
-            onClick={() => setShowUpload(!showUpload)}
-            className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 font-medium"
-          >
-            {showUpload ? "Cancel" : "+ Create New List"}
-          </button>
-        }
-      />
+      <PageHeader title="Member Lists" actions={(
+        <button
+          onClick={() => setShowUpload(!showUpload)}
+          className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 font-medium"
+        >
+          {showUpload ? 'Cancel' : '+ Create New List'}
+        </button>
+      )} />
 
       {showUpload && (
         <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-6 mb-8">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-            Create New Member List
-          </h2>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Create New Member List</h2>
           <form onSubmit={handleUpload}>
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
@@ -218,8 +204,7 @@ export default function MemberListsPage() {
                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
               />
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                CSV should have columns: lot, name, email, address (optional).
-                You can create an empty list and add members manually later.
+                CSV should have columns: lot, name, email, address (optional). You can create an empty list and add members manually later.
               </p>
             </div>
 
@@ -228,7 +213,7 @@ export default function MemberListsPage() {
               disabled={uploading}
               className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 font-medium disabled:opacity-50"
             >
-              {uploading ? "Creating..." : "Create List"}
+              {uploading ? 'Creating...' : 'Create List'}
             </button>
           </form>
         </div>
@@ -310,9 +295,7 @@ export default function MemberListsPage() {
                       ) : (
                         <>
                           <button
-                            onClick={() =>
-                              router.push(`/dashboard/member-lists/${list.id}`)
-                            }
+                            onClick={() => router.push(`/dashboard/member-lists/${list.id}`)}
                             className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm font-medium"
                           >
                             View

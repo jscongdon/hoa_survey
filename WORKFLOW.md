@@ -174,7 +174,7 @@ Check container health:
 # Development
 docker logs hoa_survey_dev --tail 100
 
-# Production
+# Production  
 docker logs hoa_survey --tail 100
 ```
 

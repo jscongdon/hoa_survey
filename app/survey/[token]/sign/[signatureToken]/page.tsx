@@ -1,57 +1,51 @@
-"use client";
+'use client'
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 
 interface SignaturePageProps {
-  params: Promise<{ token: string; signatureToken: string }>;
+  params: Promise<{ token: string; signatureToken: string }>
 }
 
 export default function SignaturePage({ params }: SignaturePageProps) {
-  const router = useRouter();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
-  const [tokens, setTokens] = useState<{
-    token: string;
-    signatureToken: string;
-  } | null>(null);
+  const router = useRouter()
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState(false)
+  const [tokens, setTokens] = useState<{ token: string; signatureToken: string } | null>(null)
 
   useEffect(() => {
-    params.then(setTokens);
-  }, [params]);
+    params.then(setTokens)
+  }, [params])
 
   const handleSign = async () => {
-    if (!tokens) return;
+    if (!tokens) return
 
-    setLoading(true);
-    setError(null);
+    setLoading(true)
+    setError(null)
 
     try {
-      const response = await fetch(
-        `/api/responses/${tokens.token}/sign/${tokens.signatureToken}`,
-        {
-          method: "POST",
-        }
-      );
+      const response = await fetch(`/api/responses/${tokens.token}/sign/${tokens.signatureToken}`, {
+        method: 'POST',
+      })
 
-      const data = await response.json();
+      const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || "Failed to sign response");
+        throw new Error(data.error || 'Failed to sign response')
       }
 
-      setSuccess(true);
+      setSuccess(true)
 
       // Redirect to survey response page after 3 seconds
       setTimeout(() => {
-        router.push(`/survey/${tokens.token}`);
-      }, 3000);
+        router.push(`/survey/${tokens.token}`)
+      }, 3000)
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
-      setLoading(false);
+      setError(err instanceof Error ? err.message : 'An error occurred')
+      setLoading(false)
     }
-  };
+  }
 
   if (!tokens) {
     return (
@@ -61,7 +55,7 @@ export default function SignaturePage({ params }: SignaturePageProps) {
           <p className="mt-4 text-gray-600 dark:text-gray-400">Loading...</p>
         </div>
       </div>
-    );
+    )
   }
 
   return (
@@ -119,8 +113,7 @@ export default function SignaturePage({ params }: SignaturePageProps) {
                 Digital Signature
               </h2>
               <p className="mt-2 text-gray-600 dark:text-gray-400">
-                Please confirm that you want to digitally sign your survey
-                response.
+                Please confirm that you want to digitally sign your survey response.
               </p>
             </div>
 
@@ -142,8 +135,7 @@ export default function SignaturePage({ params }: SignaturePageProps) {
                     Important Notice
                   </h3>
                   <p className="mt-1 text-sm text-yellow-700 dark:text-yellow-300">
-                    Once you sign your response, it will be finalized and can no
-                    longer be edited or changed. This action cannot be undone.
+                    Once you sign your response, it will be finalized and can no longer be edited or changed. This action cannot be undone.
                   </p>
                 </div>
               </div>
@@ -167,9 +159,7 @@ export default function SignaturePage({ params }: SignaturePageProps) {
                     <h3 className="text-sm font-medium text-red-800 dark:text-red-200">
                       Error
                     </h3>
-                    <p className="mt-1 text-sm text-red-700 dark:text-red-300">
-                      {error}
-                    </p>
+                    <p className="mt-1 text-sm text-red-700 dark:text-red-300">{error}</p>
                   </div>
                 </div>
               </div>
@@ -213,7 +203,7 @@ export default function SignaturePage({ params }: SignaturePageProps) {
                     Signing...
                   </>
                 ) : (
-                  "Confirm Signature"
+                  'Confirm Signature'
                 )}
               </button>
             </div>
@@ -221,5 +211,5 @@ export default function SignaturePage({ params }: SignaturePageProps) {
         )}
       </div>
     </div>
-  );
+  )
 }

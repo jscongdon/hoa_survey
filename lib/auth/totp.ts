@@ -1,4 +1,4 @@
-import { totp, authenticator } from "otplib";
+import { totp, authenticator } from 'otplib';
 
 export function generateTwoFactorSecret(email: string): string {
   return authenticator.generateSecret() as string;
@@ -9,5 +9,5 @@ export function verifyTwoFactorToken(secret: string, token: string): boolean {
 }
 
 export function getTwoFactorQRCode(secret: string, email: string): string {
-  return authenticator.keyuri(email, "HOA Survey", secret);
+  return authenticator.keyuri(email, 'HOA Survey', secret);
 }

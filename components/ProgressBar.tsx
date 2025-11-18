@@ -1,5 +1,5 @@
-"use client";
-import React from "react";
+"use client"
+import React from 'react'
 
 export default function ProgressBar({ percent }: { percent: number }) {
   return (
@@ -9,5 +9,5 @@ export default function ProgressBar({ percent }: { percent: number }) {
         style={{ width: `${Math.max(0, Math.min(100, percent))}%` }}
       />
     </div>
-  );
+  )
 }

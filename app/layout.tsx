@@ -1,12 +1,12 @@
-import type { Metadata } from "next";
-import "./globals.css";
+import type { Metadata } from 'next';
+import './globals.css';
 
-import Footer from "@/components/Footer";
-import Header from "@/components/Header";
+import Footer from '@/components/Footer';
+import Header from '@/components/Header';
 
 export const metadata: Metadata = {
-  title: "HOA Survey",
-  description: "Secure survey management for HOA communities",
+  title: 'HOA Survey',
+  description: 'Secure survey management for HOA communities',
 };
 
 export default function RootLayout({
@@ -39,7 +39,9 @@ export default function RootLayout({
         <Header />
         <main className="flex-1 p-4 sm:p-6 lg:p-8">
           <div className="max-w-7xl mx-auto">
-            <div className="primary-container">{children}</div>
+            <div className="primary-container">
+              {children}
+            </div>
           </div>
         </main>
         <Footer />

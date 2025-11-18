@@ -1,16 +1,16 @@
-import { log, error as logError } from "@/lib/logger";
-import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { sendEmail } from "@/lib/email/send";
-import crypto from "crypto";
+import { log, error as logError } from '@/lib/logger'
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { sendEmail } from '@/lib/email/send'
+import crypto from 'crypto'
 
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ token: string }> }
 ) {
   try {
-    const { token } = await params;
-
+    const { token } = await params
+    
     // Find the response
     const response = await prisma.response.findUnique({
       where: { token },
@@ -18,41 +18,32 @@ export async function POST(
         survey: true,
         member: true,
       },
-    });
+    })
 
     if (!response) {
-      return NextResponse.json(
-        { error: "Response not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Response not found' }, { status: 404 })
     }
 
     if (!response.submittedAt) {
-      return NextResponse.json(
-        { error: "Response must be submitted first" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Response must be submitted first' }, { status: 400 })
     }
 
     if (response.signed) {
-      return NextResponse.json(
-        { error: "Response is already signed" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Response is already signed' }, { status: 400 })
     }
 
     // Generate a unique signature token
-    const signatureToken = crypto.randomBytes(32).toString("hex");
+    const signatureToken = crypto.randomBytes(32).toString('hex')
 
     // Update the response with the signature token
     await prisma.response.update({
       where: { id: response.id },
       data: { signatureToken },
-    });
+    })
 
     // Send signature request email
-    const signatureUrl = `${process.env.NEXT_PUBLIC_APP_URL || process.env.BASE_URL}/survey/${token}/sign/${signatureToken}`;
-
+    const signatureUrl = `${process.env.NEXT_PUBLIC_APP_URL || process.env.BASE_URL}/survey/${token}/sign/${signatureToken}`
+    
     const emailHtml = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #2563eb;">Survey Response Signature Request</h2>
@@ -67,23 +58,20 @@ export async function POST(
         <hr style="margin: 30px 0; border: none; border-top: 1px solid #e5e7eb;">
         <p style="color: #6b7280; font-size: 12px;">This link will expire when the survey closes or if a new signature request is made.</p>
       </div>
-    `;
+    `
 
     await sendEmail({
       to: response.member.email,
       subject: `Signature Required: ${response.survey.title}`,
       html: emailHtml,
-    });
+    })
 
-    return NextResponse.json({
-      success: true,
-      message: "Signature request email sent successfully",
-    });
+    return NextResponse.json({ 
+      success: true, 
+      message: 'Signature request email sent successfully' 
+    })
   } catch (error) {
-    logError("Error requesting signature:", error);
-    return NextResponse.json(
-      { error: "Failed to send signature request" },
-      { status: 500 }
-    );
+    logError('Error requesting signature:', error)
+    return NextResponse.json({ error: 'Failed to send signature request' }, { status: 500 })
   }
 }

@@ -39,11 +39,11 @@ GitHub Actions automatically builds:
 3. Copy contents from `portainer-stack-dev.yml`
 4. Set environment variables:
 
-   ```yaml
-   environment:
-     - PRODUCTION_URL=https://dev-hoasurvey.foxpointva.com # or your dev domain
-     - JWT_SECRET=<will-get-after-setup>
-   ```
+    ```yaml
+    environment:
+       - PRODUCTION_URL=https://dev-hoasurvey.foxpointva.com  # or your dev domain
+       - JWT_SECRET=<will-get-after-setup>
+    ```
 
 5. Deploy the stack
 6. Access: `http://your-server:3001`

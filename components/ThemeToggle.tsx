@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
 
 export default function ThemeToggle() {
   const [isDark, setIsDark] = useState(false);
@@ -9,32 +9,29 @@ export default function ThemeToggle() {
   useEffect(() => {
     setMounted(true);
     // Check for saved theme preference or default to system preference
-    const savedTheme = localStorage.getItem("theme");
-    const systemPrefersDark = window.matchMedia(
-      "(prefers-color-scheme: dark)"
-    ).matches;
-
-    const shouldBeDark =
-      savedTheme === "dark" || (!savedTheme && systemPrefersDark);
+    const savedTheme = localStorage.getItem('theme');
+    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    
+    const shouldBeDark = savedTheme === 'dark' || (!savedTheme && systemPrefersDark);
     setIsDark(shouldBeDark);
-
+    
     if (shouldBeDark) {
-      document.documentElement.classList.add("dark");
+      document.documentElement.classList.add('dark');
     } else {
-      document.documentElement.classList.remove("dark");
+      document.documentElement.classList.remove('dark');
     }
   }, []);
 
   const toggleTheme = () => {
     const newIsDark = !isDark;
     setIsDark(newIsDark);
-
+    
     if (newIsDark) {
-      document.documentElement.classList.add("dark");
-      localStorage.setItem("theme", "dark");
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
     } else {
-      document.documentElement.classList.remove("dark");
-      localStorage.setItem("theme", "light");
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
     }
   };
 
@@ -58,7 +55,7 @@ export default function ThemeToggle() {
       >
         <span
           className={`absolute top-0.5 left-0.5 w-6 h-6 bg-white rounded-full shadow-md transform transition-transform duration-300 flex items-center justify-center ${
-            isDark ? "translate-x-7" : "translate-x-0"
+            isDark ? 'translate-x-7' : 'translate-x-0'
           }`}
         >
           {isDark ? (

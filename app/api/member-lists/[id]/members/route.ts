@@ -1,7 +1,7 @@
-import { log, error as logError } from "@/lib/logger";
-import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { verifyToken } from "@/lib/auth/jwt";
+import { log, error as logError } from '@/lib/logger'
+import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
+import { verifyToken } from '@/lib/auth/jwt';
 
 export async function POST(
   req: NextRequest,
@@ -9,16 +9,16 @@ export async function POST(
 ) {
   try {
     // Verify authentication
-    let adminId = req.headers.get("x-admin-id");
-
+    let adminId = req.headers.get('x-admin-id');
+    
     if (!adminId) {
-      const token = req.cookies.get("auth-token")?.value;
+      const token = req.cookies.get('auth-token')?.value;
       if (!token) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
       const payload = await verifyToken(token as string);
       if (!payload?.adminId) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
       adminId = payload.adminId;
     }
@@ -30,7 +30,7 @@ export async function POST(
     // Validate required fields
     if (!lot || !name || !email) {
       return NextResponse.json(
-        { error: "Lot, name, and email are required" },
+        { error: 'Lot, name, and email are required' },
         { status: 400 }
       );
     }
@@ -38,10 +38,7 @@ export async function POST(
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      return NextResponse.json(
-        { error: "Invalid email format" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Invalid email format' }, { status: 400 });
     }
 
     // Verify list exists
@@ -50,10 +47,7 @@ export async function POST(
     });
 
     if (!list) {
-      return NextResponse.json(
-        { error: "Member list not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Member list not found' }, { status: 404 });
     }
 
     // Create the member and connect to the list
@@ -62,7 +56,7 @@ export async function POST(
         lot,
         name,
         email,
-        address: address || "",
+        address: address || '',
         lists: {
           connect: { id },
         },
@@ -84,7 +78,7 @@ export async function POST(
     for (const survey of ongoingSurveys) {
       // Generate a unique token for this response
       const token = `${survey.id}-${newMember.id}-${Date.now()}`;
-
+      
       await prisma.response.create({
         data: {
           surveyId: survey.id,
@@ -93,7 +87,7 @@ export async function POST(
           submittedAt: null,
         },
       });
-
+      
       // If survey has minResponsesAll=true, increment minResponses
       if (survey.minResponsesAll) {
         await prisma.survey.update({
@@ -109,9 +103,9 @@ export async function POST(
 
     return NextResponse.json(newMember);
   } catch (error) {
-    logError("[MEMBER_CREATE]", error);
+    logError('[MEMBER_CREATE]', error);
     return NextResponse.json(
-      { error: "Failed to create member" },
+      { error: 'Failed to create member' },
       { status: 500 }
     );
   }
