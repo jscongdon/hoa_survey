@@ -114,7 +114,7 @@ export default function DashboardPage() {
     }
     
     const member = nonRespondents[surveyId]?.find((m: any) => m.responseId === responseId);
-    const memberName = member ? `${member.firstName} ${member.lastName}` : 'member';
+    const memberName = member ? member.name : 'member';
     
     setReminderStatus({ ...reminderStatus, [surveyId]: `Sending to ${memberName}...` });
     try {
@@ -466,7 +466,7 @@ export default function DashboardPage() {
                           <option value="">Select a member...</option>
                           {nonRespondents[survey.id].map((member: any) => (
                             <option key={member.responseId} value={member.responseId}>
-                              Lot {member.lotNumber} - {member.lastName}, {member.firstName}
+                              Lot {member.lotNumber} - {member.name}
                             </option>
                           ))}
                         </select>
