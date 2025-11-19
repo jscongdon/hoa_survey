@@ -419,31 +419,6 @@ export default function DashboardPage() {
               </p>
             )}
           </div>
-          {currentAdminRole === "FULL" && (
-            <span
-              onClick={() => router.push("/dashboard/settings")}
-              className="text-3xl cursor-pointer hover:opacity-70 transition-opacity"
-              title="Settings"
-            >
-              ⚙️
-            </span>
-          )}
-        </div>
-        <div className="flex flex-col gap-2 items-end">
-          {currentAdminRole === "FULL" && (
-            <button
-              onClick={() => router.push("/dashboard/surveys/create")}
-              className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 font-medium"
-            >
-              ➕ Create Survey
-            </button>
-          )}
-          <button
-            onClick={handleLogout}
-            className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 font-medium"
-          >
-            🚪 Logout
-          </button>
         </div>
       </div>
 
