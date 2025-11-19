@@ -44,7 +44,9 @@ export default function SurveyPage({
   const [token, setToken] = useState<string | null>(null);
   const [requestingSignature, setRequestingSignature] = useState(false);
   const [signatureRequested, setSignatureRequested] = useState(false);
-  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const [validationErrors, setValidationErrors] = useState<
+    Record<string, string>
+  >({});
 
   useEffect(() => {
     params.then((resolvedParams) => {
@@ -191,11 +193,16 @@ export default function SurveyPage({
           ans.forEach((a) => {
             if (a && typeof a === "object" && a.choice === "__WRITE_IN__") {
               if (!String(a.writeIn || "").trim()) {
-                errors[q.id] = "Please specify a value for the selected write-in.";
+                errors[q.id] =
+                  "Please specify a value for the selected write-in.";
               }
             }
           });
-        } else if (ans && typeof ans === "object" && (ans as any).choice === "__WRITE_IN__") {
+        } else if (
+          ans &&
+          typeof ans === "object" &&
+          (ans as any).choice === "__WRITE_IN__"
+        ) {
           if (!String((ans as any).writeIn || "").trim()) {
             errors[q.id] = "Please specify a value for the selected write-in.";
           }
@@ -208,7 +215,11 @@ export default function SurveyPage({
       // Scroll to first error
       const firstQ = Object.keys(errors)[0];
       const el = document.querySelector(`[data-question-id="${firstQ}"]`);
-      if (el) (el as HTMLElement).scrollIntoView({ behavior: "smooth", block: "center" });
+      if (el)
+        (el as HTMLElement).scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
       return;
     }
 
@@ -290,7 +301,11 @@ export default function SurveyPage({
     // For arrays (MULTI_MULTI), check if at least one option is selected
     if (Array.isArray(value)) {
       return value.some((v) => {
-        if (v && typeof v === "object" && (v as any).choice === "__WRITE_IN__") {
+        if (
+          v &&
+          typeof v === "object" &&
+          (v as any).choice === "__WRITE_IN__"
+        ) {
           return String((v as any).writeIn || "").trim() !== "";
         }
         return v !== undefined && v !== null && v !== "";
@@ -309,15 +324,19 @@ export default function SurveyPage({
   const totalQuestions = survey.survey.questions.length;
   const progress = Math.round((answeredCount / totalQuestions) * 100);
 
-  // Check if all required questions are answered
+  // Check if all required questions are answered — only consider questions that are enabled
   const requiredQuestions = survey.survey.questions.filter(
-    (q: any) => q.required
+    (q: any) => q.required && enabledMap[q.id] !== false
   );
   const allRequiredAnswered = requiredQuestions.every((q: any) => {
     const answer = answers[q.id];
     if (Array.isArray(answer)) {
       return answer.some((v) => {
-        if (v && typeof v === "object" && (v as any).choice === "__WRITE_IN__") {
+        if (
+          v &&
+          typeof v === "object" &&
+          (v as any).choice === "__WRITE_IN__"
+        ) {
           return String((v as any).writeIn || "").trim() !== "";
         }
         return v !== undefined && v !== null && v !== "";
@@ -463,16 +482,16 @@ export default function SurveyPage({
 
         <div className="space-y-6 mb-8">
           {survey.survey.questions.map((question: any) => (
-                <div
-                  key={question.id}
-                  data-question-id={question.id}
-                  className="bg-white dark:bg-gray-800 rounded-lg shadow p-6"
-                >
+            <div
+              key={question.id}
+              data-question-id={question.id}
+              className="bg-white dark:bg-gray-800 rounded-lg shadow p-6"
+            >
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                {question.text}
-                {question.required && (
-                  <span className="text-red-600 dark:text-red-400 ml-1">*</span>
-                )}
+                      {question.text}
+                      {question.required && enabledMap[question.id] !== false && (
+                        <span className="text-red-600 dark:text-red-400 ml-1">*</span>
+                      )}
               </h3>
 
               {question.type === "YES_NO" && (
@@ -566,8 +585,7 @@ export default function SurveyPage({
                                 delete copy[question.id];
                                 return copy;
                               });
-                            }
-                            }
+                            }}
                             className="mr-3"
                           />
                           <span
@@ -623,8 +641,7 @@ export default function SurveyPage({
                                   delete copy[question.id];
                                   return copy;
                                 });
-                              }
-                              }
+                              }}
                               className="mr-3"
                             />
                             <span
@@ -657,8 +674,7 @@ export default function SurveyPage({
                                     delete copy[question.id];
                                     return copy;
                                   });
-                                }
-                                }
+                                }}
                                 disabled={isDisabled}
                                 placeholder="Please specify"
                                 className={`w-full px-4 py-2 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
@@ -694,7 +710,8 @@ export default function SurveyPage({
                           : question.options || [];
                       return (() => {
                         const elems: React.ReactNode[] = [];
-                        const currentAnswers = (answers[question.id] as any[]) || [];
+                        const currentAnswers =
+                          (answers[question.id] as any[]) || [];
                         const qEnabled = enabledMap[question.id] !== false;
 
                         // Helper to count selected non-empty answers
@@ -715,7 +732,8 @@ export default function SurveyPage({
                             <label
                               key={option}
                               className={`flex items-center p-3 rounded-lg border-2 transition-colors ${
-                                isChecked && (isClosed || survey.signed || !qEnabled)
+                                isChecked &&
+                                (isClosed || survey.signed || !qEnabled)
                                   ? "border-blue-400 bg-blue-50 dark:border-blue-500 dark:bg-blue-900/30"
                                   : isChecked
                                     ? "border-blue-500 bg-blue-50 dark:border-blue-400 dark:bg-blue-900/50"
@@ -732,7 +750,9 @@ export default function SurveyPage({
                                 onChange={(e) => {
                                   const newAnswers = e.target.checked
                                     ? [...currentAnswers, option]
-                                    : currentAnswers.filter((a) => a !== option);
+                                    : currentAnswers.filter(
+                                        (a) => a !== option
+                                      );
                                   setAnswers({
                                     ...answers,
                                     [question.id]: newAnswers,
@@ -747,7 +767,8 @@ export default function SurveyPage({
                               />
                               <span
                                 className={`font-medium ${
-                                  isChecked && (isClosed || survey.signed || !qEnabled)
+                                  isChecked &&
+                                  (isClosed || survey.signed || !qEnabled)
                                     ? "text-blue-700 dark:text-blue-300"
                                     : isChecked
                                       ? "text-blue-600 dark:text-blue-400"
@@ -761,14 +782,21 @@ export default function SurveyPage({
                         });
 
                         // Write-in slots for MULTI_MULTI
-                        const writeInCount = (question as any).writeInCount || 0;
+                        const writeInCount =
+                          (question as any).writeInCount || 0;
                         for (let i = 0; i < writeInCount; i++) {
                           const writeInKey = `__WRITE_IN__:${i}`;
                           const isChecked = currentAnswers.some(
-                            (a) => typeof a === "object" && a.choice === "__WRITE_IN__" && a.index === i
+                            (a) =>
+                              typeof a === "object" &&
+                              a.choice === "__WRITE_IN__" &&
+                              a.index === i
                           );
                           const writeInObj = currentAnswers.find(
-                            (a) => typeof a === "object" && a.choice === "__WRITE_IN__" && a.index === i
+                            (a) =>
+                              typeof a === "object" &&
+                              a.choice === "__WRITE_IN__" &&
+                              a.index === i
                           ) as any;
                           const isDisabled =
                             isClosed ||
@@ -782,7 +810,8 @@ export default function SurveyPage({
                             <div key={writeInKey}>
                               <label
                                 className={`flex items-center p-3 rounded-lg border-2 transition-colors ${
-                                  isChecked && (isClosed || survey.signed || !qEnabled)
+                                  isChecked &&
+                                  (isClosed || survey.signed || !qEnabled)
                                     ? "border-blue-400 bg-blue-50 dark:border-blue-500 dark:bg-blue-900/30"
                                     : isChecked
                                       ? "border-blue-500 bg-blue-50 dark:border-blue-400 dark:bg-blue-900/50"
@@ -807,7 +836,13 @@ export default function SurveyPage({
                                       });
                                     } else {
                                       newAnswers = newAnswers.filter(
-                                        (a) => !(typeof a === "object" && (a as any).choice === "__WRITE_IN__" && (a as any).index === i)
+                                        (a) =>
+                                          !(
+                                            typeof a === "object" &&
+                                            (a as any).choice ===
+                                              "__WRITE_IN__" &&
+                                            (a as any).index === i
+                                          )
                                       );
                                     }
                                     setAnswers({
@@ -822,7 +857,9 @@ export default function SurveyPage({
                                   }}
                                   className="mr-3"
                                 />
-                                <span className={`font-medium ${isChecked ? "text-blue-600 dark:text-blue-400" : "text-gray-700 dark:text-gray-300"}`}>
+                                <span
+                                  className={`font-medium ${isChecked ? "text-blue-600 dark:text-blue-400" : "text-gray-700 dark:text-gray-300"}`}
+                                >
                                   Write-In {i + 1}
                                 </span>
                               </label>
@@ -832,9 +869,19 @@ export default function SurveyPage({
                                     type="text"
                                     value={writeInObj?.writeIn || ""}
                                     onChange={(e) => {
-                                      const newAnswers = (currentAnswers || []).map((a) => {
-                                        if (typeof a === "object" && (a as any).choice === "__WRITE_IN__" && (a as any).index === i) {
-                                          return { ...a, writeIn: e.target.value };
+                                      const newAnswers = (
+                                        currentAnswers || []
+                                      ).map((a) => {
+                                        if (
+                                          typeof a === "object" &&
+                                          (a as any).choice ===
+                                            "__WRITE_IN__" &&
+                                          (a as any).index === i
+                                        ) {
+                                          return {
+                                            ...a,
+                                            writeIn: e.target.value,
+                                          };
                                         }
                                         return a;
                                       });
