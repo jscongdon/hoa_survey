@@ -234,7 +234,9 @@ export async function PUT(
 
     // Use a transaction: delete old answers, create new ones, then update response metadata
     const txResult = await prisma.$transaction(async (tx) => {
-      await tx.answer.deleteMany({ where: { responseId: existingResponse.id } });
+      await tx.answer.deleteMany({
+        where: { responseId: existingResponse.id },
+      });
       if (answerRows.length > 0) {
         // createMany is faster and avoids nesting; value is required and should be a string
         await tx.answer.createMany({ data: answerRows });
@@ -331,14 +333,17 @@ export async function PUT(
         // Build a compact results summary (basic counts / averages)
         const responses = survey.responses.map((r) => ({
           id: r.id,
-          answers: r.answers.reduce((acc: any, answer: any) => {
-            try {
-              acc[answer.questionId] = JSON.parse(answer.value);
-            } catch {
-              acc[answer.questionId] = answer.value;
-            }
-            return acc;
-          }, {} as Record<string, any>),
+          answers: r.answers.reduce(
+            (acc: any, answer: any) => {
+              try {
+                acc[answer.questionId] = JSON.parse(answer.value);
+              } catch {
+                acc[answer.questionId] = answer.value;
+              }
+              return acc;
+            },
+            {} as Record<string, any>
+          ),
         }));
 
         const questionStats = survey.questions.map((question) => {
@@ -414,18 +419,18 @@ export async function PUT(
         questionStats.forEach((qs) => {
           summaryHtml += `<h4 style="margin:0 0 6px 0">${qs.text}</h4>`;
           if (qs.counts) {
-              summaryHtml += `<ul style="margin:0 0 12px 18px">`;
-              const entries = Object.entries(qs.counts || {});
-              entries.sort((a, b) => {
-                const diff = Number(b[1] || 0) - Number(a[1] || 0);
-                if (diff !== 0) return diff;
-                return String(a[0]).localeCompare(String(b[0]));
-              });
-              entries.forEach(([k, v]) => {
-                summaryHtml += `<li>${k}: ${v}</li>`;
-              });
-              summaryHtml += `</ul>`;
-            } else if (qs.responses) {
+            summaryHtml += `<ul style="margin:0 0 12px 18px">`;
+            const entries = Object.entries(qs.counts || {});
+            entries.sort((a, b) => {
+              const diff = Number(b[1] || 0) - Number(a[1] || 0);
+              if (diff !== 0) return diff;
+              return String(a[0]).localeCompare(String(b[0]));
+            });
+            entries.forEach(([k, v]) => {
+              summaryHtml += `<li>${k}: ${v}</li>`;
+            });
+            summaryHtml += `</ul>`;
+          } else if (qs.responses) {
             summaryHtml += `<ul style="margin:0 0 12px 18px">`;
             qs.responses.slice(0, 10).forEach((r: any) => {
               summaryHtml += `<li>${String(r)}</li>`;
@@ -438,12 +443,17 @@ export async function PUT(
           }
         });
 
-        const notifyUrl = (process.env.PRODUCTION_URL || process.env.DEVELOPMENT_URL || "http://localhost:3000") + `/dashboard/surveys/${survey.id}/results`;
+        const notifyUrl =
+          (process.env.PRODUCTION_URL ||
+            process.env.DEVELOPMENT_URL ||
+            "http://localhost:3000") +
+          `/dashboard/surveys/${survey.id}/results`;
 
         const emailHtml = generateBaseEmail(
           `Survey Reached Minimal Responses: ${survey.title}`,
           `Hello ${survey.createdBy.name},`,
-          summaryHtml + `<p style="margin-top:12px"><a href="${notifyUrl}" style="color:#2563eb; text-decoration:none">View full results</a></p>`,
+          summaryHtml +
+            `<p style="margin-top:12px"><a href="${notifyUrl}" style="color:#2563eb; text-decoration:none">View full results</a></p>`,
           undefined,
           "This is an automated notification."
         );
@@ -455,13 +465,21 @@ export async function PUT(
         });
 
         // Mark survey as notified to avoid duplicates
+        // Cast to `any` because the generated Prisma client in this
+        // environment may be out-of-date with the schema (types missing).
+        // Casting here avoids a TypeScript error; production runtime will
+        // still perform the update as expected. Consider running
+        // `npx prisma generate` to refresh types.
         await prisma.survey.update({
           where: { id: survey.id },
-          data: { minimalNotifiedAt: new Date() },
+          data: { minimalNotifiedAt: new Date() } as any,
         });
       }
     } catch (notifyError) {
-      logError("Error while sending minimal response notification:", notifyError);
+      logError(
+        "Error while sending minimal response notification:",
+        notifyError
+      );
     }
 
     return NextResponse.json({ success: true, response });

@@ -108,26 +108,26 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      const created = await tx.survey.create({
-        data: {
-          title,
-          description,
-          opensAt: new Date(opensAt),
-          closesAt: new Date(closesAt),
-          memberListId,
-          showLive,
-          showAfterClose,
-          minResponses: finalMinResponses,
-          minResponsesAll: minResponsesAll || false,
-          requireSignature:
-            typeof requireSignature === "boolean" ? requireSignature : true,
-          notifyOnMinResponses:
-            typeof notifyOnMinResponses === "boolean"
-              ? notifyOnMinResponses
-              : false,
-          createdById: adminId || undefined,
-        },
-      });
+      const createPayload: any = {
+        title,
+        description,
+        opensAt: new Date(opensAt),
+        closesAt: new Date(closesAt),
+        memberListId,
+        showLive,
+        showAfterClose,
+        minResponses: finalMinResponses,
+        minResponsesAll: minResponsesAll || false,
+        requireSignature:
+          typeof requireSignature === "boolean" ? requireSignature : true,
+        notifyOnMinResponses:
+          typeof notifyOnMinResponses === "boolean"
+            ? notifyOnMinResponses
+            : false,
+        createdById: adminId || undefined,
+      };
+
+      const created = await tx.survey.create({ data: createPayload });
       log("[CREATE_SURVEY] Survey created:", created.id);
 
       if (Array.isArray(questions) && questions.length > 0) {

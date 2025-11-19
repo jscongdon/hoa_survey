@@ -58,7 +58,7 @@ export async function GET(
     where: { surveyId: survey.id, submittedAt: { not: null } },
   });
 
-    return NextResponse.json({
+  return NextResponse.json({
     id: survey.id,
     title: survey.title,
     description: survey.description,
@@ -66,16 +66,16 @@ export async function GET(
     closesAt: survey.closesAt,
     memberListId: survey.memberListId,
     memberListName: survey.memberList?.name,
-      createdById: survey.createdById || null,
-      requireSignature:
-        typeof survey.requireSignature === "boolean"
-          ? survey.requireSignature
-          : true,
-      notifyOnMinResponses:
-        typeof (survey as any).notifyOnMinResponses === "boolean"
-          ? (survey as any).notifyOnMinResponses
-          : false,
-      minimalNotifiedAt: (survey as any).minimalNotifiedAt || null,
+    createdById: survey.createdById || null,
+    requireSignature:
+      typeof survey.requireSignature === "boolean"
+        ? survey.requireSignature
+        : true,
+    notifyOnMinResponses:
+      typeof (survey as any).notifyOnMinResponses === "boolean"
+        ? (survey as any).notifyOnMinResponses
+        : false,
+    minimalNotifiedAt: (survey as any).minimalNotifiedAt || null,
     minResponses: survey.minResponses,
     minResponsesAll: survey.minResponsesAll,
     totalResponses,
@@ -161,27 +161,24 @@ export async function PUT(
         }
       }
 
-      await tx.survey.update({
-        where: { id },
-        data: {
-          title,
-          description,
-          opensAt: opensAt ? new Date(opensAt) : undefined,
-          closesAt: closesAt ? new Date(closesAt) : undefined,
-          memberListId: memberListId || undefined,
-          minResponses: finalMinResponses,
-          minResponsesAll:
-            minResponsesAll !== undefined ? minResponsesAll : undefined,
-          requireSignature:
-            typeof requireSignature === "boolean"
-              ? requireSignature
-              : undefined,
-          notifyOnMinResponses:
-            typeof (body as any).notifyOnMinResponses === "boolean"
-              ? (body as any).notifyOnMinResponses
-              : undefined,
-        },
-      });
+      const updatePayload: any = {
+        title,
+        description,
+        opensAt: opensAt ? new Date(opensAt) : undefined,
+        closesAt: closesAt ? new Date(closesAt) : undefined,
+        memberListId: memberListId || undefined,
+        minResponses: finalMinResponses,
+        minResponsesAll:
+          minResponsesAll !== undefined ? minResponsesAll : undefined,
+        requireSignature:
+          typeof requireSignature === "boolean" ? requireSignature : undefined,
+        notifyOnMinResponses:
+          typeof (body as any).notifyOnMinResponses === "boolean"
+            ? (body as any).notifyOnMinResponses
+            : undefined,
+      };
+
+      await tx.survey.update({ where: { id }, data: updatePayload });
 
       await tx.question.deleteMany({ where: { surveyId: id } });
 

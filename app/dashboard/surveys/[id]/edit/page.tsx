@@ -28,7 +28,8 @@ export default function EditSurveyPage({
   const [minResponses, setMinResponses] = useState<string>("");
   const [minResponsesAll, setMinResponsesAll] = useState<boolean>(false);
   const [requireSignature, setRequireSignature] = useState<boolean>(true);
-  const [notifyOnMinResponses, setNotifyOnMinResponses] = useState<boolean>(false);
+  const [notifyOnMinResponses, setNotifyOnMinResponses] =
+    useState<boolean>(false);
   const [hasChanges, setHasChanges] = useState<boolean>(false);
   const [originalData, setOriginalData] = useState<any>(null);
 

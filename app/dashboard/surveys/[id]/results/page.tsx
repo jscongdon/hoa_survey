@@ -22,6 +22,7 @@ interface SurveyResultsData {
     opensAt: string;
     closesAt: string;
     totalResponses: number;
+    createdByName?: string | null;
   };
   questions: Array<{
     id: string;
@@ -87,13 +88,22 @@ export default function SurveyResultsPage({
         // If the API returned a creator id, fetch admins and resolve name for display
         if (results?.survey?.createdById) {
           try {
-            const adminsRes = await fetch('/api/admins');
+            const adminsRes = await fetch("/api/admins");
             if (adminsRes.ok) {
               const adminsJson = await adminsRes.json();
-              const admin = (adminsJson?.admins || []).find((a: any) => a.id === results.survey.createdById);
+              const admin = (adminsJson?.admins || []).find(
+                (a: any) => a.id === results.survey.createdById
+              );
               if (admin) {
                 // merge creator display name into local data copy so UI shows current name
-                setData((prev) => prev ? { ...prev, survey: { ...prev.survey, createdByName: admin.name } } : prev);
+                setData((prev) =>
+                  prev
+                    ? {
+                        ...prev,
+                        survey: { ...prev.survey, createdByName: admin.name },
+                      }
+                    : prev
+                );
               }
             }
           } catch (err) {
