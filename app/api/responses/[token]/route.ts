@@ -1,47 +1,50 @@
-import { log, error as logError } from '@/lib/logger'
-import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
-import { sendEmail } from '@/lib/email/send'
-import crypto from 'crypto'
+import { log, error as logError } from "@/lib/logger";
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { sendEmail } from "@/lib/email/send";
+import crypto from "crypto";
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ token: string }> }
 ) {
-  const { token } = await params
+  const { token } = await params;
   const response = await prisma.response.findUnique({
     where: { token },
     include: {
-      survey: { include: { questions: { orderBy: { order: 'asc' } } } },
+      survey: { include: { questions: { orderBy: { order: "asc" } } } },
       member: true,
       answers: true,
     },
-  })
+  });
 
   if (!response) {
-    return NextResponse.json({ error: 'Survey not found' }, { status: 404 })
+    return NextResponse.json({ error: "Survey not found" }, { status: 404 });
   }
 
-  const now = new Date()
-  const isClosed = response.survey.closesAt && now > response.survey.closesAt
-  
+  const now = new Date();
+  const isClosed = response.survey.closesAt && now > response.survey.closesAt;
+
   // Load latest answers explicitly to avoid any timing/serialization issues
-  let existingAnswers: Record<string, any> | null = null
+  let existingAnswers: Record<string, any> | null = null;
   if (response.submittedAt) {
     const answersRows = await prisma.answer.findMany({
       where: { responseId: response.id },
-      orderBy: { createdAt: 'asc' },
-    })
+      orderBy: { createdAt: "asc" },
+    });
 
     if (answersRows && answersRows.length > 0) {
-      existingAnswers = answersRows.reduce((acc: Record<string, any>, answer: any) => {
-        try {
-          acc[answer.questionId] = JSON.parse(answer.value)
-        } catch {
-          acc[answer.questionId] = answer.value
-        }
-        return acc
-      }, {})
+      existingAnswers = answersRows.reduce(
+        (acc: Record<string, any>, answer: any) => {
+          try {
+            acc[answer.questionId] = JSON.parse(answer.value);
+          } catch {
+            acc[answer.questionId] = answer.value;
+          }
+          return acc;
+        },
+        {}
+      );
     }
   }
 
@@ -56,12 +59,14 @@ export async function GET(
           text: q.text,
           order: q.order,
           options: q.options ? JSON.parse(q.options) : undefined,
+          writeIn: q.writeIn || false,
+          writeInCount: (q as any).writeInCount || 0,
           showWhen: q.showWhen ? JSON.parse(q.showWhen) : undefined,
           maxSelections: q.maxSelections || undefined,
           required: q.required || false,
         })),
       }
-    : null
+    : null;
 
   return NextResponse.json({
     ...response,
@@ -70,7 +75,7 @@ export async function GET(
     existingAnswers,
     signed: response.signed,
     signedAt: response.signedAt,
-  })
+  });
 }
 
 export async function PUT(
@@ -78,81 +83,104 @@ export async function PUT(
   { params }: { params: Promise<{ token: string }> }
 ) {
   try {
-    const body = await request.json()
+    const body = await request.json();
     // Defensive: ensure answers is always an object to avoid runtime errors
-    let answers = body?.answers
-    if (!answers || typeof answers !== 'object') {
-      answers = {}
+    let answers = body?.answers;
+    if (!answers || typeof answers !== "object") {
+      answers = {};
     }
-    const { token } = await params
+    const { token } = await params;
 
     // Check if survey is still open
     const existingResponse = await prisma.response.findUnique({
       where: { token },
-      include: { 
+      include: {
         survey: true,
         member: true,
       },
-    })
+    });
 
     if (!existingResponse) {
-      return NextResponse.json({ error: 'Response not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: "Response not found" },
+        { status: 404 }
+      );
     }
 
     // Check if response is signed (cannot be edited)
     if (existingResponse.signed) {
-      return NextResponse.json({ error: 'This response has been digitally signed and can no longer be edited' }, { status: 403 })
+      return NextResponse.json(
+        {
+          error:
+            "This response has been digitally signed and can no longer be edited",
+        },
+        { status: 403 }
+      );
     }
 
-    const now = new Date()
-    if (existingResponse.survey.closesAt && now > existingResponse.survey.closesAt) {
-      return NextResponse.json({ error: 'Survey is closed' }, { status: 403 })
+    const now = new Date();
+    if (
+      existingResponse.survey.closesAt &&
+      now > existingResponse.survey.closesAt
+    ) {
+      return NextResponse.json({ error: "Survey is closed" }, { status: 403 });
     }
 
     // Generate signature token
-    const signatureToken = crypto.randomBytes(32).toString('hex')
+    const signatureToken = crypto.randomBytes(32).toString("hex");
 
     // Delete existing answers and create new ones
     await prisma.answer.deleteMany({
       where: { responseId: existingResponse.id },
-    })
+    });
 
     // Load survey questions (ordered) so we can evaluate any showWhen conditions
     const surveyWithQuestions = await prisma.survey.findUnique({
       where: { id: existingResponse.surveyId },
-      include: { questions: { orderBy: { order: 'asc' } } },
-    })
+      include: { questions: { orderBy: { order: "asc" } } },
+    });
 
-    const questions = surveyWithQuestions?.questions ?? []
+    const questions = surveyWithQuestions?.questions ?? [];
 
     // Helper: determine if a question should be considered enabled given submitted answers
-    function isQuestionEnabled(q: any, submittedAnswers: Record<string, any>): boolean {
-      if (!q.showWhen) return true
+    function isQuestionEnabled(
+      q: any,
+      submittedAnswers: Record<string, any>
+    ): boolean {
+      if (!q.showWhen) return true;
       try {
-        const cond = typeof q.showWhen === 'string' ? JSON.parse(q.showWhen) : q.showWhen
-        const triggerOrder = cond.triggerOrder
-        const operator = cond.operator
-        const expected = cond.value
+        const cond =
+          typeof q.showWhen === "string" ? JSON.parse(q.showWhen) : q.showWhen;
+        const triggerOrder = cond.triggerOrder;
+        const operator = cond.operator;
+        const expected = cond.value;
         // Find trigger question by order
-        const trigger = questions.find(t => t.order === triggerOrder)
-        if (!trigger) return false
-        const triggerAns = submittedAnswers[trigger.id]
-        if (triggerAns === null || triggerAns === undefined || triggerAns === '') return false
+        const trigger = questions.find((t) => t.order === triggerOrder);
+        if (!trigger) return false;
+        const triggerAns = submittedAnswers[trigger.id];
+        if (
+          triggerAns === null ||
+          triggerAns === undefined ||
+          triggerAns === ""
+        )
+          return false;
 
         // Normalize answers for comparison
         if (Array.isArray(triggerAns)) {
-          if (operator === 'equals') {
-            return triggerAns.includes(expected)
+          if (operator === "equals") {
+            return triggerAns.includes(expected);
           }
           // contains on an array -> treat as includes
-          return triggerAns.some((a: any) => String(a).includes(String(expected)))
+          return triggerAns.some((a: any) =>
+            String(a).includes(String(expected))
+          );
         }
 
-        const asStr = String(triggerAns)
-        if (operator === 'equals') return asStr === String(expected)
-        return asStr.includes(String(expected))
+        const asStr = String(triggerAns);
+        if (operator === "equals") return asStr === String(expected);
+        return asStr.includes(String(expected));
       } catch (e) {
-        return false
+        return false;
       }
     }
 
@@ -160,21 +188,22 @@ export async function PUT(
     const allowedAnswerEntries = Object.entries(answers)
       .filter(([, value]) => {
         // Skip empty values up-front
-        if (value === null || value === undefined || value === '') return false
-        if (Array.isArray(value) && value.length === 0) return false
-        return true
+        if (value === null || value === undefined || value === "") return false;
+        if (Array.isArray(value) && value.length === 0) return false;
+        return true;
       })
       .filter(([questionId]) => {
         // Find question object for this id
-        const q = questions.find(q2 => q2.id === questionId)
+        const q = questions.find((q2) => q2.id === questionId);
         // If question not found in survey, skip it
-        if (!q) return false
-        return isQuestionEnabled(q, answers)
+        if (!q) return false;
+        return isQuestionEnabled(q, answers);
       })
       .map(([questionId, value]) => ({
         questionId,
-        value: typeof value === 'object' ? JSON.stringify(value) : String(value),
-      }))
+        value:
+          typeof value === "object" ? JSON.stringify(value) : String(value),
+      }));
 
     const response = await prisma.response.update({
       where: { token },
@@ -185,18 +214,18 @@ export async function PUT(
         submittedAt: new Date(),
         signatureToken,
       },
-    })
+    });
 
     // Send signature request email
     try {
-      const isDevelopment = process.env.NODE_ENV === 'development';
+      const isDevelopment = process.env.NODE_ENV === "development";
       let baseUrl: string;
       if (isDevelopment) {
-        baseUrl = process.env.DEVELOPMENT_URL || 'http://localhost:3000';
+        baseUrl = process.env.DEVELOPMENT_URL || "http://localhost:3000";
       } else {
-        baseUrl = process.env.PRODUCTION_URL || '';
+        baseUrl = process.env.PRODUCTION_URL || "";
         if (!baseUrl) {
-          throw new Error('Production URL not configured');
+          throw new Error("Production URL not configured");
         }
       }
       const signatureUrl = `${baseUrl}/survey/${token}/sign/${signatureToken}`;
@@ -221,21 +250,24 @@ export async function PUT(
           <hr style="margin: 30px 0; border: none; border-top: 1px solid #e5e7eb;">
           <p style="color: #6b7280; font-size: 12px;">This is an automated email. Please do not reply directly to this message.</p>
         </div>
-      `
+      `;
 
       await sendEmail({
         to: existingResponse.member.email,
         subject: `Digital Signature Request: ${existingResponse.survey.title}`,
         html: emailHtml,
-      })
+      });
     } catch (emailError) {
-      logError('Failed to send signature email:', emailError)
+      logError("Failed to send signature email:", emailError);
       // Continue even if email fails - response was saved successfully
     }
 
-    return NextResponse.json({ success: true, response })
+    return NextResponse.json({ success: true, response });
   } catch (error) {
-    logError(error)
-    return NextResponse.json({ error: 'Failed to submit response' }, { status: 500 })
+    logError(error);
+    return NextResponse.json(
+      { error: "Failed to submit response" },
+      { status: 500 }
+    );
   }
 }

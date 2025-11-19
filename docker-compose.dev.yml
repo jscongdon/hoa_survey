@@ -1,24 +1,26 @@
-version: '3.8'
 services:
   web:
-    image: node:20-bullseye-slim
-    working_dir: /usr/src/app
+    container_name: hoa_survey_dev
+    build: .
+    working_dir: /app
     # Install once (if node_modules missing), generate prisma client, sync jwt secret, then run dev
-    command: bash -lc "if [ ! -d node_modules ]; then npm ci; fi && npx prisma generate && (node ./scripts/sync-jwt-secret.js || true) && npm run dev"
+    command: bash -lc "if [ ! -d node_modules ]; then npm ci --legacy-peer-deps; fi && npx prisma generate && (node ./scripts/sync-jwt-secret.js || true) && npm run dev"
     ports:
       - "3000:3000"
     volumes:
-      - ./:/usr/src/app:cached
-      - node_modules:/usr/src/app/node_modules
+      - ./:/app:cached
+      - node_modules:/app/node_modules
       - hoasurvey-data:/data
     environment:
       DATABASE_URL: "file:/data/hoasurvey.db"
       NODE_ENV: development
       CHOKIDAR_USEPOLLING: "true"
-      JWT_SECRET: "dbd54ce4552660509b3b495a73398cd9b27834f0ee7cdf1c6a8596abefc7014da14639dae4524f6e4a0ca77d296d88e3303121b219d61f38954a01c8c2e81c25"
+      # JWT_SECRET can be provided via .env.local or Docker environment
+    restart: unless-stopped
     tty: true
 
 volumes:
   node_modules: {}
   hoasurvey-data:
     external: true
+    name: hoasurvey-data
