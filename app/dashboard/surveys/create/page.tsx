@@ -98,6 +98,27 @@ export default function CreateSurveyPage() {
 
       <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-6 max-w-2xl">
         <form onSubmit={handleSubmit} className="space-y-6">
+
+          {/* Member List moved to the top so it's the first field */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Member List *
+            </label>
+            <select
+              value={memberListId}
+              onChange={(e) => setMemberListId(e.target.value)}
+              required
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+            >
+              <option value="">Select a member list</option>
+              {lists.map((list) => (
+                <option key={list.id} value={list.id}>
+                  {list.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Survey Title *
@@ -153,24 +174,9 @@ export default function CreateSurveyPage() {
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Member List *
-            </label>
-            <select
-              value={memberListId}
-              onChange={(e) => setMemberListId(e.target.value)}
-              required
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-            >
-              <option value="">Select a member list</option>
-              {lists.map((list) => (
-                <option key={list.id} value={list.id}>
-                  {list.name}
-                </option>
-              ))}
-            </select>
-          </div>
+          
+
+          
 
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -225,6 +231,39 @@ export default function CreateSurveyPage() {
                   : "Please select a member list first"
                 : "If specified, the survey status will show progress towards this goal"}
             </p>
+            {/* Minimum Response Notification: moved to directly below Minimum Responses Required */}
+            <div className="flex items-center mt-2">
+              <input
+                type="checkbox"
+                id="notifyOnMinResponses"
+                checked={notifyOnMinResponses}
+                onChange={(e) => setNotifyOnMinResponses(e.target.checked)}
+                className="w-4 h-4 text-blue-500"
+              />
+              <label
+                htmlFor="notifyOnMinResponses"
+                title="Notify me when the minimal number of responses has been reached."
+                className="ml-2 text-sm text-gray-700 dark:text-gray-300"
+              >
+                Minimum Response Notification
+              </label>
+            </div>
+            {/* Request Digital Signature: placed below Minimum Response Notification */}
+            <div className="flex items-center mt-2">
+              <input
+                type="checkbox"
+                id="requireSignature"
+                checked={requireSignature}
+                onChange={(e) => setRequireSignature(e.target.checked)}
+                className="w-4 h-4 text-blue-500"
+              />
+              <label
+                htmlFor="requireSignature"
+                className="ml-2 text-sm text-gray-700 dark:text-gray-300"
+              >
+                Request Digital Signature
+              </label>
+            </div>
           </div>
 
           <div>
@@ -249,39 +288,7 @@ export default function CreateSurveyPage() {
               Show live results to respondents
             </label>
           </div>
-
-          <div className="flex items-center">
-            <input
-              type="checkbox"
-              id="requireSignature"
-              checked={requireSignature}
-              onChange={(e) => setRequireSignature(e.target.checked)}
-              className="w-4 h-4 text-blue-500"
-            />
-            <label
-              htmlFor="requireSignature"
-              className="ml-2 text-sm text-gray-700 dark:text-gray-300"
-            >
-              Request Digital Signature
-            </label>
-          </div>
-
-          <div className="flex items-center">
-            <input
-              type="checkbox"
-              id="notifyOnMinResponses"
-              checked={notifyOnMinResponses}
-              onChange={(e) => setNotifyOnMinResponses(e.target.checked)}
-              className="w-4 h-4 text-blue-500"
-            />
-            <label
-              htmlFor="notifyOnMinResponses"
-              title="Notify me when the minimal number of responses has been reached."
-              className="ml-2 text-sm text-gray-700 dark:text-gray-300"
-            >
-              Minimum Response Notification
-            </label>
-          </div>
+          
 
           <div className="flex gap-4">
             <button

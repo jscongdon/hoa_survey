@@ -489,23 +489,27 @@ export default function DashboardPage() {
                   )}
 
                   {survey.initialSentAt && (
-                    <>
-                      <button 
-                        onClick={() => handleSendReminder(survey.id)}
-                        disabled={!!reminderStatus[survey.id]}
-                        className="w-full px-4 py-2 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
-                      >
-                        Remind Non-Respondents
-                      </button>
+                    // Hide reminder buttons when survey has reached 100% completion
+                    // (either responseRate is 100 or submittedCount >= totalRecipients)
+                    (survey.responseRate < 100 && survey.submittedCount < survey.totalRecipients) ? (
+                      <>
+                        <button 
+                          onClick={() => handleSendReminder(survey.id)}
+                          disabled={!!reminderStatus[survey.id]}
+                          className="w-full px-4 py-2 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                        >
+                          Remind Non-Respondents
+                        </button>
 
-                      <button 
-                        onClick={() => toggleNonRespondents(survey.id)}
-                        disabled={loadingNonRespondents[survey.id]}
-                        className="w-full px-4 py-2 text-sm bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
-                      >
-                        {loadingNonRespondents[survey.id] ? 'Loading...' : 'Remind Non-Respondent'}
-                      </button>
-                    </>
+                        <button 
+                          onClick={() => toggleNonRespondents(survey.id)}
+                          disabled={loadingNonRespondents[survey.id]}
+                          className="w-full px-4 py-2 text-sm bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                        >
+                          {loadingNonRespondents[survey.id] ? 'Loading...' : 'Remind Non-Respondent'}
+                        </button>
+                      </>
+                    ) : null
                   )}
                 </div>
                 {showNonRespondents[survey.id] && nonRespondents[survey.id] && (

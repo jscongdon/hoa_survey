@@ -306,21 +306,7 @@ export default function EditSurveyPage({
                 : "No responses yet."}
           </p>
         </div>
-        <div className="flex items-center">
-          <input
-            type="checkbox"
-            id="requireSignatureEdit"
-            checked={requireSignature}
-            onChange={(e) => setRequireSignature(e.target.checked)}
-            className="w-4 h-4 text-blue-500"
-          />
-          <label
-            htmlFor="requireSignatureEdit"
-            className="ml-2 text-sm text-gray-700 dark:text-gray-300"
-          >
-            Request Digital Signature
-          </label>
-        </div>
+        
         <div className="flex items-center">
           <input
             type="checkbox"
@@ -335,6 +321,22 @@ export default function EditSurveyPage({
             className="ml-2 text-sm text-gray-700 dark:text-gray-300"
           >
             Minimum Response Notification
+          </label>
+        </div>
+        {/* Request Digital Signature: placed below Minimum Response Notification */}
+        <div className="flex items-center">
+          <input
+            type="checkbox"
+            id="requireSignatureEdit"
+            checked={requireSignature}
+            onChange={(e) => setRequireSignature(e.target.checked)}
+            className="w-4 h-4 text-blue-500"
+          />
+          <label
+            htmlFor="requireSignatureEdit"
+            className="ml-2 text-sm text-gray-700 dark:text-gray-300"
+          >
+            Request Digital Signature
           </label>
         </div>
         <div>
@@ -435,6 +437,7 @@ export default function EditSurveyPage({
               : "If specified, the survey status will show progress towards this goal"}
           </p>
         </div>
+        
         <div>
           <label className="block text-sm mb-2 text-gray-900 dark:text-white">
             Questions

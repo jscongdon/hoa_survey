@@ -68,6 +68,8 @@ export async function GET(
         {} as Record<string, any>
       ),
       submittedAt: response.submittedAt,
+      signed: response.signed,
+      signedAt: response.signedAt,
     }));
 
     log(

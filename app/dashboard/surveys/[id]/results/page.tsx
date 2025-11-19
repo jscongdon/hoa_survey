@@ -37,6 +37,8 @@ interface SurveyResultsData {
     member: { lot: string; name: string };
     answers: Record<string, any>;
     submittedAt: string;
+    signed?: boolean;
+    signedAt?: string | null;
   }>;
 }
 
@@ -397,7 +399,26 @@ export default function SurveyResultsPage({
                         {response.member.lot}
                       </td>
                       <td className="px-4 py-3 text-gray-900 dark:text-white">
-                        {response.member.name}
+                        <div className="flex items-center gap-2">
+                          {response.signed && (
+                            <span
+                              title="Digitally signed"
+                              aria-label="Digitally signed"
+                              className="inline-flex items-center text-green-600 dark:text-green-400"
+                            >
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 24 24"
+                                fill="currentColor"
+                                className="w-4 h-4"
+                                aria-hidden="true"
+                              >
+                                <path d="M12 1.5 4 5.25v5.5c0 5.25 3.75 9.75 8 11.25 4.25-1.5 8-6 8-11.25v-5.5L12 1.5zm3.03 7.72-4.24 4.24a.75.75 0 0 1-1.06 0l-1.5-1.5a.75.75 0 0 1 1.06-1.06l1.02 1.02 3.71-3.71a.75.75 0 0 1 1.06 1.06z" />
+                              </svg>
+                            </span>
+                          )}
+                          <span>{response.member.name}</span>
+                        </div>
                       </td>
                       <td className="px-4 py-3 text-gray-600 dark:text-gray-400">
                         {new Date(response.submittedAt).toLocaleString()}
