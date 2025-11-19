@@ -84,6 +84,22 @@ export default function SurveyResultsPage({
         if (!res.ok) throw new Error("Failed to fetch results");
         const results = await res.json();
         setData(results);
+        // If the API returned a creator id, fetch admins and resolve name for display
+        if (results?.survey?.createdById) {
+          try {
+            const adminsRes = await fetch('/api/admins');
+            if (adminsRes.ok) {
+              const adminsJson = await adminsRes.json();
+              const admin = (adminsJson?.admins || []).find((a: any) => a.id === results.survey.createdById);
+              if (admin) {
+                // merge creator display name into local data copy so UI shows current name
+                setData((prev) => prev ? { ...prev, survey: { ...prev.survey, createdByName: admin.name } } : prev);
+              }
+            }
+          } catch (err) {
+            // ignore lookup failures, we can still show the id
+          }
+        }
       } catch (error) {
         console.error("Error fetching results:", error);
       } finally {
@@ -148,9 +164,16 @@ export default function SurveyResultsPage({
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-8">
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            {data.survey.title}
-          </h1>
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+              {data.survey.title}
+            </h1>
+            {data.survey.createdByName && (
+              <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                Created by {data.survey.createdByName}
+              </div>
+            )}
+          </div>
           <button
             onClick={() => router.push("/dashboard")}
             className="px-4 py-2 bg-gray-300 dark:bg-gray-700 text-gray-900 dark:text-white rounded hover:bg-gray-400 dark:hover:bg-gray-600"

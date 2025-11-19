@@ -25,6 +25,7 @@ export default function CreateSurveyPage() {
   const [questions, setQuestions] = useState<any[]>([]);
   const [lists, setLists] = useState<MemberList[]>([]);
   const [requireSignature, setRequireSignature] = useState(true);
+  const [notifyOnMinResponses, setNotifyOnMinResponses] = useState(false);
   const [loading, setLoading] = useState(false);
 
   // Get current member count for selected list
@@ -71,6 +72,7 @@ export default function CreateSurveyPage() {
           memberListId,
           showLive,
           requireSignature,
+          notifyOnMinResponses,
           minResponses: minResponses ? parseInt(minResponses) : null,
           minResponsesAll,
           questions,
@@ -261,6 +263,23 @@ export default function CreateSurveyPage() {
               className="ml-2 text-sm text-gray-700 dark:text-gray-300"
             >
               Request Digital Signature
+            </label>
+          </div>
+
+          <div className="flex items-center">
+            <input
+              type="checkbox"
+              id="notifyOnMinResponses"
+              checked={notifyOnMinResponses}
+              onChange={(e) => setNotifyOnMinResponses(e.target.checked)}
+              className="w-4 h-4 text-blue-500"
+            />
+            <label
+              htmlFor="notifyOnMinResponses"
+              title="Notify me when the minimal number of responses has been reached."
+              className="ml-2 text-sm text-gray-700 dark:text-gray-300"
+            >
+              Minimum Response Notification
             </label>
           </div>
 

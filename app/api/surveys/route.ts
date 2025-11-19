@@ -25,6 +25,7 @@ export async function GET(request: NextRequest) {
       memberList: true,
       responses: true,
       questions: true,
+      createdBy: { select: { id: true, name: true, email: true } },
     },
     orderBy: { createdAt: "desc" },
   });
@@ -75,6 +76,7 @@ export async function POST(request: NextRequest) {
       minResponses,
       minResponsesAll,
       requireSignature,
+      notifyOnMinResponses,
       questions,
     } = body;
 
@@ -119,6 +121,11 @@ export async function POST(request: NextRequest) {
           minResponsesAll: minResponsesAll || false,
           requireSignature:
             typeof requireSignature === "boolean" ? requireSignature : true,
+          notifyOnMinResponses:
+            typeof notifyOnMinResponses === "boolean"
+              ? notifyOnMinResponses
+              : false,
+          createdById: adminId || undefined,
         },
       });
       log("[CREATE_SURVEY] Survey created:", created.id);

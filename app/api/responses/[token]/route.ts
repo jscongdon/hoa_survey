@@ -90,6 +90,7 @@ export async function PUT(
       answers = {};
     }
     const { token } = await params;
+    // (no-op) incoming answers are processed below
 
     // Check if survey is still open
     const existingResponse = await prisma.response.findUnique({
@@ -128,15 +129,15 @@ export async function PUT(
 
     // We'll determine whether a signature token is required after loading the survey
 
-    // Delete existing answers and create new ones
-    await prisma.answer.deleteMany({
-      where: { responseId: existingResponse.id },
-    });
+    // (answer rows will be prepared after we compute allowedAnswerEntries)
 
     // Load survey questions (ordered) so we can evaluate any showWhen conditions
     const surveyWithQuestions = await prisma.survey.findUnique({
       where: { id: existingResponse.surveyId },
-      include: { questions: { orderBy: { order: "asc" } } },
+      include: {
+        questions: { orderBy: { order: "asc" } },
+        createdBy: true,
+      },
     });
 
     const questions = surveyWithQuestions?.questions ?? [];
@@ -212,11 +213,10 @@ export async function PUT(
       : null;
 
     const updateData: any = {
-      answers: {
-        create: allowedAnswerEntries,
-      },
       submittedAt: new Date(),
     };
+
+    // Allowed answer entries computed; proceed to persist them
 
     if (requiresSignature) {
       updateData.signatureToken = signatureToken;
@@ -225,31 +225,54 @@ export async function PUT(
       updateData.signedAt = new Date();
     }
 
-    const response = await prisma.response.update({
-      where: { token },
-      data: updateData,
+    // Prepare answer rows for createMany
+    const answerRows = allowedAnswerEntries.map((entry) => ({
+      responseId: existingResponse.id,
+      questionId: entry.questionId,
+      value: entry.value,
+    }));
+
+    // Use a transaction: delete old answers, create new ones, then update response metadata
+    const txResult = await prisma.$transaction(async (tx) => {
+      await tx.answer.deleteMany({ where: { responseId: existingResponse.id } });
+      if (answerRows.length > 0) {
+        // createMany is faster and avoids nesting; value is required and should be a string
+        await tx.answer.createMany({ data: answerRows });
+      }
+
+      const resp = await tx.response.update({
+        where: { token },
+        data: updateData,
+      });
+
+      return resp;
     });
+
+    // Fetch updated response including answers for logging
+    const response = await prisma.response.findUnique({
+      where: { token },
+      include: { answers: true },
+    });
+
+    // Updated response and answers persisted
 
     // Send signature request email (only if survey requires a signature)
     try {
-      if (!requiresSignature) {
-        // No signature required; skip email
-        return NextResponse.json({ success: true, response });
-      }
-      const isDevelopment = process.env.NODE_ENV === "development";
-      let baseUrl: string;
-      if (isDevelopment) {
-        baseUrl = process.env.DEVELOPMENT_URL || "http://localhost:3000";
-      } else {
-        baseUrl = process.env.PRODUCTION_URL || "";
-        if (!baseUrl) {
-          throw new Error("Production URL not configured");
+      if (requiresSignature) {
+        const isDevelopment = process.env.NODE_ENV === "development";
+        let baseUrl: string;
+        if (isDevelopment) {
+          baseUrl = process.env.DEVELOPMENT_URL || "http://localhost:3000";
+        } else {
+          baseUrl = process.env.PRODUCTION_URL || "";
+          if (!baseUrl) {
+            throw new Error("Production URL not configured");
+          }
         }
-      }
-      const signatureUrl = `${baseUrl}/survey/${token}/sign/${signatureToken}`;
-      const viewResponseUrl = `${baseUrl}/survey/${token}`;
+        const signatureUrl = `${baseUrl}/survey/${token}/sign/${signatureToken}`;
+        const viewResponseUrl = `${baseUrl}/survey/${token}`;
 
-      const bodyHtml = `
+        const bodyHtml = `
         <p>Thank you for submitting your response to the survey: <strong>${existingResponse.survey.title}</strong></p>
         <p>To validate the authenticity of your submission, please click the button below to digitally sign your response:</p>
         <div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 20px 0;">
@@ -261,22 +284,184 @@ export async function PUT(
         <p>If you did not submit this response or have any questions, please contact the administrator.</p>
       `;
 
-      const emailHtml = generateBaseEmail(
-        `Digital Signature Request`,
-        `Hello ${existingResponse.member.name},`,
-        bodyHtml,
-        { text: "Sign Your Response", url: signatureUrl },
-        "This is an automated email. Please do not reply directly to this message."
-      );
+        const emailHtml = generateBaseEmail(
+          `Digital Signature Request`,
+          `Hello ${existingResponse.member.name},`,
+          bodyHtml,
+          { text: "Sign Your Response", url: signatureUrl },
+          "This is an automated email. Please do not reply directly to this message."
+        );
 
-      await sendEmail({
-        to: existingResponse.member.email,
-        subject: `Digital Signature Request: ${existingResponse.survey.title}`,
-        html: emailHtml,
-      });
+        await sendEmail({
+          to: existingResponse.member.email,
+          subject: `Digital Signature Request: ${existingResponse.survey.title}`,
+          html: emailHtml,
+        });
+      }
     } catch (emailError) {
       logError("Failed to send signature email:", emailError);
       // Continue even if email fails - response was saved successfully
+    }
+
+    // After saving the response and sending signature email, check whether
+    // we should notify the survey creator that the minimal responses threshold
+    // has been reached.
+    try {
+      const survey = await prisma.survey.findUnique({
+        where: { id: existingResponse.surveyId },
+        include: {
+          questions: { orderBy: { order: "asc" } },
+          responses: {
+            where: { submittedAt: { not: null } },
+            include: { answers: true },
+          },
+          createdBy: true,
+        },
+      });
+
+      if (
+        survey &&
+        (survey as any).notifyOnMinResponses &&
+        survey.minResponses &&
+        survey.responses.length >= survey.minResponses &&
+        !(survey as any).minimalNotifiedAt &&
+        survey.createdBy &&
+        survey.createdBy.email
+      ) {
+        // Build a compact results summary (basic counts / averages)
+        const responses = survey.responses.map((r) => ({
+          id: r.id,
+          answers: r.answers.reduce((acc: any, answer: any) => {
+            try {
+              acc[answer.questionId] = JSON.parse(answer.value);
+            } catch {
+              acc[answer.questionId] = answer.value;
+            }
+            return acc;
+          }, {} as Record<string, any>),
+        }));
+
+        const questionStats = survey.questions.map((question) => {
+          const questionAnswers = responses
+            .map((response) => response.answers[question.id])
+            .filter((a) => a !== undefined && a !== null && a !== "")
+            .filter((a) => !(Array.isArray(a) && a.length === 0));
+
+          const stats: any = {
+            questionId: question.id,
+            text: question.text,
+            type: question.type,
+            totalResponses: questionAnswers.length,
+          };
+
+          if (question.type === "YES_NO" || question.type === "MULTI_SINGLE") {
+            const counts: Record<string, number> = {};
+            questionAnswers.forEach((answer) => {
+              if (
+                answer &&
+                typeof answer === "object" &&
+                answer.choice === "__WRITE_IN__"
+              ) {
+                const writeText = String(answer.writeIn || "").trim();
+                const key = writeText !== "" ? writeText : "Other";
+                counts[key] = (counts[key] || 0) + 1;
+              } else {
+                const key = String(answer);
+                counts[key] = (counts[key] || 0) + 1;
+              }
+            });
+            stats.counts = counts;
+          } else if (question.type === "MULTI_MULTI") {
+            const counts: Record<string, number> = {};
+            questionAnswers.forEach((answer) => {
+              if (Array.isArray(answer)) {
+                answer.forEach((opt: any) => {
+                  if (
+                    opt &&
+                    typeof opt === "object" &&
+                    opt.choice === "__WRITE_IN__"
+                  ) {
+                    const writeText = String(opt.writeIn || "").trim();
+                    const key = writeText !== "" ? writeText : "Other";
+                    counts[key] = (counts[key] || 0) + 1;
+                  } else {
+                    const key = String(opt);
+                    counts[key] = (counts[key] || 0) + 1;
+                  }
+                });
+              }
+            });
+            stats.counts = counts;
+          } else if (question.type === "RATING_5") {
+            const ratings = questionAnswers.map((a: any) => Number(a));
+            const sum = ratings.reduce((acc: number, v: number) => acc + v, 0);
+            const avg = ratings.length > 0 ? sum / ratings.length : 0;
+            const counts: Record<string, number> = {};
+            ratings.forEach((rating) => {
+              counts[String(rating)] = (counts[String(rating)] || 0) + 1;
+            });
+            stats.average = Math.round(avg * 10) / 10;
+            stats.counts = counts;
+          } else if (question.type === "PARAGRAPH") {
+            stats.responses = questionAnswers;
+          }
+
+          return stats;
+        });
+
+        // Generate compact HTML summary
+        let summaryHtml = `<p>The survey <strong>${survey.title}</strong> has reached its minimal response threshold of <strong>${survey.minResponses}</strong>. Here is a brief summary of results so far:</p>`;
+        questionStats.forEach((qs) => {
+          summaryHtml += `<h4 style="margin:0 0 6px 0">${qs.text}</h4>`;
+          if (qs.counts) {
+              summaryHtml += `<ul style="margin:0 0 12px 18px">`;
+              const entries = Object.entries(qs.counts || {});
+              entries.sort((a, b) => {
+                const diff = Number(b[1] || 0) - Number(a[1] || 0);
+                if (diff !== 0) return diff;
+                return String(a[0]).localeCompare(String(b[0]));
+              });
+              entries.forEach(([k, v]) => {
+                summaryHtml += `<li>${k}: ${v}</li>`;
+              });
+              summaryHtml += `</ul>`;
+            } else if (qs.responses) {
+            summaryHtml += `<ul style="margin:0 0 12px 18px">`;
+            qs.responses.slice(0, 10).forEach((r: any) => {
+              summaryHtml += `<li>${String(r)}</li>`;
+            });
+            summaryHtml += `</ul>`;
+          } else if (qs.average !== undefined) {
+            summaryHtml += `<p style="margin:0 0 12px 0">Average: ${qs.average} (${qs.totalResponses} responses)</p>`;
+          } else {
+            summaryHtml += `<p style="margin:0 0 12px 0">${qs.totalResponses} responses</p>`;
+          }
+        });
+
+        const notifyUrl = (process.env.PRODUCTION_URL || process.env.DEVELOPMENT_URL || "http://localhost:3000") + `/dashboard/surveys/${survey.id}/results`;
+
+        const emailHtml = generateBaseEmail(
+          `Survey Reached Minimal Responses: ${survey.title}`,
+          `Hello ${survey.createdBy.name},`,
+          summaryHtml + `<p style="margin-top:12px"><a href="${notifyUrl}" style="color:#2563eb; text-decoration:none">View full results</a></p>`,
+          undefined,
+          "This is an automated notification."
+        );
+
+        await sendEmail({
+          to: survey.createdBy.email,
+          subject: `Survey reached minimal responses: ${survey.title}`,
+          html: emailHtml,
+        });
+
+        // Mark survey as notified to avoid duplicates
+        await prisma.survey.update({
+          where: { id: survey.id },
+          data: { minimalNotifiedAt: new Date() },
+        });
+      }
+    } catch (notifyError) {
+      logError("Error while sending minimal response notification:", notifyError);
     }
 
     return NextResponse.json({ success: true, response });

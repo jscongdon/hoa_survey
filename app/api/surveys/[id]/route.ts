@@ -27,6 +27,7 @@ export async function GET(
     include: {
       questions: { orderBy: { order: "asc" } },
       memberList: { select: { id: true, name: true } },
+      createdBy: { select: { id: true, name: true, email: true } },
     },
   });
 
@@ -57,7 +58,7 @@ export async function GET(
     where: { surveyId: survey.id, submittedAt: { not: null } },
   });
 
-  return NextResponse.json({
+    return NextResponse.json({
     id: survey.id,
     title: survey.title,
     description: survey.description,
@@ -65,10 +66,16 @@ export async function GET(
     closesAt: survey.closesAt,
     memberListId: survey.memberListId,
     memberListName: survey.memberList?.name,
-    requireSignature:
-      typeof survey.requireSignature === "boolean"
-        ? survey.requireSignature
-        : true,
+      createdById: survey.createdById || null,
+      requireSignature:
+        typeof survey.requireSignature === "boolean"
+          ? survey.requireSignature
+          : true,
+      notifyOnMinResponses:
+        typeof (survey as any).notifyOnMinResponses === "boolean"
+          ? (survey as any).notifyOnMinResponses
+          : false,
+      minimalNotifiedAt: (survey as any).minimalNotifiedAt || null,
     minResponses: survey.minResponses,
     minResponsesAll: survey.minResponsesAll,
     totalResponses,
@@ -168,6 +175,10 @@ export async function PUT(
           requireSignature:
             typeof requireSignature === "boolean"
               ? requireSignature
+              : undefined,
+          notifyOnMinResponses:
+            typeof (body as any).notifyOnMinResponses === "boolean"
+              ? (body as any).notifyOnMinResponses
               : undefined,
         },
       });

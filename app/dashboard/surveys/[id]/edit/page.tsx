@@ -28,6 +28,7 @@ export default function EditSurveyPage({
   const [minResponses, setMinResponses] = useState<string>("");
   const [minResponsesAll, setMinResponsesAll] = useState<boolean>(false);
   const [requireSignature, setRequireSignature] = useState<boolean>(true);
+  const [notifyOnMinResponses, setNotifyOnMinResponses] = useState<boolean>(false);
   const [hasChanges, setHasChanges] = useState<boolean>(false);
   const [originalData, setOriginalData] = useState<any>(null);
 
@@ -98,6 +99,11 @@ export default function EditSurveyPage({
             ? data.requireSignature
             : true
         );
+        setNotifyOnMinResponses(
+          typeof (data as any).notifyOnMinResponses === "boolean"
+            ? (data as any).notifyOnMinResponses
+            : false
+        );
         const normalized = Array.isArray(data.questions)
           ? data.questions.map((q: any, i: number) => ({
               text: q.text,
@@ -138,6 +144,10 @@ export default function EditSurveyPage({
             typeof data.requireSignature === "boolean"
               ? data.requireSignature
               : true,
+          notifyOnMinResponses:
+            typeof (data as any).notifyOnMinResponses === "boolean"
+              ? (data as any).notifyOnMinResponses
+              : false,
           minResponses: data.minResponses ? String(data.minResponses) : "",
           minResponsesAll: data.minResponsesAll || false,
           questions: normalized,
@@ -156,6 +166,7 @@ export default function EditSurveyPage({
       closesAt !== originalData.closesAt ||
       memberListId !== originalData.memberListId ||
       requireSignature !== (originalData.requireSignature ?? true) ||
+      notifyOnMinResponses !== (originalData.notifyOnMinResponses ?? false) ||
       minResponses !== originalData.minResponses ||
       minResponsesAll !== originalData.minResponsesAll ||
       JSON.stringify(questions) !== JSON.stringify(originalData.questions);
@@ -168,6 +179,7 @@ export default function EditSurveyPage({
     closesAt,
     memberListId,
     requireSignature,
+    notifyOnMinResponses,
     minResponses,
     minResponsesAll,
     questions,
@@ -200,6 +212,7 @@ export default function EditSurveyPage({
         opensAt: opensAt ? new Date(opensAt).toISOString() : null,
         closesAt: closesAt ? new Date(closesAt).toISOString() : null,
         requireSignature,
+        notifyOnMinResponses,
         questions,
         memberListId,
         minResponses: minResponses ? parseInt(minResponses) : null,
@@ -215,6 +228,7 @@ export default function EditSurveyPage({
         closesAt,
         memberListId,
         requireSignature,
+        notifyOnMinResponses,
         minResponses,
         questions,
       });
@@ -304,6 +318,22 @@ export default function EditSurveyPage({
             className="ml-2 text-sm text-gray-700 dark:text-gray-300"
           >
             Request Digital Signature
+          </label>
+        </div>
+        <div className="flex items-center">
+          <input
+            type="checkbox"
+            id="notifyOnMinResponsesEdit"
+            checked={notifyOnMinResponses}
+            onChange={(e) => setNotifyOnMinResponses(e.target.checked)}
+            className="w-4 h-4 text-blue-500"
+          />
+          <label
+            htmlFor="notifyOnMinResponsesEdit"
+            title="Notify me when the minimal number of responses has been reached."
+            className="ml-2 text-sm text-gray-700 dark:text-gray-300"
+          >
+            Minimum Response Notification
           </label>
         </div>
         <div>
