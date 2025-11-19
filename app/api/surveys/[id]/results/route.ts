@@ -129,10 +129,12 @@ export async function GET(
             typeof answer === "object" &&
             answer.choice === "__WRITE_IN__"
           ) {
-            counts["Other"] = (counts["Other"] || 0) + 1;
+            const writeText = String(answer.writeIn || "").trim();
+            const key = writeText !== "" ? writeText : "Other";
+            counts[key] = (counts[key] || 0) + 1;
             // collect write-ins
             stats.writeIns = stats.writeIns || [];
-            stats.writeIns.push(answer.writeIn || "");
+            if (writeText !== "") stats.writeIns.push(writeText);
           } else {
             const value = String(answer);
             counts[value] = (counts[value] || 0) + 1;
@@ -143,7 +145,7 @@ export async function GET(
         // Count occurrences of each option (answers are arrays)
         const counts: Record<string, number> = {};
         questionAnswers.forEach((answer) => {
-          if (Array.isArray(answer)) {
+            if (Array.isArray(answer)) {
             answer.forEach((option: any) => {
               // Support write-in objects inside the array
               if (
@@ -151,9 +153,11 @@ export async function GET(
                 typeof option === "object" &&
                 option.choice === "__WRITE_IN__"
               ) {
-                counts["Other"] = (counts["Other"] || 0) + 1;
+                const writeText = String(option.writeIn || "").trim();
+                const key = writeText !== "" ? writeText : "Other";
+                counts[key] = (counts[key] || 0) + 1;
                 stats.writeIns = stats.writeIns || [];
-                stats.writeIns.push(option.writeIn || "");
+                if (writeText !== "") stats.writeIns.push(writeText);
               } else {
                 const key = String(option);
                 counts[key] = (counts[key] || 0) + 1;
