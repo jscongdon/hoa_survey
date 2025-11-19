@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import SurveyBuilder from '@/components/SurveyBuilder';
+import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+import SurveyBuilder from "@/components/SurveyBuilder";
 
 interface MemberList {
   id: string;
@@ -14,22 +14,23 @@ interface MemberList {
 
 export default function CreateSurveyPage() {
   const router = useRouter();
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [opensAt, setOpensAt] = useState('');
-  const [closesAt, setClosesAt] = useState('');
-  const [memberListId, setMemberListId] = useState('');
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [opensAt, setOpensAt] = useState("");
+  const [closesAt, setClosesAt] = useState("");
+  const [memberListId, setMemberListId] = useState("");
   const [showLive, setShowLive] = useState(false);
-  const [minResponses, setMinResponses] = useState('');
+  const [minResponses, setMinResponses] = useState("");
   const [minResponsesAll, setMinResponsesAll] = useState(false);
   const [questions, setQuestions] = useState<any[]>([]);
   const [lists, setLists] = useState<MemberList[]>([]);
+  const [requireSignature, setRequireSignature] = useState(true);
   const [loading, setLoading] = useState(false);
 
   // Get current member count for selected list
   const currentMemberCount = React.useMemo(() => {
     if (!memberListId) return 0;
-    const list = lists.find(l => l.id === memberListId);
+    const list = lists.find((l) => l.id === memberListId);
     return list?._count?.members || 0;
   }, [memberListId, lists]);
 
@@ -43,11 +44,11 @@ export default function CreateSurveyPage() {
   React.useEffect(() => {
     const fetchLists = async () => {
       try {
-        const res = await fetch('/api/member-lists');
+        const res = await fetch("/api/member-lists");
         const data = await res.json();
         setLists(data);
       } catch (error) {
-        console.error('Failed to fetch lists:', error);
+        console.error("Failed to fetch lists:", error);
       }
     };
 
@@ -59,9 +60,9 @@ export default function CreateSurveyPage() {
     setLoading(true);
 
     try {
-      const res = await fetch('/api/surveys', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/surveys", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title,
           description,
@@ -69,6 +70,7 @@ export default function CreateSurveyPage() {
           closesAt: closesAt ? new Date(closesAt).toISOString() : null,
           memberListId,
           showLive,
+          requireSignature,
           minResponses: minResponses ? parseInt(minResponses) : null,
           minResponsesAll,
           questions,
@@ -80,7 +82,7 @@ export default function CreateSurveyPage() {
         router.push(`/dashboard/surveys/${survey.id}/edit`);
       }
     } catch (error) {
-      console.error('Failed to create survey:', error);
+      console.error("Failed to create survey:", error);
     } finally {
       setLoading(false);
     }
@@ -180,7 +182,13 @@ export default function CreateSurveyPage() {
                 onChange={(e) => setMinResponses(e.target.value)}
                 disabled={minResponsesAll}
                 className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
-                placeholder={minResponsesAll ? (memberListId ? `${currentMemberCount} members` : 'Select a member list first') : 'Leave empty for no minimum'}
+                placeholder={
+                  minResponsesAll
+                    ? memberListId
+                      ? `${currentMemberCount} members`
+                      : "Select a member list first"
+                    : "Leave empty for no minimum"
+                }
               />
               <div className="flex items-center">
                 <input
@@ -194,23 +202,26 @@ export default function CreateSurveyPage() {
                       if (memberListId) {
                         setMinResponses(String(currentMemberCount));
                       } else {
-                        setMinResponses('');
+                        setMinResponses("");
                       }
                     }
                   }}
                   className="w-4 h-4 text-blue-500"
                 />
-                <label htmlFor="minResponsesAll" className="ml-2 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                <label
+                  htmlFor="minResponsesAll"
+                  className="ml-2 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap"
+                >
                   All Members
                 </label>
               </div>
             </div>
             <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-              {minResponsesAll 
-                ? (memberListId 
-                    ? `Minimum will automatically match the total member count (${currentMemberCount}) and adjust when members are added`
-                    : 'Please select a member list first')
-                : 'If specified, the survey status will show progress towards this goal'}
+              {minResponsesAll
+                ? memberListId
+                  ? `Minimum will automatically match the total member count (${currentMemberCount}) and adjust when members are added`
+                  : "Please select a member list first"
+                : "If specified, the survey status will show progress towards this goal"}
             </p>
           </div>
 
@@ -229,8 +240,27 @@ export default function CreateSurveyPage() {
               onChange={(e) => setShowLive(e.target.checked)}
               className="w-4 h-4 text-blue-500"
             />
-            <label htmlFor="showLive" className="ml-2 text-sm text-gray-700 dark:text-gray-300">
+            <label
+              htmlFor="showLive"
+              className="ml-2 text-sm text-gray-700 dark:text-gray-300"
+            >
               Show live results to respondents
+            </label>
+          </div>
+
+          <div className="flex items-center">
+            <input
+              type="checkbox"
+              id="requireSignature"
+              checked={requireSignature}
+              onChange={(e) => setRequireSignature(e.target.checked)}
+              className="w-4 h-4 text-blue-500"
+            />
+            <label
+              htmlFor="requireSignature"
+              className="ml-2 text-sm text-gray-700 dark:text-gray-300"
+            >
+              Request Digital Signature
             </label>
           </div>
 
@@ -240,7 +270,7 @@ export default function CreateSurveyPage() {
               disabled={loading}
               className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-400 font-medium"
             >
-              {loading ? 'Creating...' : 'Create Survey'}
+              {loading ? "Creating..." : "Create Survey"}
             </button>
             <button
               type="button"

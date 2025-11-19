@@ -126,8 +126,7 @@ export async function PUT(
       return NextResponse.json({ error: "Survey is closed" }, { status: 403 });
     }
 
-    // Generate signature token
-    const signatureToken = crypto.randomBytes(32).toString("hex");
+    // We'll determine whether a signature token is required after loading the survey
 
     // Delete existing answers and create new ones
     await prisma.answer.deleteMany({
@@ -205,19 +204,38 @@ export async function PUT(
           typeof value === "object" ? JSON.stringify(value) : String(value),
       }));
 
+    // Determine whether this survey requires a digital signature
+    const requiresSignature = surveyWithQuestions?.requireSignature !== false;
+
+    const signatureToken = requiresSignature
+      ? crypto.randomBytes(32).toString("hex")
+      : null;
+
+    const updateData: any = {
+      answers: {
+        create: allowedAnswerEntries,
+      },
+      submittedAt: new Date(),
+    };
+
+    if (requiresSignature) {
+      updateData.signatureToken = signatureToken;
+    } else {
+      updateData.signed = true;
+      updateData.signedAt = new Date();
+    }
+
     const response = await prisma.response.update({
       where: { token },
-      data: {
-        answers: {
-          create: allowedAnswerEntries,
-        },
-        submittedAt: new Date(),
-        signatureToken,
-      },
+      data: updateData,
     });
 
-    // Send signature request email
+    // Send signature request email (only if survey requires a signature)
     try {
+      if (!requiresSignature) {
+        // No signature required; skip email
+        return NextResponse.json({ success: true, response });
+      }
       const isDevelopment = process.env.NODE_ENV === "development";
       let baseUrl: string;
       if (isDevelopment) {

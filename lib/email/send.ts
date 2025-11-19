@@ -119,7 +119,7 @@ export function generateSurveyEmail(
     title,
     greeting,
     body,
-    { text: 'Take Survey', url: surveyLink, bgColor: undefined },
-    'This survey is sent to you as a resident of your HOA community. Please do not share this link.'
+    { text: "Take Survey", url: surveyLink, bgColor: undefined },
+    "This survey is sent to you as a resident of your HOA community. Please do not share this link."
   );
 }

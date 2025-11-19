@@ -27,6 +27,7 @@ export default function EditSurveyPage({
   const [totalResponses, setTotalResponses] = useState<number>(0);
   const [minResponses, setMinResponses] = useState<string>("");
   const [minResponsesAll, setMinResponsesAll] = useState<boolean>(false);
+  const [requireSignature, setRequireSignature] = useState<boolean>(true);
   const [hasChanges, setHasChanges] = useState<boolean>(false);
   const [originalData, setOriginalData] = useState<any>(null);
 
@@ -92,6 +93,11 @@ export default function EditSurveyPage({
         );
         setMinResponses(data.minResponses ? String(data.minResponses) : "");
         setMinResponsesAll(data.minResponsesAll || false);
+        setRequireSignature(
+          typeof data.requireSignature === "boolean"
+            ? data.requireSignature
+            : true
+        );
         const normalized = Array.isArray(data.questions)
           ? data.questions.map((q: any, i: number) => ({
               text: q.text,
@@ -128,6 +134,10 @@ export default function EditSurveyPage({
           opensAt: toLocalDatetimeString(data.opensAt),
           closesAt: toLocalDatetimeString(data.closesAt),
           memberListId: data.memberListId || "",
+          requireSignature:
+            typeof data.requireSignature === "boolean"
+              ? data.requireSignature
+              : true,
           minResponses: data.minResponses ? String(data.minResponses) : "",
           minResponsesAll: data.minResponsesAll || false,
           questions: normalized,
@@ -145,6 +155,7 @@ export default function EditSurveyPage({
       opensAt !== originalData.opensAt ||
       closesAt !== originalData.closesAt ||
       memberListId !== originalData.memberListId ||
+      requireSignature !== (originalData.requireSignature ?? true) ||
       minResponses !== originalData.minResponses ||
       minResponsesAll !== originalData.minResponsesAll ||
       JSON.stringify(questions) !== JSON.stringify(originalData.questions);
@@ -156,6 +167,7 @@ export default function EditSurveyPage({
     opensAt,
     closesAt,
     memberListId,
+    requireSignature,
     minResponses,
     minResponsesAll,
     questions,
@@ -187,6 +199,7 @@ export default function EditSurveyPage({
         description,
         opensAt: opensAt ? new Date(opensAt).toISOString() : null,
         closesAt: closesAt ? new Date(closesAt).toISOString() : null,
+        requireSignature,
         questions,
         memberListId,
         minResponses: minResponses ? parseInt(minResponses) : null,
@@ -201,6 +214,7 @@ export default function EditSurveyPage({
         opensAt,
         closesAt,
         memberListId,
+        requireSignature,
         minResponses,
         questions,
       });
@@ -276,6 +290,21 @@ export default function EditSurveyPage({
                 ? `${submittedResponses}/${totalResponses} responses submitted. You can still change the list until submissions begin.`
                 : "No responses yet."}
           </p>
+        </div>
+        <div className="flex items-center">
+          <input
+            type="checkbox"
+            id="requireSignatureEdit"
+            checked={requireSignature}
+            onChange={(e) => setRequireSignature(e.target.checked)}
+            className="w-4 h-4 text-blue-500"
+          />
+          <label
+            htmlFor="requireSignatureEdit"
+            className="ml-2 text-sm text-gray-700 dark:text-gray-300"
+          >
+            Request Digital Signature
+          </label>
         </div>
         <div>
           <label className="block text-sm text-gray-900 dark:text-white">
