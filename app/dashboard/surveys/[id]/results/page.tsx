@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 interface QuestionStats {
   questionId: string;
@@ -50,7 +50,9 @@ export default function SurveyResultsPage({
   const [loading, setLoading] = useState(true);
   const [currentAdminRole, setCurrentAdminRole] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [expandedResponseId, setExpandedResponseId] = useState<string | null>(null);
+  const [expandedResponseId, setExpandedResponseId] = useState<string | null>(
+    null
+  );
 
   useEffect(() => {
     params.then((resolvedParams) => {
@@ -61,13 +63,13 @@ export default function SurveyResultsPage({
   useEffect(() => {
     const fetchAdminRole = async () => {
       try {
-        const res = await fetch('/api/auth/me');
+        const res = await fetch("/api/auth/me");
         if (res.ok) {
           const data = await res.json();
           setCurrentAdminRole(data.role);
         }
       } catch (error) {
-        console.error('Error fetching admin role:', error);
+        console.error("Error fetching admin role:", error);
       }
     };
     fetchAdminRole();
@@ -79,11 +81,11 @@ export default function SurveyResultsPage({
     const fetchResults = async () => {
       try {
         const res = await fetch(`/api/surveys/${surveyId}/results`);
-        if (!res.ok) throw new Error('Failed to fetch results');
+        if (!res.ok) throw new Error("Failed to fetch results");
         const results = await res.json();
         setData(results);
       } catch (error) {
-        console.error('Error fetching results:', error);
+        console.error("Error fetching results:", error);
       } finally {
         setLoading(false);
       }
@@ -93,15 +95,22 @@ export default function SurveyResultsPage({
   }, [surveyId]);
 
   const handleDeleteResponse = async (responseId: string) => {
-    if (!confirm('Are you sure you want to delete this response? This action cannot be undone.')) {
+    if (
+      !confirm(
+        "Are you sure you want to delete this response? This action cannot be undone."
+      )
+    ) {
       return;
     }
 
     setDeletingId(responseId);
     try {
-      const res = await fetch(`/api/surveys/${surveyId}/responses/${responseId}`, {
-        method: 'DELETE',
-      });
+      const res = await fetch(
+        `/api/surveys/${surveyId}/responses/${responseId}`,
+        {
+          method: "DELETE",
+        }
+      );
 
       if (res.ok) {
         // Refresh the results
@@ -112,26 +121,38 @@ export default function SurveyResultsPage({
         }
       } else {
         const error = await res.json();
-        alert(error.error || 'Failed to delete response');
+        alert(error.error || "Failed to delete response");
       }
     } catch (error) {
-      console.error('Error deleting response:', error);
-      alert('Failed to delete response');
+      console.error("Error deleting response:", error);
+      alert("Failed to delete response");
     } finally {
       setDeletingId(null);
     }
   };
 
-  if (loading) return <div className="p-8 text-center text-gray-900 dark:text-white">Loading results...</div>;
-  if (!data) return <div className="p-8 text-center text-gray-900 dark:text-white">Survey not found</div>;
+  if (loading)
+    return (
+      <div className="p-8 text-center text-gray-900 dark:text-white">
+        Loading results...
+      </div>
+    );
+  if (!data)
+    return (
+      <div className="p-8 text-center text-gray-900 dark:text-white">
+        Survey not found
+      </div>
+    );
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-8">
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{data.survey.title}</h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+            {data.survey.title}
+          </h1>
           <button
-            onClick={() => router.push('/dashboard')}
+            onClick={() => router.push("/dashboard")}
             className="px-4 py-2 bg-gray-300 dark:bg-gray-700 text-gray-900 dark:text-white rounded hover:bg-gray-400 dark:hover:bg-gray-600"
           >
             ← Back to Dashboard
@@ -140,52 +161,71 @@ export default function SurveyResultsPage({
 
         {data.survey.description && (
           <div className="bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-700 rounded-lg p-4 mb-6">
-            <p className="text-gray-700 dark:text-gray-300">{data.survey.description}</p>
+            <p className="text-gray-700 dark:text-gray-300">
+              {data.survey.description}
+            </p>
           </div>
         )}
 
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Overview</h2>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+            Overview
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-blue-50 dark:bg-blue-900 p-4 rounded">
               <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                 {data.survey.totalResponses}
               </div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">Total Responses</div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">
+                Total Responses
+              </div>
             </div>
             <div className="bg-green-50 dark:bg-green-900 p-4 rounded">
               <div className="text-2xl font-bold text-green-600 dark:text-green-400">
                 {data.questions.length}
               </div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">Questions</div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">
+                Questions
+              </div>
             </div>
             <div className="bg-purple-50 dark:bg-purple-900 p-4 rounded">
               <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                {new Date(data.survey.closesAt) > new Date() ? 'Open' : 'Closed'}
+                {new Date(data.survey.closesAt) > new Date()
+                  ? "Open"
+                  : "Closed"}
               </div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">Survey Status</div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">
+                Survey Status
+              </div>
             </div>
           </div>
         </div>
 
         <div className="space-y-6">
           {data.stats.map((stat, index) => {
-            const question = data.questions.find((q) => q.id === stat.questionId);
+            const question = data.questions.find(
+              (q) => q.id === stat.questionId
+            );
             if (!question) return null;
 
             return (
-              <div key={stat.questionId} className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+              <div
+                key={stat.questionId}
+                className="bg-white dark:bg-gray-800 rounded-lg shadow p-6"
+              >
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
                       {index + 1}. {stat.text}
                       {question.required && (
-                        <span className="text-red-600 dark:text-red-400 ml-1">*</span>
+                        <span className="text-red-600 dark:text-red-400 ml-1">
+                          *
+                        </span>
                       )}
                     </h3>
                     <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
                       <span className="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
-                        {stat.type.replace('_', ' ')}
+                        {stat.type.replace("_", " ")}
                       </span>
                       <span>
                         {stat.totalResponses} responses ({stat.responseRate}%)
@@ -194,9 +234,9 @@ export default function SurveyResultsPage({
                   </div>
                 </div>
 
-                {(stat.type === 'YES_NO' ||
-                  stat.type === 'MULTI_SINGLE' ||
-                  stat.type === 'MULTI_MULTI') &&
+                {(stat.type === "YES_NO" ||
+                  stat.type === "MULTI_SINGLE" ||
+                  stat.type === "MULTI_MULTI") &&
                   stat.counts && (
                     <div className="space-y-2">
                       {Object.entries(stat.counts)
@@ -209,7 +249,9 @@ export default function SurveyResultsPage({
                           return (
                             <div key={option} className="space-y-1">
                               <div className="flex justify-between text-sm">
-                                <span className="text-gray-700 dark:text-gray-300">{option}</span>
+                                <span className="text-gray-700 dark:text-gray-300">
+                                  {option}
+                                </span>
                                 <span className="text-gray-600 dark:text-gray-400">
                                   {count} ({percentage}%)
                                 </span>
@@ -226,13 +268,15 @@ export default function SurveyResultsPage({
                     </div>
                   )}
 
-                {stat.type === 'RATING_5' && stat.counts && (
+                {stat.type === "RATING_5" && stat.counts && (
                   <div>
                     <div className="mb-4 text-center">
                       <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">
                         {stat.average?.toFixed(1)}
                       </div>
-                      <div className="text-sm text-gray-600 dark:text-gray-400">Average Rating</div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400">
+                        Average Rating
+                      </div>
                     </div>
                     <div className="space-y-2">
                       {[5, 4, 3, 2, 1].map((rating) => {
@@ -243,7 +287,9 @@ export default function SurveyResultsPage({
                             : 0;
                         return (
                           <div key={rating} className="flex items-center gap-2">
-                            <span className="w-8 text-sm text-gray-700 dark:text-gray-300">{rating} ★</span>
+                            <span className="w-8 text-sm text-gray-700 dark:text-gray-300">
+                              {rating} ★
+                            </span>
                             <div className="flex-1">
                               <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                                 <div
@@ -262,7 +308,7 @@ export default function SurveyResultsPage({
                   </div>
                 )}
 
-                {stat.type === 'PARAGRAPH' && stat.responses && (
+                {stat.type === "PARAGRAPH" && stat.responses && (
                   <div className="space-y-3">
                     {stat.responses.length > 0 ? (
                       stat.responses.map((response, idx) => (
@@ -270,11 +316,15 @@ export default function SurveyResultsPage({
                           key={idx}
                           className="bg-gray-50 dark:bg-gray-700 p-4 rounded border border-gray-200 dark:border-gray-600"
                         >
-                          <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{response}</p>
+                          <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
+                            {response}
+                          </p>
                         </div>
                       ))
                     ) : (
-                      <p className="text-gray-500 dark:text-gray-400 italic">No responses yet</p>
+                      <p className="text-gray-500 dark:text-gray-400 italic">
+                        No responses yet
+                      </p>
                     )}
                   </div>
                 )}
@@ -309,26 +359,40 @@ export default function SurveyResultsPage({
                 {data.responses.map((response) => (
                   <React.Fragment key={response.id}>
                     <tr className="border-b border-gray-100 dark:border-gray-700">
-                      <td className="px-4 py-3 text-gray-900 dark:text-white">{response.member.lot}</td>
-                      <td className="px-4 py-3 text-gray-900 dark:text-white">{response.member.name}</td>
+                      <td className="px-4 py-3 text-gray-900 dark:text-white">
+                        {response.member.lot}
+                      </td>
+                      <td className="px-4 py-3 text-gray-900 dark:text-white">
+                        {response.member.name}
+                      </td>
                       <td className="px-4 py-3 text-gray-600 dark:text-gray-400">
                         {new Date(response.submittedAt).toLocaleString()}
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex gap-2">
-                          <button 
-                            onClick={() => setExpandedResponseId(expandedResponseId === response.id ? null : response.id)}
+                          <button
+                            onClick={() =>
+                              setExpandedResponseId(
+                                expandedResponseId === response.id
+                                  ? null
+                                  : response.id
+                              )
+                            }
                             className="px-3 py-1 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600"
                           >
-                            {expandedResponseId === response.id ? 'Hide Details' : 'View Details'}
+                            {expandedResponseId === response.id
+                              ? "Hide Details"
+                              : "View Details"}
                           </button>
-                          {currentAdminRole === 'FULL' && (
+                          {currentAdminRole === "FULL" && (
                             <button
                               onClick={() => handleDeleteResponse(response.id)}
                               disabled={deletingId === response.id}
                               className="px-3 py-1 bg-red-500 text-white text-sm rounded-lg hover:bg-red-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
                             >
-                              {deletingId === response.id ? 'Deleting...' : 'Delete'}
+                              {deletingId === response.id
+                                ? "Deleting..."
+                                : "Delete"}
                             </button>
                           )}
                         </div>
@@ -338,29 +402,45 @@ export default function SurveyResultsPage({
                       <tr className="bg-gray-50 dark:bg-gray-700">
                         <td colSpan={4} className="px-4 py-4">
                           <div className="space-y-4">
-                            <h3 className="font-semibold text-gray-900 dark:text-white mb-3">Response Details</h3>
+                            <h3 className="font-semibold text-gray-900 dark:text-white mb-3">
+                              Response Details
+                            </h3>
                             {data.questions.map((question) => {
                               const answer = response.answers[question.id];
                               return (
-                                <div key={question.id} className="border-b border-gray-200 dark:border-gray-600 pb-3 last:border-b-0">
-                                  <p className="font-medium text-gray-900 dark:text-white mb-2">{question.text}</p>
+                                <div
+                                  key={question.id}
+                                  className="border-b border-gray-200 dark:border-gray-600 pb-3 last:border-b-0"
+                                >
+                                  <p className="font-medium text-gray-900 dark:text-white mb-2">
+                                    {question.text}
+                                  </p>
                                   <p className="text-gray-700 dark:text-gray-300 pl-4">
-                                    {answer !== undefined && answer !== null && answer !== '' 
-                                      ? (
-                                          Array.isArray(answer)
-                                            ? answer
-                                                .map((a: any) =>
-                                                  a && typeof a === 'object' && a.choice === '__WRITE_IN__'
-                                                    ? String(a.writeIn || '')
-                                                    : String(a)
-                                                )
-                                                .join(', ')
-                                            : (typeof answer === 'object' && (answer as any).choice === '__WRITE_IN__')
-                                              ? String((answer as any).writeIn || '')
-                                              : String(answer)
-                                        )
-                                      : <span className="italic text-gray-500">No answer provided</span>
-                                    }
+                                    {answer !== undefined &&
+                                    answer !== null &&
+                                    answer !== "" ? (
+                                      Array.isArray(answer) ? (
+                                        answer
+                                          .map((a: any) =>
+                                            a &&
+                                            typeof a === "object" &&
+                                            a.choice === "__WRITE_IN__"
+                                              ? String(a.writeIn || "")
+                                              : String(a)
+                                          )
+                                          .join(", ")
+                                      ) : typeof answer === "object" &&
+                                        (answer as any).choice ===
+                                          "__WRITE_IN__" ? (
+                                        String((answer as any).writeIn || "")
+                                      ) : (
+                                        String(answer)
+                                      )
+                                    ) : (
+                                      <span className="italic text-gray-500">
+                                        No answer provided
+                                      </span>
+                                    )}
                                   </p>
                                 </div>
                               );

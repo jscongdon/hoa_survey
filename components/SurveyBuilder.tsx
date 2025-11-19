@@ -605,22 +605,22 @@ export default function SurveyBuilder({
             </span>
           </label>
         )}
-                {type === "MULTI_MULTI" && (
-                  <div className="mt-2">
-                    <label className="text-sm text-gray-700 dark:text-gray-300 block mb-1">
-                      Number of write-in slots (optional)
-                    </label>
-                    <input
-                      type="number"
-                      min={0}
-                      value={writeInCount}
-                      onChange={(e) => setWriteInCount(e.target.value)}
-                      disabled={editingIndex !== null}
-                      className="w-24 border border-gray-300 dark:border-gray-600 p-2 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                      placeholder="0"
-                    />
-                  </div>
-                )}
+        {type === "MULTI_MULTI" && (
+          <div className="mt-2">
+            <label className="text-sm text-gray-700 dark:text-gray-300 block mb-1">
+              Number of write-in slots (optional)
+            </label>
+            <input
+              type="number"
+              min={0}
+              value={writeInCount}
+              onChange={(e) => setWriteInCount(e.target.value)}
+              disabled={editingIndex !== null}
+              className="w-24 border border-gray-300 dark:border-gray-600 p-2 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+              placeholder="0"
+            />
+          </div>
+        )}
         <label className="flex items-center gap-2 cursor-pointer">
           <input
             type="checkbox"
