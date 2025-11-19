@@ -1,5 +1,6 @@
 services:
   app:
+    container_name: hoa_survey
     build: .
     working_dir: /app
     volumes:

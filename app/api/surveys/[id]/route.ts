@@ -1,21 +1,22 @@
-import { log, error as logError } from '@/lib/logger'
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { verifyToken } from '@/lib/auth/jwt';
+import { log, error as logError } from "@/lib/logger";
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@prisma/client";
+import { verifyToken } from "@/lib/auth/jwt";
 
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  let adminId = req.headers.get('x-admin-id');
+  let adminId = req.headers.get("x-admin-id");
   if (!adminId) {
-    const token = req.cookies.get('auth-token')?.value;
+    const token = req.cookies.get("auth-token")?.value;
     if (!token) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
     const payload = await verifyToken(token as string);
     if (!payload?.adminId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
     adminId = payload.adminId;
   }
@@ -24,13 +25,13 @@ export async function GET(
   const survey = await prisma.survey.findUnique({
     where: { id },
     include: {
-      questions: { orderBy: { order: 'asc' } },
+      questions: { orderBy: { order: "asc" } },
       memberList: { select: { id: true, name: true } },
     },
   });
 
   if (!survey) {
-    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
   // Parse stored options (saved as JSON string) into arrays for the client
@@ -41,14 +42,19 @@ export async function GET(
     text: q.text,
     order: q.order,
     options: q.options ? JSON.parse(q.options) : undefined,
+    writeIn: q.writeIn || false,
     showWhen: q.showWhen ? JSON.parse(q.showWhen) : undefined,
     maxSelections: q.maxSelections || undefined,
     required: q.required || false,
   }));
 
   // Response counts
-  const totalResponses = await prisma.response.count({ where: { surveyId: survey.id } });
-  const submittedResponses = await prisma.response.count({ where: { surveyId: survey.id, submittedAt: { not: null } } });
+  const totalResponses = await prisma.response.count({
+    where: { surveyId: survey.id },
+  });
+  const submittedResponses = await prisma.response.count({
+    where: { surveyId: survey.id, submittedAt: { not: null } },
+  });
 
   return NextResponse.json({
     id: survey.id,
@@ -70,22 +76,31 @@ export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  let adminId = req.headers.get('x-admin-id');
+  let adminId = req.headers.get("x-admin-id");
   if (!adminId) {
-    const token = req.cookies.get('auth-token')?.value;
+    const token = req.cookies.get("auth-token")?.value;
     if (!token) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
     const payload = await verifyToken(token as string);
     if (!payload?.adminId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
     adminId = payload.adminId;
   }
 
   try {
     const body = await req.json();
-    const { title, description, opensAt, closesAt, questions, memberListId, minResponses, minResponsesAll } = body;
+    const {
+      title,
+      description,
+      opensAt,
+      closesAt,
+      questions,
+      memberListId,
+      minResponses,
+      minResponsesAll,
+    } = body;
     const { id } = await params;
 
     // Check if memberListId is changing and block if responses already exist
@@ -101,7 +116,10 @@ export async function PUT(
         });
         if (submittedCount > 0) {
           return NextResponse.json(
-            { error: 'Cannot change member list after submitted responses exist for this survey.' },
+            {
+              error:
+                "Cannot change member list after submitted responses exist for this survey.",
+            },
             { status: 409 }
           );
         }
@@ -111,7 +129,8 @@ export async function PUT(
     // Perform update + question replacement atomically
     await prisma.$transaction(async (tx) => {
       // If minResponsesAll is true, get the member count and set minResponses to that
-      let finalMinResponses = minResponses !== undefined ? minResponses : undefined;
+      let finalMinResponses =
+        minResponses !== undefined ? minResponses : undefined;
       if (minResponsesAll) {
         const survey = await tx.survey.findUnique({
           where: { id },
@@ -128,7 +147,7 @@ export async function PUT(
           finalMinResponses = memberCount;
         }
       }
-      
+
       await tx.survey.update({
         where: { id },
         data: {
@@ -138,7 +157,8 @@ export async function PUT(
           closesAt: closesAt ? new Date(closesAt) : undefined,
           memberListId: memberListId || undefined,
           minResponses: finalMinResponses,
-          minResponsesAll: minResponsesAll !== undefined ? minResponsesAll : undefined,
+          minResponsesAll:
+            minResponsesAll !== undefined ? minResponsesAll : undefined,
         },
       });
 
@@ -152,12 +172,15 @@ export async function PUT(
               surveyId: id,
               text: q.text,
               type: q.type,
-              order: typeof q.order === 'number' ? q.order : i,
+              order: typeof q.order === "number" ? q.order : i,
               options: q.options ? JSON.stringify(q.options) : null,
+              writeIn: q.writeIn || false,
               showWhen: q.showWhen ? JSON.stringify(q.showWhen) : null,
-              maxSelections: q.maxSelections ? parseInt(String(q.maxSelections)) : null,
+              maxSelections: q.maxSelections
+                ? parseInt(String(q.maxSelections))
+                : null,
               required: q.required || false,
-            },
+            } as Prisma.QuestionUncheckedCreateInput,
           });
         }
       }
@@ -166,6 +189,9 @@ export async function PUT(
     return NextResponse.json({ ok: true });
   } catch (error) {
     logError(error);
-    return NextResponse.json({ error: 'Failed to update survey' }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to update survey" },
+      { status: 500 }
+    );
   }
 }

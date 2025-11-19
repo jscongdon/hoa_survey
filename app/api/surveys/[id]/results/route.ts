@@ -1,8 +1,8 @@
-import { log, error as logError } from '@/lib/logger'
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { cookies } from 'next/headers';
-import { verifyToken } from '@/lib/auth/jwt';
+import { log, error as logError } from "@/lib/logger";
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { cookies } from "next/headers";
+import { verifyToken } from "@/lib/auth/jwt";
 
 export async function GET(
   request: NextRequest,
@@ -11,14 +11,14 @@ export async function GET(
   try {
     // Verify authentication
     const cookieStore = await cookies();
-    const token = cookieStore.get('auth-token');
+    const token = cookieStore.get("auth-token");
     if (!token) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const payload = await verifyToken(token.value);
     if (!payload?.adminId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { id } = await params;
@@ -28,7 +28,7 @@ export async function GET(
       where: { id },
       include: {
         questions: {
-          orderBy: { order: 'asc' },
+          orderBy: { order: "asc" },
         },
         responses: {
           where: {
@@ -44,7 +44,7 @@ export async function GET(
     });
 
     if (!survey) {
-      return NextResponse.json({ error: 'Survey not found' }, { status: 404 });
+      return NextResponse.json({ error: "Survey not found" }, { status: 404 });
     }
 
     // Convert answers array to object with questionId as key
@@ -54,57 +54,92 @@ export async function GET(
         lot: response.member.lot,
         name: response.member.name,
       },
-      answers: response.answers.reduce((acc, answer) => {
-        // Parse arrays stored as JSON strings
-        try {
-          acc[answer.questionId] = JSON.parse(answer.value);
-        } catch {
-          acc[answer.questionId] = answer.value;
-        }
-        return acc;
-      }, {} as Record<string, any>),
+      answers: response.answers.reduce(
+        (acc, answer) => {
+          // Parse arrays stored as JSON strings
+          try {
+            acc[answer.questionId] = JSON.parse(answer.value);
+          } catch {
+            acc[answer.questionId] = answer.value;
+          }
+          return acc;
+        },
+        {} as Record<string, any>
+      ),
       submittedAt: response.submittedAt,
     }));
 
-    log('[RESULTS] Survey questions:', JSON.stringify(survey.questions.map(q => ({ id: q.id, text: q.text, type: q.type })), null, 2));
-    log('[RESULTS] Total responses:', responses.length);
-    log('[RESULTS] Response answers:', JSON.stringify(responses.map(r => r.answers), null, 2));
+    log(
+      "[RESULTS] Survey questions:",
+      JSON.stringify(
+        survey.questions.map((q) => ({ id: q.id, text: q.text, type: q.type })),
+        null,
+        2
+      )
+    );
+    log("[RESULTS] Total responses:", responses.length);
+    log(
+      "[RESULTS] Response answers:",
+      JSON.stringify(
+        responses.map((r) => r.answers),
+        null,
+        2
+      )
+    );
 
     // Calculate statistics for each question
     const questionStats = survey.questions.map((question, questionIndex) => {
       // Collect answers by question ID
       const questionAnswers = responses
-        .map(response => response.answers[question.id])
-        .filter(answer => {
+        .map((response) => response.answers[question.id])
+        .filter((answer) => {
           // Filter out empty answers
-          if (answer === undefined || answer === null || answer === '') return false;
+          if (answer === undefined || answer === null || answer === "")
+            return false;
           if (Array.isArray(answer) && answer.length === 0) return false;
           return true;
         });
 
-      log(`[RESULTS] Question ${question.id} "${question.text}" (${question.type}):`, 
+      log(
+        `[RESULTS] Question ${question.id} "${question.text}" (${question.type}):`,
         `Found ${questionAnswers.length} answers out of ${responses.length} total responses`,
-        questionAnswers);
+        questionAnswers
+      );
 
       let stats: any = {
         questionId: question.id,
         text: question.text,
         type: question.type,
         totalResponses: questionAnswers.length,
-        responseRate: survey.responses.length > 0 
-          ? Math.round((questionAnswers.length / survey.responses.length) * 100) 
-          : 0,
+        responseRate:
+          survey.responses.length > 0
+            ? Math.round(
+                (questionAnswers.length / survey.responses.length) * 100
+              )
+            : 0,
       };
 
-      if (question.type === 'YES_NO' || question.type === 'MULTI_SINGLE') {
+      if (question.type === "YES_NO" || question.type === "MULTI_SINGLE") {
         // Count occurrences of each option
         const counts: Record<string, number> = {};
         questionAnswers.forEach((answer) => {
-          const value = String(answer);
-          counts[value] = (counts[value] || 0) + 1;
+          // Support write-in objects: { choice: '__WRITE_IN__', writeIn: 'text' }
+          if (
+            answer &&
+            typeof answer === "object" &&
+            answer.choice === "__WRITE_IN__"
+          ) {
+            counts["Other"] = (counts["Other"] || 0) + 1;
+            // collect write-ins
+            stats.writeIns = stats.writeIns || [];
+            stats.writeIns.push(answer.writeIn || "");
+          } else {
+            const value = String(answer);
+            counts[value] = (counts[value] || 0) + 1;
+          }
         });
         stats.counts = counts;
-      } else if (question.type === 'MULTI_MULTI') {
+      } else if (question.type === "MULTI_MULTI") {
         // Count occurrences of each option (answers are arrays)
         const counts: Record<string, number> = {};
         questionAnswers.forEach((answer) => {
@@ -115,7 +150,7 @@ export async function GET(
           }
         });
         stats.counts = counts;
-      } else if (question.type === 'RATING_5') {
+      } else if (question.type === "RATING_5") {
         // Calculate average and distribution
         const ratings = questionAnswers.map((a) => Number(a));
         const sum = ratings.reduce((acc, val) => acc + val, 0);
@@ -126,7 +161,7 @@ export async function GET(
         });
         stats.average = Math.round(average * 10) / 10;
         stats.counts = counts;
-      } else if (question.type === 'PARAGRAPH') {
+      } else if (question.type === "PARAGRAPH") {
         // Just return all text responses
         stats.responses = questionAnswers;
       }
@@ -148,15 +183,15 @@ export async function GET(
         text: q.text,
         type: q.type,
         options: q.options ? JSON.parse(q.options) : null,
-        required: (q as any).required || false,
+        required: q.required || false,
       })),
       stats: questionStats,
       responses,
     });
   } catch (error) {
-    logError('Error fetching survey results:', error);
+    logError("Error fetching survey results:", error);
     return NextResponse.json(
-      { error: 'Failed to fetch survey results' },
+      { error: "Failed to fetch survey results" },
       { status: 500 }
     );
   }
