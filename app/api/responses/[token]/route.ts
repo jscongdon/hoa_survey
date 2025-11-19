@@ -60,6 +60,7 @@ export async function GET(
           order: q.order,
           options: q.options ? JSON.parse(q.options) : undefined,
           writeIn: q.writeIn || false,
+          writeInCount: (q as any).writeInCount || 0,
           showWhen: q.showWhen ? JSON.parse(q.showWhen) : undefined,
           maxSelections: q.maxSelections || undefined,
           required: q.required || false,

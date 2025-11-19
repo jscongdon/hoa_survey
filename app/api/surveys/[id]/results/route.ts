@@ -144,8 +144,20 @@ export async function GET(
         const counts: Record<string, number> = {};
         questionAnswers.forEach((answer) => {
           if (Array.isArray(answer)) {
-            answer.forEach((option) => {
-              counts[option] = (counts[option] || 0) + 1;
+            answer.forEach((option: any) => {
+              // Support write-in objects inside the array
+              if (
+                option &&
+                typeof option === "object" &&
+                option.choice === "__WRITE_IN__"
+              ) {
+                counts["Other"] = (counts["Other"] || 0) + 1;
+                stats.writeIns = stats.writeIns || [];
+                stats.writeIns.push(option.writeIn || "");
+              } else {
+                const key = String(option);
+                counts[key] = (counts[key] || 0) + 1;
+              }
             });
           }
         });
@@ -184,6 +196,7 @@ export async function GET(
         type: q.type,
         options: q.options ? JSON.parse(q.options) : null,
         required: q.required || false,
+        writeInCount: (q as any).writeInCount || 0,
       })),
       stats: questionStats,
       responses,

@@ -44,6 +44,7 @@ export default function SurveyPage({
   const [token, setToken] = useState<string | null>(null);
   const [requestingSignature, setRequestingSignature] = useState(false);
   const [signatureRequested, setSignatureRequested] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     params.then((resolvedParams) => {
@@ -181,6 +182,35 @@ export default function SurveyPage({
 
   const handleSubmit = async () => {
     if (!token) return;
+    // Validate write-in fields: any selected write-in must have non-empty "please specify" text
+    const errors: Record<string, string> = {};
+    if (survey) {
+      survey.survey.questions.forEach((q: any) => {
+        const ans = answers[q.id];
+        if (Array.isArray(ans)) {
+          ans.forEach((a) => {
+            if (a && typeof a === "object" && a.choice === "__WRITE_IN__") {
+              if (!String(a.writeIn || "").trim()) {
+                errors[q.id] = "Please specify a value for the selected write-in.";
+              }
+            }
+          });
+        } else if (ans && typeof ans === "object" && (ans as any).choice === "__WRITE_IN__") {
+          if (!String((ans as any).writeIn || "").trim()) {
+            errors[q.id] = "Please specify a value for the selected write-in.";
+          }
+        }
+      });
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setValidationErrors(errors);
+      // Scroll to first error
+      const firstQ = Object.keys(errors)[0];
+      const el = document.querySelector(`[data-question-id="${firstQ}"]`);
+      if (el) (el as HTMLElement).scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
 
     try {
       await fetch(`/api/responses/${token}`, {
@@ -259,7 +289,12 @@ export default function SurveyPage({
   const answeredCount = Object.entries(answers).filter(([_, value]) => {
     // For arrays (MULTI_MULTI), check if at least one option is selected
     if (Array.isArray(value)) {
-      return value.length > 0;
+      return value.some((v) => {
+        if (v && typeof v === "object" && (v as any).choice === "__WRITE_IN__") {
+          return String((v as any).writeIn || "").trim() !== "";
+        }
+        return v !== undefined && v !== null && v !== "";
+      });
     }
     // For other types, check if value exists and is not empty
     if (
@@ -281,7 +316,12 @@ export default function SurveyPage({
   const allRequiredAnswered = requiredQuestions.every((q: any) => {
     const answer = answers[q.id];
     if (Array.isArray(answer)) {
-      return answer.length > 0;
+      return answer.some((v) => {
+        if (v && typeof v === "object" && (v as any).choice === "__WRITE_IN__") {
+          return String((v as any).writeIn || "").trim() !== "";
+        }
+        return v !== undefined && v !== null && v !== "";
+      });
     }
     if (
       answer &&
@@ -423,10 +463,11 @@ export default function SurveyPage({
 
         <div className="space-y-6 mb-8">
           {survey.survey.questions.map((question: any) => (
-            <div
-              key={question.id}
-              className="bg-white dark:bg-gray-800 rounded-lg shadow p-6"
-            >
+                <div
+                  key={question.id}
+                  data-question-id={question.id}
+                  className="bg-white dark:bg-gray-800 rounded-lg shadow p-6"
+                >
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                 {question.text}
                 {question.required && (
@@ -515,11 +556,17 @@ export default function SurveyPage({
                             value={option}
                             checked={Boolean(isChecked)}
                             disabled={isDisabled}
-                            onChange={(e) =>
+                            onChange={(e) => {
                               setAnswers({
                                 ...answers,
                                 [question.id]: e.target.value,
-                              })
+                              });
+                              setValidationErrors((prev) => {
+                                const copy = { ...prev };
+                                delete copy[question.id];
+                                return copy;
+                              });
+                            }
                             }
                             className="mr-3"
                           />
@@ -563,14 +610,20 @@ export default function SurveyPage({
                               value="__WRITE_IN__"
                               checked={isChecked}
                               disabled={isDisabled}
-                              onChange={() =>
+                              onChange={() => {
                                 setAnswers({
                                   ...answers,
                                   [question.id]: {
                                     choice: "__WRITE_IN__",
                                     writeIn: "",
                                   },
-                                })
+                                });
+                                setValidationErrors((prev) => {
+                                  const copy = { ...prev };
+                                  delete copy[question.id];
+                                  return copy;
+                                });
+                              }
                               }
                               className="mr-3"
                             />
@@ -591,14 +644,20 @@ export default function SurveyPage({
                                 value={
                                   (answers[question.id] as any)?.writeIn || ""
                                 }
-                                onChange={(e) =>
+                                onChange={(e) => {
                                   setAnswers({
                                     ...answers,
                                     [question.id]: {
                                       choice: "__WRITE_IN__",
                                       writeIn: e.target.value,
                                     },
-                                  })
+                                  });
+                                  setValidationErrors((prev) => {
+                                    const copy = { ...prev };
+                                    delete copy[question.id];
+                                    return copy;
+                                  });
+                                }
                                 }
                                 disabled={isDisabled}
                                 placeholder="Please specify"
@@ -633,64 +692,178 @@ export default function SurveyPage({
                         typeof question.options === "string"
                           ? JSON.parse(question.options)
                           : question.options || [];
-                      return options.map((option: string) => {
-                        const currentAnswers =
-                          (answers[question.id] as string[]) || [];
-                        const isChecked = currentAnswers.includes(option);
+                      return (() => {
+                        const elems: React.ReactNode[] = [];
+                        const currentAnswers = (answers[question.id] as any[]) || [];
                         const qEnabled = enabledMap[question.id] !== false;
-                        const isDisabled =
-                          isClosed ||
-                          survey.signed ||
-                          !qEnabled ||
-                          (!isChecked &&
-                            question.maxSelections &&
-                            currentAnswers.length >= question.maxSelections);
 
-                        return (
-                          <label
-                            key={option}
-                            className={`flex items-center p-3 rounded-lg border-2 transition-colors ${
-                              isChecked &&
-                              (isClosed || survey.signed || !qEnabled)
-                                ? "border-blue-400 bg-blue-50 dark:border-blue-500 dark:bg-blue-900/30"
-                                : isChecked
-                                  ? "border-blue-500 bg-blue-50 dark:border-blue-400 dark:bg-blue-900/50"
-                                  : isDisabled
-                                    ? "border-gray-200 dark:border-gray-700 opacity-50"
-                                    : "border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500"
-                            }`}
-                          >
-                            <input
-                              type="checkbox"
-                              value={option}
-                              checked={isChecked}
-                              disabled={isDisabled}
-                              onChange={(e) => {
-                                const newAnswers = e.target.checked
-                                  ? [...currentAnswers, option]
-                                  : currentAnswers.filter((a) => a !== option);
-                                setAnswers({
-                                  ...answers,
-                                  [question.id]: newAnswers,
-                                });
-                              }}
-                              className="mr-3"
-                            />
-                            <span
-                              className={`font-medium ${
-                                isChecked &&
-                                (isClosed || survey.signed || !qEnabled)
-                                  ? "text-blue-700 dark:text-blue-300"
+                        // Helper to count selected non-empty answers
+                        const selectedCount = currentAnswers.length;
+
+                        // Regular options
+                        options.forEach((option: string) => {
+                          const isChecked = currentAnswers.includes(option);
+                          const isDisabled =
+                            isClosed ||
+                            survey.signed ||
+                            !qEnabled ||
+                            (!isChecked &&
+                              question.maxSelections &&
+                              selectedCount >= question.maxSelections);
+
+                          elems.push(
+                            <label
+                              key={option}
+                              className={`flex items-center p-3 rounded-lg border-2 transition-colors ${
+                                isChecked && (isClosed || survey.signed || !qEnabled)
+                                  ? "border-blue-400 bg-blue-50 dark:border-blue-500 dark:bg-blue-900/30"
                                   : isChecked
-                                    ? "text-blue-600 dark:text-blue-400"
-                                    : "text-gray-700 dark:text-gray-300"
+                                    ? "border-blue-500 bg-blue-50 dark:border-blue-400 dark:bg-blue-900/50"
+                                    : isDisabled
+                                      ? "border-gray-200 dark:border-gray-700 opacity-50"
+                                      : "border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500"
                               }`}
                             >
-                              {option}
-                            </span>
-                          </label>
-                        );
-                      });
+                              <input
+                                type="checkbox"
+                                value={option}
+                                checked={isChecked}
+                                disabled={isDisabled}
+                                onChange={(e) => {
+                                  const newAnswers = e.target.checked
+                                    ? [...currentAnswers, option]
+                                    : currentAnswers.filter((a) => a !== option);
+                                  setAnswers({
+                                    ...answers,
+                                    [question.id]: newAnswers,
+                                  });
+                                  setValidationErrors((prev) => {
+                                    const copy = { ...prev };
+                                    delete copy[question.id];
+                                    return copy;
+                                  });
+                                }}
+                                className="mr-3"
+                              />
+                              <span
+                                className={`font-medium ${
+                                  isChecked && (isClosed || survey.signed || !qEnabled)
+                                    ? "text-blue-700 dark:text-blue-300"
+                                    : isChecked
+                                      ? "text-blue-600 dark:text-blue-400"
+                                      : "text-gray-700 dark:text-gray-300"
+                                }`}
+                              >
+                                {option}
+                              </span>
+                            </label>
+                          );
+                        });
+
+                        // Write-in slots for MULTI_MULTI
+                        const writeInCount = (question as any).writeInCount || 0;
+                        for (let i = 0; i < writeInCount; i++) {
+                          const writeInKey = `__WRITE_IN__:${i}`;
+                          const isChecked = currentAnswers.some(
+                            (a) => typeof a === "object" && a.choice === "__WRITE_IN__" && a.index === i
+                          );
+                          const writeInObj = currentAnswers.find(
+                            (a) => typeof a === "object" && a.choice === "__WRITE_IN__" && a.index === i
+                          ) as any;
+                          const isDisabled =
+                            isClosed ||
+                            survey.signed ||
+                            !qEnabled ||
+                            (!isChecked &&
+                              question.maxSelections &&
+                              selectedCount >= question.maxSelections);
+
+                          elems.push(
+                            <div key={writeInKey}>
+                              <label
+                                className={`flex items-center p-3 rounded-lg border-2 transition-colors ${
+                                  isChecked && (isClosed || survey.signed || !qEnabled)
+                                    ? "border-blue-400 bg-blue-50 dark:border-blue-500 dark:bg-blue-900/30"
+                                    : isChecked
+                                      ? "border-blue-500 bg-blue-50 dark:border-blue-400 dark:bg-blue-900/50"
+                                      : isDisabled
+                                        ? "border-gray-200 dark:border-gray-700 opacity-50"
+                                        : "border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500"
+                                }`}
+                              >
+                                <input
+                                  type="checkbox"
+                                  value={writeInKey}
+                                  checked={isChecked}
+                                  disabled={isDisabled}
+                                  onChange={(e) => {
+                                    let newAnswers = [...currentAnswers];
+                                    if (e.target.checked) {
+                                      // add write-in object placeholder
+                                      newAnswers.push({
+                                        choice: "__WRITE_IN__",
+                                        writeIn: "",
+                                        index: i,
+                                      });
+                                    } else {
+                                      newAnswers = newAnswers.filter(
+                                        (a) => !(typeof a === "object" && (a as any).choice === "__WRITE_IN__" && (a as any).index === i)
+                                      );
+                                    }
+                                    setAnswers({
+                                      ...answers,
+                                      [question.id]: newAnswers,
+                                    });
+                                    setValidationErrors((prev) => {
+                                      const copy = { ...prev };
+                                      delete copy[question.id];
+                                      return copy;
+                                    });
+                                  }}
+                                  className="mr-3"
+                                />
+                                <span className={`font-medium ${isChecked ? "text-blue-600 dark:text-blue-400" : "text-gray-700 dark:text-gray-300"}`}>
+                                  Write-In {i + 1}
+                                </span>
+                              </label>
+                              {isChecked && (
+                                <div className="mt-2 ml-6">
+                                  <input
+                                    type="text"
+                                    value={writeInObj?.writeIn || ""}
+                                    onChange={(e) => {
+                                      const newAnswers = (currentAnswers || []).map((a) => {
+                                        if (typeof a === "object" && (a as any).choice === "__WRITE_IN__" && (a as any).index === i) {
+                                          return { ...a, writeIn: e.target.value };
+                                        }
+                                        return a;
+                                      });
+                                      setAnswers({
+                                        ...answers,
+                                        [question.id]: newAnswers,
+                                      });
+                                      setValidationErrors((prev) => {
+                                        const copy = { ...prev };
+                                        delete copy[question.id];
+                                        return copy;
+                                      });
+                                    }}
+                                    disabled={isDisabled}
+                                    placeholder="Please specify"
+                                    className={`w-full px-4 py-2 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                                      isDisabled && writeInObj?.writeIn
+                                        ? "border-blue-400 bg-blue-50 dark:border-blue-500 dark:bg-blue-900/30 text-blue-900 dark:text-blue-100"
+                                        : "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                                    }`}
+                                  />
+                                </div>
+                              )}
+                            </div>
+                          );
+                        }
+
+                        return elems;
+                      })();
                     })()}
                   </div>
                 </div>

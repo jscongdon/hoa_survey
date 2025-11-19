@@ -7,6 +7,7 @@ type Question = {
   text: string;
   options?: string[];
   writeIn?: boolean;
+  writeInCount?: number;
   maxSelections?: number;
   required?: boolean;
   order: number;
@@ -34,6 +35,7 @@ export default function SurveyBuilder({
   const [options, setOptions] = useState("");
   const [maxSelections, setMaxSelections] = useState("");
   const [writeIn, setWriteIn] = useState(false);
+  const [writeInCount, setWriteInCount] = useState("");
   const [required, setRequired] = useState(false);
   const [showWhen, setShowWhen] = useState<{
     triggerOrder: number | null;
@@ -64,6 +66,10 @@ export default function SurveyBuilder({
       text,
       options: opts,
       writeIn: writeIn && type === "MULTI_SINGLE" ? true : false,
+      writeInCount:
+        type === "MULTI_MULTI" && writeInCount
+          ? parseInt(writeInCount)
+          : undefined,
       maxSelections: maxSel,
       required,
       order: questions.length,
@@ -106,6 +112,7 @@ export default function SurveyBuilder({
     setMaxSelections("");
     setRequired(false);
     setWriteIn(false);
+    setWriteInCount("");
     setShowWhen(null);
   }
 
@@ -116,6 +123,7 @@ export default function SurveyBuilder({
     setOptions(q.options ? q.options.join(", ") : "");
     setWriteIn(q.writeIn || false);
     setMaxSelections(q.maxSelections ? String(q.maxSelections) : "");
+    setWriteInCount(q.writeInCount ? String(q.writeInCount) : "");
     setRequired(q.required || false);
     // handle showWhen stored as JSON string or object
     if (q.showWhen) {
@@ -153,6 +161,10 @@ export default function SurveyBuilder({
       text,
       options: opts,
       writeIn: writeIn && type === "MULTI_SINGLE" ? true : false,
+      writeInCount:
+        type === "MULTI_MULTI" && writeInCount
+          ? parseInt(writeInCount)
+          : undefined,
       maxSelections: maxSel,
       required,
       order: editingIndex,
@@ -191,6 +203,7 @@ export default function SurveyBuilder({
     setMaxSelections("");
     setRequired(false);
     setWriteIn(false);
+    setWriteInCount("");
     setEditingIndex(null);
   }
 
@@ -592,6 +605,22 @@ export default function SurveyBuilder({
             </span>
           </label>
         )}
+                {type === "MULTI_MULTI" && (
+                  <div className="mt-2">
+                    <label className="text-sm text-gray-700 dark:text-gray-300 block mb-1">
+                      Number of write-in slots (optional)
+                    </label>
+                    <input
+                      type="number"
+                      min={0}
+                      value={writeInCount}
+                      onChange={(e) => setWriteInCount(e.target.value)}
+                      disabled={editingIndex !== null}
+                      className="w-24 border border-gray-300 dark:border-gray-600 p-2 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                      placeholder="0"
+                    />
+                  </div>
+                )}
         <label className="flex items-center gap-2 cursor-pointer">
           <input
             type="checkbox"

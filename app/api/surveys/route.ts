@@ -133,6 +133,9 @@ export async function POST(request: NextRequest) {
               order: typeof q.order === "number" ? q.order : i,
               options: q.options ? JSON.stringify(q.options) : null,
               writeIn: q.writeIn || false,
+              writeInCount: (q as any).writeInCount
+                ? parseInt(String((q as any).writeInCount))
+                : 0,
               showWhen: q.showWhen ? JSON.stringify(q.showWhen) : null,
               maxSelections: q.maxSelections
                 ? parseInt(String(q.maxSelections))

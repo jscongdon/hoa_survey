@@ -29,6 +29,7 @@ export const surveySchema = z.object({
       type: z.string(),
       options: z.array(z.string()).optional(),
       writeIn: z.boolean().optional(),
+      writeInCount: z.number().int().min(0).optional(),
       maxSelections: z.number().int().positive().optional(),
       // Optional conditional display rule
       showWhen: z
@@ -66,6 +67,7 @@ export const questionSchema = z.object({
   text: z.string().min(1, "Question text is required"),
   options: z.array(z.string()).optional(),
   writeIn: z.boolean().optional(),
+  writeInCount: z.number().int().min(0).optional(),
   maxSelections: z.number().int().positive().optional(),
   showWhen: z
     .object({

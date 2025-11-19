@@ -109,6 +109,7 @@ export default function EditSurveyPage({
                   : undefined,
               maxSelections: q.maxSelections || undefined,
               writeIn: q.writeIn || false,
+              writeInCount: (q as any).writeInCount || 0,
               required: q.required || false,
               order: typeof q.order === "number" ? q.order : i,
             }))

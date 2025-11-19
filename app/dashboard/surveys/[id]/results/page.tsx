@@ -346,7 +346,19 @@ export default function SurveyResultsPage({
                                   <p className="font-medium text-gray-900 dark:text-white mb-2">{question.text}</p>
                                   <p className="text-gray-700 dark:text-gray-300 pl-4">
                                     {answer !== undefined && answer !== null && answer !== '' 
-                                      ? (Array.isArray(answer) ? answer.join(', ') : String(answer))
+                                      ? (
+                                          Array.isArray(answer)
+                                            ? answer
+                                                .map((a: any) =>
+                                                  a && typeof a === 'object' && a.choice === '__WRITE_IN__'
+                                                    ? String(a.writeIn || '')
+                                                    : String(a)
+                                                )
+                                                .join(', ')
+                                            : (typeof answer === 'object' && (answer as any).choice === '__WRITE_IN__')
+                                              ? String((answer as any).writeIn || '')
+                                              : String(answer)
+                                        )
                                       : <span className="italic text-gray-500">No answer provided</span>
                                     }
                                   </p>

@@ -1,15 +1,15 @@
 services:
   web:
     container_name: hoa_survey_dev
-    image: node:20-bullseye-slim
-    working_dir: /usr/src/app
+    build: .
+    working_dir: /app
     # Install once (if node_modules missing), generate prisma client, sync jwt secret, then run dev
-    command: bash -lc "if [ ! -d node_modules ]; then npm ci; fi && npx prisma generate && (node ./scripts/sync-jwt-secret.js || true) && npm run dev"
+    command: bash -lc "if [ ! -d node_modules ]; then npm ci --legacy-peer-deps; fi && npx prisma generate && (node ./scripts/sync-jwt-secret.js || true) && npm run dev"
     ports:
       - "3000:3000"
     volumes:
-      - ./:/usr/src/app:cached
-      - node_modules:/usr/src/app/node_modules
+      - ./:/app:cached
+      - node_modules:/app/node_modules
       - hoasurvey-data:/data
     environment:
       DATABASE_URL: "file:/data/hoasurvey.db"
