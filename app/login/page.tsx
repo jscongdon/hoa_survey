@@ -1,69 +1,87 @@
-'use client';
+"use client";
 
-import React, { useState, FormEvent, useEffect, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import React, { useState, FormEvent, useEffect, Suspense } from "react";
+import Image from "next/image";
+import { useRouter, useSearchParams } from "next/navigation";
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
   const [needsVerification, setNeedsVerification] = useState(false);
-  const [unverifiedEmail, setUnverifiedEmail] = useState('');
+  const [unverifiedEmail, setUnverifiedEmail] = useState("");
   const [resendingVerification, setResendingVerification] = useState(false);
+  const [hoaName, setHoaName] = useState("HOA Survey");
+  const [hoaLogoUrl, setHoaLogoUrl] = useState<string | null>(null);
 
   useEffect(() => {
     // Check if setup is complete
-    fetch('/api/setup/status')
-      .then(res => res.json())
-      .then(data => {
+    fetch("/api/setup/status")
+      .then((res) => res.json())
+      .then((data) => {
         if (!data.setupCompleted && !data.adminExists) {
           // No admin exists, redirect to setup
-          router.push('/setup');
+          router.push("/setup");
         }
       })
       .catch(() => {
         // Ignore errors, allow login page to load
       });
+
+    // fetch public HOA name and optional logo for display
+    fetch("/api/public/hoa-name")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d?.hoaName) setHoaName(d.hoaName);
+        if (d?.hoaLogoUrl) setHoaLogoUrl(d.hoaLogoUrl);
+      })
+      .catch(() => {});
   }, [router]);
 
   useEffect(() => {
-    if (searchParams.get('verified') === 'true') {
-      setSuccess('Email verified successfully! You can now log in with full administrator access.')
+    if (searchParams.get("verified") === "true") {
+      setSuccess(
+        "Email verified successfully! You can now log in with full administrator access."
+      );
     }
-    if (searchParams.get('reset') === 'success') {
-      setSuccess('Password reset successfully! You can now log in with your new password.')
+    if (searchParams.get("reset") === "success") {
+      setSuccess(
+        "Password reset successfully! You can now log in with your new password."
+      );
     }
-    if (searchParams.get('pending') === 'verification') {
-      setError('Please verify your email address before accessing the dashboard.')
+    if (searchParams.get("pending") === "verification") {
+      setError(
+        "Please verify your email address before accessing the dashboard."
+      );
     }
-  }, [searchParams])
+  }, [searchParams]);
 
   const handleResendVerification = async () => {
     setResendingVerification(true);
-    setError('');
-    setSuccess('');
+    setError("");
+    setSuccess("");
 
     try {
-      const res = await fetch('/api/auth/resend-verification', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/auth/resend-verification", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: unverifiedEmail }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || 'Failed to resend verification email');
+        setError(data.error || "Failed to resend verification email");
       } else {
-        setSuccess('Verification email sent! Please check your inbox.');
+        setSuccess("Verification email sent! Please check your inbox.");
         setNeedsVerification(false);
       }
     } catch (err) {
-      setError('An error occurred. Please try again.');
+      setError("An error occurred. Please try again.");
     } finally {
       setResendingVerification(false);
     }
@@ -71,16 +89,16 @@ function LoginForm() {
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
+    setError("");
+    setSuccess("");
     setNeedsVerification(false);
     setLoading(true);
 
     try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ email, password }),
       });
 
@@ -92,32 +110,36 @@ function LoginForm() {
           setUnverifiedEmail(data.email);
           setError(data.error);
         } else {
-          setError(data.error || 'Login failed');
+          setError(data.error || "Login failed");
         }
         setLoading(false);
         return;
       }
 
       // Small delay to ensure cookie is set before navigation
-      import('@/lib/devClient').then(async (m) => {
-        const dev = await m.isDevModeClient()
-        if (dev) console.log('Login success response', res.status, data)
-      }).catch(() => {})
+      import("@/lib/devClient")
+        .then(async (m) => {
+          const dev = await m.isDevModeClient();
+          if (dev) console.log("Login success response", res.status, data);
+        })
+        .catch(() => {});
       setTimeout(async () => {
         try {
-          await router.push('/dashboard');
-          import('@/lib/devClient').then(async (m) => {
-            const dev = await m.isDevModeClient()
-            if (dev) console.log('Navigation to /dashboard triggered')
-          }).catch(() => {})
+          await router.push("/dashboard");
+          import("@/lib/devClient")
+            .then(async (m) => {
+              const dev = await m.isDevModeClient();
+              if (dev) console.log("Navigation to /dashboard triggered");
+            })
+            .catch(() => {});
         } catch (navErr) {
-          console.error('Navigation error', navErr);
-          setError('Navigation failed. Please try again.');
+          console.error("Navigation error", navErr);
+          setError("Navigation failed. Please try again.");
           setLoading(false);
         }
       }, 100);
     } catch (err) {
-      setError('An error occurred. Please try again.');
+      setError("An error occurred. Please try again.");
       setLoading(false);
     }
   };
@@ -125,9 +147,32 @@ function LoginForm() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
       <div className="max-w-md w-full bg-white dark:bg-gray-800 p-8 rounded-lg shadow-md">
-        <h1 className="text-3xl font-bold text-center text-gray-900 dark:text-white mb-8">
-          HOA Survey
+        <h1 className="text-3xl font-bold text-center text-gray-900 dark:text-white mb-4">
+          {hoaName + " Surveys"}
         </h1>
+
+        <div className="flex justify-center mb-6">
+          {hoaLogoUrl ? (
+            // Render the configured HOA logo
+            // Use Next/Image for optimization; width/height set to reasonable defaults
+            <Image
+              src={hoaLogoUrl}
+              alt={`${hoaName} logo`}
+              width={120}
+              height={120}
+              className="object-contain"
+            />
+          ) : (
+            // Fallback to bundled HOA Survey logo
+            <Image
+              src="/hoasurvey_logo.png"
+              alt="HOA Survey logo"
+              width={120}
+              height={120}
+              className="object-contain"
+            />
+          )}
+        </div>
 
         {success && (
           <div className="mb-4 p-3 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-200 rounded">
@@ -145,7 +190,9 @@ function LoginForm() {
                 disabled={resendingVerification}
                 className="mt-2 text-sm underline hover:no-underline disabled:opacity-50"
               >
-                {resendingVerification ? 'Sending...' : 'Resend verification email'}
+                {resendingVerification
+                  ? "Sending..."
+                  : "Resend verification email"}
               </button>
             )}
           </div>
@@ -181,7 +228,7 @@ function LoginForm() {
           <div className="flex items-center justify-end">
             <button
               type="button"
-              onClick={() => router.push('/forgot-password')}
+              onClick={() => router.push("/forgot-password")}
               className="text-sm text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300"
             >
               Forgot password?
@@ -193,7 +240,7 @@ function LoginForm() {
             disabled={loading}
             className="w-full px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-400 font-medium"
           >
-            {loading ? 'Logging in...' : 'Login'}
+            {loading ? "Logging in..." : "Login"}
           </button>
         </form>
 
@@ -207,11 +254,13 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-        <div className="text-gray-900 dark:text-white">Loading...</div>
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+          <div className="text-gray-900 dark:text-white">Loading...</div>
+        </div>
+      }
+    >
       <LoginForm />
     </Suspense>
   );
