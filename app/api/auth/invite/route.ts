@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { sendEmail } from '@/lib/email/send'
+import { sendEmail, generateBaseEmail } from '@/lib/email/send'
 import { signToken } from '@/lib/auth/jwt'
 import crypto from 'crypto'
 import { log } from '@/lib/logger'
@@ -47,10 +47,23 @@ export async function POST(req: Request) {
     }
     const inviteUrl = `${appUrl.replace(/\/$/, '')}/invite/${token}`
     log(`[INVITE] Generated invite URL: ${inviteUrl} (inviter=${invitedById}) expires=${expiry.toISOString()}`)
+    const bodyHtml = `
+      <p>You have been invited as an admin for <strong>${sys?.hoaName || 'your HOA'}</strong>.</p>
+      <p>This invite will expire on ${expiry.toISOString()}.</p>
+    `;
+
+    const html = generateBaseEmail(
+      'Administrator Invitation',
+      `<p>Hello ${name || ''},</p>`,
+      bodyHtml,
+      { text: 'Accept Invitation', url: inviteUrl },
+      `This invite expires on ${expiry.toISOString()}.`
+    );
+
     await sendEmail({
       to: email,
       subject: 'HOA Survey Admin Invite',
-      html: `<p>You have been invited as an admin. Click <a href="${inviteUrl}">here</a> to set your password and activate your account.</p><p>This invite will expire on ${expiry.toISOString()}.</p>`
+      html,
     })
     return NextResponse.json({ ok: true })
   } catch (err) {

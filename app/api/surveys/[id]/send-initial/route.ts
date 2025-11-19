@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyToken } from '@/lib/auth/jwt';
-import { sendEmail } from '@/lib/email/send';
+import { sendEmail, generateBaseEmail } from '@/lib/email/send';
 import { log, error as logError } from '@/lib/logger';
 
 export async function POST(
@@ -43,10 +43,12 @@ export async function POST(
     for (const resp of responses) {
       try {
         const surveyUrl = `${baseUrl}/survey/${resp.token}`;
-        const html = `<p>Hello ${resp.member.name},</p>
-          <p>You are invited to participate in the survey: <strong>${survey.title}</strong>.</p>
-          <p>Please click the link below to complete the survey:</p>
-          <p><a href="${surveyUrl}">Open Survey</a></p>`;
+        const html = generateBaseEmail(
+          `Survey: ${survey.title}`,
+          `<p>Hello ${resp.member.name},</p>`,
+          `<p>You are invited to participate in the survey: <strong>${survey.title}</strong>.</p><p>Please click the button below to complete the survey.</p>`,
+          { text: 'Open Survey', url: surveyUrl },
+        );
 
         await sendEmail({ to: resp.member.email, subject: `Survey: ${survey.title}`, html });
       } catch (e) {
