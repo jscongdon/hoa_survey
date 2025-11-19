@@ -74,6 +74,7 @@ export async function POST(request: NextRequest) {
       showAfterClose,
       minResponses,
       minResponsesAll,
+      requireSignature,
       questions,
     } = body;
 
@@ -116,6 +117,8 @@ export async function POST(request: NextRequest) {
           showAfterClose,
           minResponses: finalMinResponses,
           minResponsesAll: minResponsesAll || false,
+          requireSignature:
+            typeof requireSignature === "boolean" ? requireSignature : true,
         },
       });
       log("[CREATE_SURVEY] Survey created:", created.id);

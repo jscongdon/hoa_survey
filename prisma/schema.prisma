@@ -75,6 +75,7 @@ model Survey {
   showAfterClose Boolean    @default(true)
   minResponses   Int?       // Minimum number of responses needed (optional)
   minResponsesAll Boolean   @default(false) // If true, minResponses should equal total members in list
+  requireSignature Boolean    @default(true) // Whether this survey requires digital signature for responses
   createdAt      DateTime   @default(now())
 }
 

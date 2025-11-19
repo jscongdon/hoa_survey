@@ -65,6 +65,10 @@ export async function GET(
     closesAt: survey.closesAt,
     memberListId: survey.memberListId,
     memberListName: survey.memberList?.name,
+    requireSignature:
+      typeof survey.requireSignature === "boolean"
+        ? survey.requireSignature
+        : true,
     minResponses: survey.minResponses,
     minResponsesAll: survey.minResponsesAll,
     totalResponses,
@@ -101,6 +105,7 @@ export async function PUT(
       memberListId,
       minResponses,
       minResponsesAll,
+      requireSignature,
     } = body;
     const { id } = await params;
 
@@ -160,6 +165,10 @@ export async function PUT(
           minResponses: finalMinResponses,
           minResponsesAll:
             minResponsesAll !== undefined ? minResponsesAll : undefined,
+          requireSignature:
+            typeof requireSignature === "boolean"
+              ? requireSignature
+              : undefined,
         },
       });
 
