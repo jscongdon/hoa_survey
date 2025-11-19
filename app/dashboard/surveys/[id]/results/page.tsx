@@ -235,6 +235,7 @@ export default function SurveyResultsPage({
                 </div>
 
                 {(stat.type === "YES_NO" ||
+                  stat.type === "APPROVE_DISAPPROVE" ||
                   stat.type === "MULTI_SINGLE" ||
                   stat.type === "MULTI_MULTI") &&
                   stat.counts && (

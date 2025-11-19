@@ -145,7 +145,7 @@ export async function GET(
         // Count occurrences of each option (answers are arrays)
         const counts: Record<string, number> = {};
         questionAnswers.forEach((answer) => {
-            if (Array.isArray(answer)) {
+          if (Array.isArray(answer)) {
             answer.forEach((option: any) => {
               // Support write-in objects inside the array
               if (

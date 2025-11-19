@@ -488,15 +488,65 @@ export default function SurveyPage({
               className="bg-white dark:bg-gray-800 rounded-lg shadow p-6"
             >
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                      {question.text}
-                      {question.required && enabledMap[question.id] !== false && (
-                        <span className="text-red-600 dark:text-red-400 ml-1">*</span>
-                      )}
+                {question.text}
+                {question.required && enabledMap[question.id] !== false && (
+                  <span className="text-red-600 dark:text-red-400 ml-1">*</span>
+                )}
               </h3>
 
               {question.type === "YES_NO" && (
                 <div className="space-y-2">
                   {["Yes", "No"].map((option) => {
+                    const isChecked = answers[question.id] === option;
+                    const qEnabled = enabledMap[question.id] !== false;
+                    const isDisabled = isClosed || survey.signed || !qEnabled;
+                    return (
+                      <label
+                        key={option}
+                        className={`flex items-center p-3 rounded-lg border-2 transition-colors ${
+                          isChecked && isDisabled
+                            ? "border-blue-400 bg-blue-50 dark:border-blue-500 dark:bg-blue-900/30"
+                            : isChecked
+                              ? "border-blue-500 bg-blue-50 dark:border-blue-400 dark:bg-blue-900/50"
+                              : isDisabled
+                                ? "border-gray-200 dark:border-gray-700"
+                                : "border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500"
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name={question.id}
+                          value={option}
+                          checked={isChecked}
+                          disabled={isDisabled}
+                          onChange={(e) =>
+                            setAnswers({
+                              ...answers,
+                              [question.id]: e.target.value,
+                            })
+                          }
+                          className="mr-3"
+                        />
+                        <span
+                          className={`font-medium ${
+                            isChecked && isDisabled
+                              ? "text-blue-700 dark:text-blue-300"
+                              : isChecked
+                                ? "text-blue-600 dark:text-blue-400"
+                                : "text-gray-700 dark:text-gray-300"
+                          }`}
+                        >
+                          {option}
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
+              )}
+
+              {question.type === "APPROVE_DISAPPROVE" && (
+                <div className="space-y-2">
+                  {["Approve", "Disapprove"].map((option) => {
                     const isChecked = answers[question.id] === option;
                     const qEnabled = enabledMap[question.id] !== false;
                     const isDisabled = isClosed || survey.signed || !qEnabled;
