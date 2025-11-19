@@ -68,10 +68,10 @@ export async function POST(request: NextRequest) {
       subject: 'HOA Survey System - SMTP Test',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <h2 style="color: #3b82f6;">✅ SMTP Configuration Test</h2>
+          <h2 style="color: #2563eb;">✅ SMTP Configuration Test</h2>
           <p>This is a test email from your HOA Survey System.</p>
           <p><strong>Your SMTP settings are working correctly!</strong></p>
-          <hr style="margin: 20px 0; border: none; border-top: 1px solid #e5e7eb;" />
+          <hr style="margin: 30px 0; border: none; border-top: 1px solid #e5e7eb;" />
           <p style="font-size: 12px; color: #666;">
             Server: ${host}<br>
             Port: ${port}<br>
