@@ -40,6 +40,7 @@ export async function GET(
           },
         },
         memberList: true,
+        createdBy: { select: { id: true, name: true, email: true } },
       },
     });
 
@@ -193,6 +194,7 @@ export async function GET(
         opensAt: survey.opensAt,
         closesAt: survey.closesAt,
         totalResponses: survey.responses.length,
+        createdById: survey.createdById || null,
       },
       questions: survey.questions.map((q) => ({
         id: q.id,

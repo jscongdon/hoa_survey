@@ -37,6 +37,7 @@ model Admin {
   invitedById String?
   invitedBy   Admin?   @relation("InvitedAdmins", fields: [invitedById], references: [id])
   invites     Admin[]  @relation("InvitedAdmins")
+  surveysCreated Survey[] @relation("CreatedSurveys")
   resetToken  String?  @unique
   resetTokenExpires DateTime?
   createdAt   DateTime @default(now())
@@ -68,6 +69,8 @@ model Survey {
   closesAt       DateTime
   memberListId   String
   memberList     MemberList @relation(fields: [memberListId], references: [id])
+  createdById    String?
+  createdBy      Admin?     @relation("CreatedSurveys", fields: [createdById], references: [id])
   questions      Question[]
   responses      Response[]
   initialSentAt  DateTime? // When the initial notice was sent to recipients
@@ -76,6 +79,8 @@ model Survey {
   minResponses   Int?       // Minimum number of responses needed (optional)
   minResponsesAll Boolean   @default(false) // If true, minResponses should equal total members in list
   requireSignature Boolean    @default(true) // Whether this survey requires digital signature for responses
+  notifyOnMinResponses Boolean @default(false) // Email creator when minResponses reached
+  minimalNotifiedAt DateTime?
   createdAt      DateTime   @default(now())
 }
 

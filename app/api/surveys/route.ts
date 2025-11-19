@@ -25,6 +25,7 @@ export async function GET(request: NextRequest) {
       memberList: true,
       responses: true,
       questions: true,
+      createdBy: { select: { id: true, name: true, email: true } },
     },
     orderBy: { createdAt: "desc" },
   });
@@ -75,6 +76,7 @@ export async function POST(request: NextRequest) {
       minResponses,
       minResponsesAll,
       requireSignature,
+      notifyOnMinResponses,
       questions,
     } = body;
 
@@ -106,21 +108,26 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      const created = await tx.survey.create({
-        data: {
-          title,
-          description,
-          opensAt: new Date(opensAt),
-          closesAt: new Date(closesAt),
-          memberListId,
-          showLive,
-          showAfterClose,
-          minResponses: finalMinResponses,
-          minResponsesAll: minResponsesAll || false,
-          requireSignature:
-            typeof requireSignature === "boolean" ? requireSignature : true,
-        },
-      });
+      const createPayload: any = {
+        title,
+        description,
+        opensAt: new Date(opensAt),
+        closesAt: new Date(closesAt),
+        memberListId,
+        showLive,
+        showAfterClose,
+        minResponses: finalMinResponses,
+        minResponsesAll: minResponsesAll || false,
+        requireSignature:
+          typeof requireSignature === "boolean" ? requireSignature : true,
+        notifyOnMinResponses:
+          typeof notifyOnMinResponses === "boolean"
+            ? notifyOnMinResponses
+            : false,
+        createdById: adminId || undefined,
+      };
+
+      const created = await tx.survey.create({ data: createPayload });
       log("[CREATE_SURVEY] Survey created:", created.id);
 
       if (Array.isArray(questions) && questions.length > 0) {
