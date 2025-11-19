@@ -61,6 +61,7 @@ export const questionSchema = z.object({
     "MULTI_SINGLE",
     "MULTI_MULTI",
     "YES_NO",
+    "APPROVE_DISAPPROVE",
     "RATING_5",
     "PARAGRAPH",
   ]),

@@ -568,6 +568,7 @@ export default function SurveyBuilder({
           <option value="MULTI_SINGLE">Multiple Choice (Single)</option>
           <option value="MULTI_MULTI">Multiple Choice (Multi)</option>
           <option value="YES_NO">Yes/No</option>
+          <option value="APPROVE_DISAPPROVE">Approve / Disapprove</option>
           <option value="RATING_5">Rating (1-5)</option>
           <option value="PARAGRAPH">Paragraph</option>
         </select>
