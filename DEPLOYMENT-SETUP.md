@@ -39,11 +39,11 @@ GitHub Actions automatically builds:
 3. Copy contents from `portainer-stack-dev.yml`
 4. Set environment variables:
 
-    ```yaml
-    environment:
-       - PRODUCTION_URL=https://dev-hoasurvey.foxpointva.com  # or your dev domain
-       - JWT_SECRET=<will-get-after-setup>
-    ```
+   ```yaml
+   environment:
+     - PRODUCTION_URL=https://dev-hoasurvey.foxpointva.com # or your dev domain
+     - JWT_SECRET=<will-get-after-setup>
+   ```
 
 5. Deploy the stack
 6. Access: `http://your-server:3001`
@@ -218,9 +218,9 @@ Recommended options:
 
 ```yaml
 services:
-   web:
-      volumes:
-         - ./uploads:/app/public/uploads
+  web:
+    volumes:
+      - ./uploads:/app/public/uploads
 ```
 
 With this, you do not need to set `UPLOADS_DIR` — files written to `public/uploads` are persisted on the host and served directly by Next at `/uploads/<filename>`.
@@ -229,11 +229,11 @@ With this, you do not need to set `UPLOADS_DIR` — files written to `public/upl
 
 ```yaml
 services:
-   web:
-      volumes:
-         - ./uploads:/app/public/uploads
-      environment:
-         - UPLOADS_DIR=/app/public/uploads
+  web:
+    volumes:
+      - ./uploads:/app/public/uploads
+    environment:
+      - UPLOADS_DIR=/app/public/uploads
 ```
 
 Notes:

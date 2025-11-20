@@ -56,23 +56,23 @@ export default function Header() {
         const { type } = ev.data;
         if (type === "logo-updated" || type === "logo-removed") {
           // refetch public branding to get latest logo URL
-            (async () => {
-              try {
-                const r = await fetch("/api/public/hoa-name");
-                if (r.ok) {
-                  const d = await r.json();
-                  setHoaName(d.hoaName || "HOA Survey");
-                  setHoaLogoUrl(d.hoaLogoUrl || null);
-                  try {
-                    router.refresh();
-                  } catch (err) {
-                    // router.refresh may not be available in some environments; ignore
-                  }
+          (async () => {
+            try {
+              const r = await fetch("/api/public/hoa-name");
+              if (r.ok) {
+                const d = await r.json();
+                setHoaName(d.hoaName || "HOA Survey");
+                setHoaLogoUrl(d.hoaLogoUrl || null);
+                try {
+                  router.refresh();
+                } catch (err) {
+                  // router.refresh may not be available in some environments; ignore
                 }
-              } catch (e) {
-                // ignore
               }
-            })();
+            } catch (e) {
+              // ignore
+            }
+          })();
         }
       };
     } catch (e) {
