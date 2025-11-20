@@ -207,6 +207,40 @@ docker cp hoa_survey_dev:/data/hoasurvey-dev.db ./backup-dev-$(date +%Y%m%d-%H%M
 - Both environments can run simultaneously on same server
 - Test all changes in dev before deploying to production
 
+## 🖼️ Uploads and `UPLOADS_DIR`
+
+- The app serves uploaded branding files from `public/uploads` so Next.js and the image optimizer can access them directly.
+- For persistence in containerized deployments, mount a host directory to `public/uploads` so uploaded files are retained across container restarts.
+
+Recommended options:
+
+- **Simple (recommended):** mount your host uploads volume to the container `public/uploads` path. Example `docker-compose` snippet:
+
+```yaml
+services:
+   web:
+      volumes:
+         - ./uploads:/app/public/uploads
+```
+
+With this, you do not need to set `UPLOADS_DIR` — files written to `public/uploads` are persisted on the host and served directly by Next at `/uploads/<filename>`.
+
+**Alternative (if you must set `UPLOADS_DIR`):**
+
+```yaml
+services:
+   web:
+      volumes:
+         - ./uploads:/app/public/uploads
+      environment:
+         - UPLOADS_DIR=/app/public/uploads
+```
+
+Notes:
+
+- Do not configure `UPLOADS_DIR` to a different path without also mounting that path to `/app/public/uploads` — the app now writes uploaded files only into `public/uploads` to avoid duplicating data.
+- Recommended: mount the host directory to `/app/public/uploads` so files persist across container restarts and are available at `/uploads/<filename>`.
+
 docker logs hoa_survey_dev --tail 100
 docker restart hoa_survey_dev
 

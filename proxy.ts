@@ -10,6 +10,7 @@ export async function proxy(request: NextRequest) {
   if (
     pathname.startsWith('/api') ||
     pathname.startsWith('/_next') ||
+    pathname.startsWith('/uploads') ||
     pathname.startsWith('/favicon.ico') ||
     pathname.startsWith('/hoasurvey_logo.png') ||
     pathname.match(/^\/([a-zA-Z0-9_\-]+)\.(png|jpg|jpeg|gif|svg|webp|ico)$/)
@@ -63,6 +64,6 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!api|_next/static|_next/image|favicon.ico|hoasurvey_logo.png|(?:[a-zA-Z0-9_\-]+)\.(?:png|jpg|jpeg|gif|svg|webp|ico)).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|hoasurvey_logo.png|uploads|(?:[a-zA-Z0-9_\-]+)\.(?:png|jpg|jpeg|gif|svg|webp|ico)).*)',
   ],
 }

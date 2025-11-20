@@ -10,6 +10,7 @@ export default function Header() {
   const [open, setOpen] = useState(false);
   const [role, setRole] = useState<string | null>(null);
   const [hoaName, setHoaName] = useState<string>("HOA Survey");
+  const [hoaLogoUrl, setHoaLogoUrl] = useState<string | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -27,13 +28,14 @@ export default function Header() {
         console.error("Failed to fetch admin role:", err);
         setRole(null);
       }
-      // fetch public HOA name for display in header
+      // fetch public HOA name and optional logo for display in header
       try {
         const r = await fetch("/api/public/hoa-name");
         if (!mounted) return;
         if (r.ok) {
           const d = await r.json();
           if (d?.hoaName) setHoaName(d.hoaName);
+          if (d?.hoaLogoUrl) setHoaLogoUrl(d.hoaLogoUrl);
         }
       } catch (e) {
         // ignore
@@ -41,6 +43,47 @@ export default function Header() {
     })();
     return () => {
       mounted = false;
+    };
+  }, []);
+
+  // Listen for logo update/remove broadcasts from other tabs
+  useEffect(() => {
+    let bc: BroadcastChannel | null = null;
+    try {
+      bc = new BroadcastChannel("hoa-branding");
+      bc.onmessage = (ev) => {
+        if (!ev?.data) return;
+        const { type } = ev.data;
+        if (type === "logo-updated" || type === "logo-removed") {
+          // refetch public branding to get latest logo URL
+            (async () => {
+              try {
+                const r = await fetch("/api/public/hoa-name");
+                if (r.ok) {
+                  const d = await r.json();
+                  setHoaName(d.hoaName || "HOA Survey");
+                  setHoaLogoUrl(d.hoaLogoUrl || null);
+                  try {
+                    router.refresh();
+                  } catch (err) {
+                    // router.refresh may not be available in some environments; ignore
+                  }
+                }
+              } catch (e) {
+                // ignore
+              }
+            })();
+        }
+      };
+    } catch (e) {
+      // BroadcastChannel not available; nothing to do
+    }
+    return () => {
+      try {
+        if (bc) bc.close();
+      } catch (e) {
+        /* ignore */
+      }
     };
   }, []);
 
@@ -63,8 +106,8 @@ export default function Header() {
     <header className="w-full py-4 flex items-center justify-between border-b border-gray-200 dark:border-gray-700 mb-8 px-4 sm:px-6 lg:px-8">
       <div className="flex items-center">
         <Image
-          src="/hoasurvey_logo.png"
-          alt="HOA Survey Logo"
+          src={hoaLogoUrl || "/hoasurvey_logo.png"}
+          alt={hoaName ? `${hoaName} logo` : "HOA Survey Logo"}
           width={48}
           height={48}
           className="mr-3"

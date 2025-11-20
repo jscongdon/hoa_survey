@@ -11,8 +11,10 @@ services:
       - ./:/app:cached
       - node_modules:/app/node_modules
       - hoasurvey-data:/data
+      - ./public/uploads:/app/public/uploads
     environment:
       DATABASE_URL: "file:/data/hoasurvey.db"
+      UPLOADS_DIR: "/app/public/uploads"
       NODE_ENV: development
       CHOKIDAR_USEPOLLING: "true"
       # JWT_SECRET can be provided via .env.local or Docker environment
