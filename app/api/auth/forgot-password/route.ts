@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendEmail, generateBaseEmail } from "@/lib/email/send";
 import crypto from "crypto";
+import { getBaseUrl } from "@/lib/app-url";
 
 export async function POST(request: NextRequest) {
   try {
@@ -40,26 +41,16 @@ export async function POST(request: NextRequest) {
 
     log("[FORGOT-PASSWORD] Stored token in DB for email:", admin.email);
 
-    // Get system config for app URL
-    const config = await prisma.systemConfig.findUnique({
-      where: { id: "system" },
-    });
-    const isDevelopment = process.env.NODE_ENV === "development";
+    // Get the appropriate app URL for email links
     let baseUrl: string;
-    if (isDevelopment) {
-      baseUrl =
-        config?.appUrl ||
-        process.env.DEVELOPMENT_URL ||
-        "http://localhost:3000";
-    } else {
-      baseUrl = config?.appUrl || process.env.PRODUCTION_URL || "";
-      if (!baseUrl) {
-        logError("No production URL set for password reset!");
-        return NextResponse.json(
-          { error: "Production URL not configured" },
-          { status: 500 }
-        );
-      }
+    try {
+      baseUrl = await getBaseUrl();
+    } catch (error) {
+      logError("Failed to get app URL for password reset:", error);
+      return NextResponse.json(
+        { error: "Application URL not configured" },
+        { status: 500 }
+      );
     }
 
     const resetUrl = `${baseUrl}/reset-password?token=${token}`;

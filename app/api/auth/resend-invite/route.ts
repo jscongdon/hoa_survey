@@ -4,6 +4,7 @@ import { sendEmail, generateBaseEmail } from "@/lib/email/send";
 import crypto from "crypto";
 import { verifyToken } from "@/lib/auth/jwt";
 import { log } from "@/lib/logger";
+import { getBaseUrl } from "@/lib/app-url";
 
 export async function POST(req: Request) {
   try {
@@ -55,23 +56,16 @@ export async function POST(req: Request) {
       data: { secret2FA: tokenStr, inviteExpires: expiry },
     });
 
-    // Build appUrl similar to invite flow
-    const sys = await prisma.systemConfig.findUnique({
-      where: { id: "system" },
-    });
-    let appUrl: string | undefined = sys?.appUrl || undefined;
-    if (!appUrl) {
-      if (process.env.NODE_ENV === "development") {
-        appUrl = process.env.DEVELOPMENT_URL || "http://localhost:3000";
-      } else {
-        appUrl = process.env.PRODUCTION_URL || "";
-        if (!appUrl) {
-          return NextResponse.json(
-            { error: "Production URL not configured" },
-            { status: 500 }
-          );
-        }
-      }
+    // Build appUrl
+    let appUrl: string;
+    try {
+      appUrl = await getBaseUrl();
+    } catch (error) {
+      log("[RESEND-INVITE] Failed to get app URL:", error);
+      return NextResponse.json(
+        { error: "Application URL not configured" },
+        { status: 500 }
+      );
     }
 
     const inviteUrl = `${appUrl.replace(/\/$/, "")}/invite/${tokenStr}`;

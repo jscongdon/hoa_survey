@@ -9,7 +9,7 @@
     "start": "next start -p 3000",
     "lint": "eslint . --ext .ts,.tsx --max-warnings=0",
     "type-check": "tsc --noEmit",
-    "test": "CI=true vitest",
+    "test": "npm run test:db",
     "test:db": "CI=true DATABASE_URL=file:./test.db bash -lc \"npx prisma migrate deploy || npx prisma db push; CI=true DATABASE_URL=file:./test.db vitest; rm -f ./test.db*\"",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",

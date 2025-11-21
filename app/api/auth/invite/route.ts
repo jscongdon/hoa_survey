@@ -4,6 +4,7 @@ import { sendEmail, generateBaseEmail } from "@/lib/email/send";
 import { signToken } from "@/lib/auth/jwt";
 import crypto from "crypto";
 import { log } from "@/lib/logger";
+import { getBaseUrl } from "@/lib/app-url";
 
 export async function POST(req: Request) {
   try {
@@ -33,29 +34,24 @@ export async function POST(req: Request) {
       },
     });
     // Send invite email
-    // Prefer a configured app URL in the SystemConfig (allows correct host/port),
-    // fall back to environment variables.
-    const sys = await prisma.systemConfig.findUnique({
-      where: { id: "system" },
-    });
-    let appUrl: string | undefined = sys?.appUrl || undefined;
-    if (!appUrl) {
-      if (process.env.NODE_ENV === "development") {
-        appUrl = process.env.DEVELOPMENT_URL || "http://localhost:3000";
-      } else {
-        appUrl = process.env.PRODUCTION_URL || "";
-        if (!appUrl) {
-          return NextResponse.json(
-            { error: "Production URL not configured" },
-            { status: 500 }
-          );
-        }
-      }
+    let appUrl: string;
+    try {
+      appUrl = await getBaseUrl();
+    } catch (error) {
+      log("[INVITE] Failed to get app URL:", error);
+      return NextResponse.json(
+        { error: "Application URL not configured" },
+        { status: 500 }
+      );
     }
     const inviteUrl = `${appUrl.replace(/\/$/, "")}/invite/${token}`;
     log(
       `[INVITE] Generated invite URL: ${inviteUrl} (inviter=${invitedById}) expires=${expiry.toISOString()}`
     );
+    // Fetch system config for HOA name
+    const sys = await prisma.systemConfig.findUnique({
+      where: { id: "system" },
+    });
     const bodyHtml = `
       <p>You have been invited as an admin for <strong>${sys?.hoaName || "your HOA"}</strong>.</p>
       <p>This invite will expire on ${expiry.toISOString()}.</p>

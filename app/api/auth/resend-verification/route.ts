@@ -4,6 +4,7 @@ import nodemailer from "nodemailer";
 import { generateBaseEmail } from "@/lib/email/send";
 import crypto from "crypto";
 import { log, error as logError } from "@/lib/logger";
+import { getBaseUrl } from "@/lib/app-url";
 
 export async function POST(request: NextRequest) {
   try {
@@ -69,18 +70,14 @@ export async function POST(request: NextRequest) {
     });
 
     let appUrl: string;
-    if (process.env.NODE_ENV === "development") {
-      appUrl =
-        config.appUrl || process.env.DEVELOPMENT_URL || "http://localhost:3000";
-    } else {
-      appUrl = config.appUrl || process.env.PRODUCTION_URL || "";
-      if (!appUrl) {
-        logError("[RESEND-VERIFICATION] No production app URL set!");
-        return NextResponse.json(
-          { error: "Production URL not configured" },
-          { status: 500 }
-        );
-      }
+    try {
+      appUrl = await getBaseUrl();
+    } catch (error) {
+      logError("[RESEND-VERIFICATION] Failed to get app URL:", error);
+      return NextResponse.json(
+        { error: "Application URL not configured" },
+        { status: 500 }
+      );
     }
     const verificationUrl = `${appUrl}/api/setup/verify?token=${verificationToken}&email=${encodeURIComponent(email)}`;
 
