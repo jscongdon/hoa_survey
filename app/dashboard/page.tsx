@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { formatDate } from "@/lib/dateFormatter";
+import { useAuth } from "@/lib/auth/AuthContext";
 
 interface Survey {
   id: string;
@@ -18,6 +19,7 @@ interface Survey {
 
 export default function DashboardPage() {
   const router = useRouter();
+  const { refreshAuth } = useAuth();
   const [surveys, setSurveys] = useState<Survey[]>([]);
   const [loading, setLoading] = useState(true);
   const [reminderStatus, setReminderStatus] = useState<{
@@ -46,6 +48,7 @@ export default function DashboardPage() {
 
   const handleLogout = async () => {
     await fetch("/api/auth/logout", { method: "POST" });
+    await refreshAuth();
     router.push("/login");
   };
 

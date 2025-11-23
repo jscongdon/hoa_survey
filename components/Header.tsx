@@ -3,31 +3,19 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { useRouter, usePathname } from "next/navigation";
+import { useAuth } from "@/lib/auth/AuthContext";
 
 export default function Header() {
   const router = useRouter();
   const pathname = usePathname();
+  const { role, refreshAuth } = useAuth();
   const [open, setOpen] = useState(false);
-  const [role, setRole] = useState<string | null>(null);
   const [hoaName, setHoaName] = useState<string>("HOA Survey");
   const [hoaLogoUrl, setHoaLogoUrl] = useState<string | null>(null);
 
   useEffect(() => {
     let mounted = true;
     (async () => {
-      try {
-        const res = await fetch("/api/auth/me");
-        if (!mounted) return;
-        if (res.ok) {
-          const data = await res.json();
-          setRole(data.role || null);
-        } else {
-          setRole(null);
-        }
-      } catch (err) {
-        console.error("Failed to fetch admin role:", err);
-        setRole(null);
-      }
       // fetch public HOA name and optional logo for display in header
       try {
         const r = await fetch("/api/public/hoa-name");
@@ -90,6 +78,8 @@ export default function Header() {
   async function handleLogout() {
     try {
       await fetch("/api/auth/logout", { method: "POST" });
+      // Refresh auth state to clear the role
+      await refreshAuth();
     } catch (e) {
       console.error("Logout failed", e);
     } finally {
