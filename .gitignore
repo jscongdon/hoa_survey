@@ -54,5 +54,8 @@ Thumbs.db
 # Testing
 .prettierignore
 
+# Project management files
+TaskReadMe.md
+
 # TypeScript incremental build info
 tsconfig.tsbuildinfo
