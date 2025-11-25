@@ -156,14 +156,14 @@ export default function DashboardPage() {
     const isCurrentlyShowing = showNonRespondents[surveyId];
 
     if (!isCurrentlyShowing) {
-      // Fetch non-respondents if not already loaded
+      // Fetch nonrespondents if not already loaded
       if (!nonRespondents[surveyId]) {
         setLoadingNonRespondents({
           ...loadingNonRespondents,
           [surveyId]: true,
         });
         try {
-          const res = await fetch(`/api/surveys/${surveyId}/non-respondents`, {
+          const res = await fetch(`/api/surveys/${surveyId}/nonrespondents`, {
             credentials: "include",
           });
           if (res.ok) {
@@ -171,7 +171,7 @@ export default function DashboardPage() {
             setNonRespondents({ ...nonRespondents, [surveyId]: data });
           }
         } catch (error) {
-          console.error("Failed to fetch non-respondents:", error);
+          console.error("Failed to fetch nonrespondents:", error);
         } finally {
           setLoadingNonRespondents({
             ...loadingNonRespondents,
@@ -425,17 +425,17 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
         {surveys
           .filter((s) => new Date(s.closesAt) > new Date())
           .map((survey) => (
             <div
               key={survey.id}
-              className="bg-white dark:bg-gray-900 rounded-lg shadow p-6"
+              className="bg-white dark:bg-gray-900 rounded-lg shadow p-4 sm:p-6"
             >
               <div className="flex items-start justify-between mb-2">
-                <div className="flex-1">
-                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white truncate">
                     {survey.title}
                   </h3>
                   <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
@@ -450,20 +450,28 @@ export default function DashboardPage() {
                     })}
                   </p>
                 </div>
-                <div className="flex gap-2 ml-4">
+                <div className="flex flex-col sm:flex-row gap-2 ml-2 sm:ml-4 flex-shrink-0">
+                  <button
+                    onClick={() =>
+                      router.push(`/dashboard/surveys/${survey.id}/results`)
+                    }
+                    className="px-3 py-1.5 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600 order-1 sm:order-4"
+                  >
+                    View Results
+                  </button>
                   {currentAdminRole === "FULL" && (
                     <>
                       <button
                         onClick={() => handleCloseSurvey(survey.id)}
-                        className="px-3 py-1 bg-orange-500 text-white text-sm rounded-lg hover:bg-orange-600"
+                        className="px-3 py-1.5 bg-orange-500 text-white text-sm rounded-lg hover:bg-orange-600 order-2"
                       >
-                        Close Survey
+                        Close
                       </button>
                       <button
                         onClick={() =>
                           router.push(`/dashboard/surveys/${survey.id}/edit`)
                         }
-                        className="px-3 py-1 bg-yellow-500 text-white text-sm rounded-lg hover:bg-yellow-600"
+                        className="px-3 py-1.5 bg-yellow-500 text-white text-sm rounded-lg hover:bg-yellow-600 order-3"
                       >
                         Edit
                       </button>
@@ -474,20 +482,12 @@ export default function DashboardPage() {
                           }
                         }}
                         disabled={deletingId === survey.id}
-                        className="px-3 py-1 bg-red-500 text-white text-sm rounded-lg hover:bg-red-600 disabled:bg-gray-400"
+                        className="px-3 py-1.5 bg-red-500 text-white text-sm rounded-lg hover:bg-red-600 disabled:bg-gray-400 order-4 sm:order-2"
                       >
                         Delete
                       </button>
                     </>
                   )}
-                  <button
-                    onClick={() =>
-                      router.push(`/dashboard/surveys/${survey.id}/results`)
-                    }
-                    className="px-3 py-1 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600"
-                  >
-                    View Results
-                  </button>
                 </div>
               </div>
               <div className="mb-3">
@@ -534,7 +534,7 @@ export default function DashboardPage() {
                   style={{ width: `${survey.responseRate}%` }}
                 ></div>
               </div>
-              <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-2 sm:gap-3">
                 {currentAdminRole === "FULL" && !survey.initialSentAt && (
                   <button
                     onClick={() => handleSendInitial(survey.id)}
@@ -559,30 +559,32 @@ export default function DashboardPage() {
                           disabled={!!reminderStatus[survey.id]}
                           className="w-full px-4 py-2 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
                         >
-                          Remind Non-Respondents
+                          Send Reminders
                         </button>
                       ) : null}
 
-                      <button
-                        onClick={() => toggleNonRespondents(survey.id)}
-                        disabled={loadingNonRespondents[survey.id]}
-                        className="w-full px-4 py-2 text-sm bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
-                      >
-                        {loadingNonRespondents[survey.id]
-                          ? "Loading..."
-                          : "Remind Non-Respondent"}
-                      </button>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <button
+                          onClick={() => toggleNonRespondents(survey.id)}
+                          disabled={loadingNonRespondents[survey.id]}
+                          className="px-3 py-2 text-sm bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                        >
+                          {loadingNonRespondents[survey.id]
+                            ? "Loading..."
+                            : "Remind Individual"}
+                        </button>
 
-                      <button
-                        onClick={() =>
-                          router.push(
-                            `/dashboard/surveys/${survey.id}/non-respondents`
-                          )
-                        }
-                        className="w-full px-4 py-2 text-sm bg-green-500 text-white rounded-lg hover:bg-green-600"
-                      >
-                        View Non-Respondents
-                      </button>
+                        <button
+                          onClick={() =>
+                            router.push(
+                              `/dashboard/surveys/${survey.id}/nonrespondents`
+                            )
+                          }
+                          className="px-3 py-2 text-sm bg-green-500 text-white rounded-lg hover:bg-green-600"
+                        >
+                          View Nonrespondents
+                        </button>
+                      </div>
                     </>
                   ) : null
                 }
@@ -638,11 +640,98 @@ export default function DashboardPage() {
           ))}
       </div>
 
-      <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+      <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-4">
         Past Surveys
       </h2>
 
-      <div className="bg-white dark:bg-gray-900 rounded-lg shadow overflow-hidden">
+      {/* Mobile Card Layout */}
+      <div className="block md:hidden space-y-4">
+        {surveys
+          .filter((s) => new Date(s.closesAt) <= new Date())
+          .map((survey) => (
+            <div
+              key={survey.id}
+              className="bg-white dark:bg-gray-900 rounded-lg shadow p-4"
+            >
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white truncate mb-1">
+                    {survey.title}
+                  </h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Closed: {formatDate(survey.closesAt)}
+                  </p>
+                </div>
+              </div>
+
+              <div className="mb-3">
+                <div
+                  className={`text-sm ${
+                    survey.minResponses
+                      ? survey.submittedCount >= survey.minResponses
+                        ? "text-green-600 dark:text-green-400"
+                        : "text-orange-600 dark:text-orange-400"
+                      : "text-green-600 dark:text-green-400"
+                  }`}
+                >
+                  {survey.minResponses
+                    ? survey.submittedCount >= survey.minResponses
+                      ? "✓"
+                      : "○"
+                    : "✓"}{" "}
+                  {survey.responseRate}% ({survey.submittedCount}/{survey.totalRecipients})
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() =>
+                    router.push(`/dashboard/surveys/${survey.id}/results`)
+                  }
+                  className="px-3 py-1.5 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600 flex-1 min-w-0"
+                >
+                  View Results
+                </button>
+                <button
+                  onClick={() =>
+                    handleExportSurvey(survey.id, survey.title)
+                  }
+                  className="px-3 py-1.5 bg-green-500 text-white text-sm rounded-lg hover:bg-green-600 flex-1 min-w-0"
+                >
+                  Export
+                </button>
+                {currentAdminRole === "FULL" && (
+                  <>
+                    <button
+                      onClick={() =>
+                        router.push(
+                          `/dashboard/surveys/${survey.id}/edit`
+                        )
+                      }
+                      className="px-3 py-1.5 bg-yellow-500 text-white text-sm rounded-lg hover:bg-yellow-600 flex-1 min-w-0"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (window.confirm("Delete this survey?")) {
+                          handleDeleteSurvey(survey.id);
+                        }
+                      }}
+                      disabled={deletingId === survey.id}
+                      className="px-3 py-1.5 bg-red-500 text-white text-sm rounded-lg hover:bg-red-600 disabled:bg-gray-400 flex-1 min-w-0"
+                    >
+                      Delete
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          ))}
+      </div>
+
+      {/* Desktop Table Layout */}
+      <div className="hidden md:block bg-white dark:bg-gray-900 rounded-lg shadow overflow-hidden">
         <table className="w-full">
           <thead className="bg-gray-100 dark:bg-gray-800">
             <tr>

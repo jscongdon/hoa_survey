@@ -173,11 +173,11 @@ export default function SurveyResultsPage({
     );
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 sm:p-6 lg:p-8">
       <div className="max-w-6xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 gap-3">
+          <div className="min-w-0 flex-1">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white truncate">
               {data.survey.title}
             </h1>
             {data.survey.createdByName && (
@@ -188,9 +188,9 @@ export default function SurveyResultsPage({
           </div>
           <button
             onClick={() => router.push("/dashboard")}
-            className="px-4 py-2 bg-gray-300 dark:bg-gray-700 text-gray-900 dark:text-white rounded hover:bg-gray-400 dark:hover:bg-gray-600"
+            className="px-4 py-2 bg-gray-300 dark:bg-gray-700 text-gray-900 dark:text-white rounded hover:bg-gray-400 dark:hover:bg-gray-600 text-sm sm:text-base self-start sm:self-auto"
           >
-            ← Back to Dashboard
+            Dashboard
           </button>
         </div>
 
@@ -202,11 +202,11 @@ export default function SurveyResultsPage({
           </div>
         )}
 
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-6 mb-4 sm:mb-6">
+          <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-4">
             Overview
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <div className="bg-blue-50 dark:bg-blue-900 p-4 rounded">
               <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                 {data.survey.totalResponses}
@@ -373,7 +373,127 @@ export default function SurveyResultsPage({
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
             Individual Responses
           </h2>
-          <div className="overflow-x-auto">
+          
+          {/* Mobile Card Layout */}
+          <div className="block md:hidden space-y-4">
+            {data.responses.map((response) => (
+              <div key={response.id} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 border border-gray-200 dark:border-gray-600">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      {response.signed && (
+                        <span
+                          title="Digitally signed"
+                          aria-label="Digitally signed"
+                          className="inline-flex items-center text-green-600 dark:text-green-400"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            fill="currentColor"
+                            className="w-4 h-4"
+                            aria-hidden="true"
+                          >
+                            <path d="M12 1.5 4 5.25v5.5c0 5.25 3.75 9.75 8 11.25 4.25-1.5 8-6 8-11.25v-5.5L12 1.5zm3.03 7.72-4.24 4.24a.75.75 0 0 1-1.06 0l-1.5-1.5a.75.75 0 0 1 1.06-1.06l1.02 1.02 3.71-3.71a.75.75 0 0 1 1.06 1.06z" />
+                          </svg>
+                        </span>
+                      )}
+                      <span className="font-medium text-gray-900 dark:text-white truncate">
+                        {response.member.name}
+                      </span>
+                    </div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                      Lot {response.member.lot}
+                    </div>
+                    <div className="text-sm text-gray-500 dark:text-gray-500 mt-1">
+                      {new Date(response.submittedAt).toLocaleString()}
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={() =>
+                      setExpandedResponseId(
+                        expandedResponseId === response.id
+                          ? null
+                          : response.id
+                      )
+                    }
+                    className="px-3 py-1 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600 flex-1 min-w-0"
+                  >
+                    {expandedResponseId === response.id
+                      ? "Hide Details"
+                      : "View Details"}
+                  </button>
+                  {currentAdminRole === "FULL" && (
+                    <button
+                      onClick={() => handleDeleteResponse(response.id)}
+                      disabled={deletingId === response.id}
+                      className="px-3 py-1 bg-red-500 text-white text-sm rounded-lg hover:bg-red-600 disabled:bg-gray-400 disabled:cursor-not-allowed flex-1 min-w-0"
+                    >
+                      {deletingId === response.id
+                        ? "Deleting..."
+                        : "Delete"}
+                    </button>
+                  )}
+                </div>
+                
+                {expandedResponseId === response.id && (
+                  <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
+                    <h3 className="font-semibold text-gray-900 dark:text-white mb-3">
+                      Response Details
+                    </h3>
+                    <div className="space-y-4">
+                      {data.questions.map((question) => {
+                        const answer = response.answers[question.id];
+                        return (
+                          <div
+                            key={question.id}
+                            className="border-b border-gray-200 dark:border-gray-600 pb-3 last:border-b-0"
+                          >
+                            <p className="font-medium text-gray-900 dark:text-white mb-2">
+                              {question.text}
+                            </p>
+                            <p className="text-gray-700 dark:text-gray-300 pl-4">
+                              {answer !== undefined &&
+                              answer !== null &&
+                              answer !== "" ? (
+                                Array.isArray(answer) ? (
+                                  answer
+                                    .map((a: any) =>
+                                      a &&
+                                      typeof a === "object" &&
+                                      a.choice === "__WRITE_IN__"
+                                        ? String(a.writeIn || "")
+                                        : String(a)
+                                    )
+                                    .join(", ")
+                                ) : typeof answer === "object" &&
+                                  (answer as any).choice ===
+                                    "__WRITE_IN__" ? (
+                                  String((answer as any).writeIn || "")
+                                ) : (
+                                  String(answer)
+                                )
+                              ) : (
+                                <span className="italic text-gray-500">
+                                  No answer provided
+                                </span>
+                              )}
+                            </p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop Table Layout */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-gray-200 dark:border-gray-700">

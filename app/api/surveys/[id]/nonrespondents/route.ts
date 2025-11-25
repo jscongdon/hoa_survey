@@ -76,7 +76,7 @@ export async function GET(
   } catch (error) {
     logError("[NON_RESPONDENTS_GET]", error);
     return NextResponse.json(
-      { error: "Failed to fetch non-respondents" },
+      { error: "Failed to fetch nonrespondents" },
       { status: 500 }
     );
   }

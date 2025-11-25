@@ -242,7 +242,7 @@ export default function SurveyForm({
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Opens At *
@@ -273,7 +273,7 @@ export default function SurveyForm({
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Minimum Responses Required (Optional)
         </label>
-        <div className="flex items-center gap-4 mb-2">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 mb-2">
           <input
             type="number"
             min={0}

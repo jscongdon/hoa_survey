@@ -29,7 +29,7 @@ describe('Non-respondents API - Basic', () => {
     }
 
     // Import the route dynamically to avoid issues
-    const { GET } = await import('../app/api/surveys/[id]/non-respondents/route')
+    const { GET } = await import('../app/api/surveys/[id]/nonrespondents/route')
     const res: any = await GET(req, { params: { id: 'survey1' } })
     expect(res.status).toBe(401)
   })
@@ -43,7 +43,7 @@ describe('Non-respondents API - Basic', () => {
       cookies: { get: () => ({ value: 'token' }) },
     }
 
-    const { GET } = await import('../app/api/surveys/[id]/non-respondents/route')
+    const { GET } = await import('../app/api/surveys/[id]/nonrespondents/route')
     const res: any = await GET(req, { params: { id: 'nonexistent' } })
     expect(res.status).toBe(404)
   })
