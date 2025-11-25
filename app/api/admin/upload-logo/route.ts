@@ -88,6 +88,40 @@ export async function POST(request: NextRequest) {
     else if (detectedType === "image/svg+xml") ext = "svg";
 
     const filename = `hoa-logo-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+
+    // Delete old logo file before uploading new one
+    const existingConfig = await prisma.systemConfig.findUnique({
+      where: { id: "system" },
+    });
+    const oldLogoUrl = existingConfig?.hoaLogoUrl;
+    if (oldLogoUrl && oldLogoUrl.startsWith("/uploads/")) {
+      const oldRel = oldLogoUrl.replace(/^\/uploads\//, "");
+      const oldFilePath = path.join(publicUploadsDir, oldRel);
+      try {
+        if (fs.existsSync(oldFilePath)) fs.unlinkSync(oldFilePath);
+      } catch (e) {
+        logError("Failed to delete old logo file:", oldFilePath, e);
+      }
+    }
+
+    // Also clean up any orphaned logo files (in case database is out of sync)
+    try {
+      const files = fs.readdirSync(publicUploadsDir);
+      for (const file of files) {
+        if (file.startsWith("hoa-logo-") && file !== filename) {
+          const filePath = path.join(publicUploadsDir, file);
+          try {
+            fs.unlinkSync(filePath);
+            logError("Cleaned up orphaned logo file:", filePath);
+          } catch (e) {
+            logError("Failed to delete orphaned logo file:", filePath, e);
+          }
+        }
+      }
+    } catch (e) {
+      logError("Failed to read uploads directory for cleanup:", e);
+    }
+
     const publicFilePath = path.join(publicUploadsDir, filename);
     fs.writeFileSync(publicFilePath, buffer);
 

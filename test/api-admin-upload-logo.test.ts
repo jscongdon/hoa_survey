@@ -22,6 +22,7 @@ vi.mock("fs", () => ({
     mkdirSync: vi.fn(),
     writeFileSync: vi.fn(),
     unlinkSync: vi.fn(),
+    readdirSync: vi.fn(),
   },
 }));
 
@@ -73,11 +74,17 @@ describe("Admin Upload Logo API - /api/admin/upload-logo", () => {
       });
       (fs.default.mkdirSync as any).mockImplementation(() => {});
       (fs.default.writeFileSync as any).mockImplementation(() => {});
+      (fs.default.unlinkSync as any).mockImplementation(() => {});
+      (fs.default.readdirSync as any).mockReturnValue(["hoa-logo-orphaned.png", "other-file.txt"]);
       (path.join as any).mockImplementation((...args: string[]) =>
         args.join("/")
       );
 
       // Mock database
+      (prisma.systemConfig.findUnique as any).mockResolvedValue({
+        id: "system",
+        hoaLogoUrl: "/uploads/old-logo.png",
+      });
       (prisma.systemConfig.upsert as any).mockResolvedValue({
         id: "system",
         hoaLogoUrl: "/uploads/hoa-logo-1732094400000-abc123.png",
@@ -136,14 +143,24 @@ describe("Admin Upload Logo API - /api/admin/upload-logo", () => {
           ),
         },
       });
+
+      // Verify old logo file was deleted
+      expect(fs.default.unlinkSync).toHaveBeenCalledWith(
+        expect.stringContaining("public/uploads/old-logo.png")
+      );
     });
 
     it("successfully uploads JPEG logo", async () => {
       (verifyToken as any).mockResolvedValue({ adminId: "admin1" });
       (fs.default.existsSync as any).mockReturnValue(true);
+      (fs.default.unlinkSync as any).mockImplementation(() => {});
       (path.join as any).mockImplementation((...args: string[]) =>
         args.join("/")
       );
+      (prisma.systemConfig.findUnique as any).mockResolvedValue({
+        id: "system",
+        hoaLogoUrl: "/uploads/old-logo.jpg",
+      });
       (prisma.systemConfig.upsert as any).mockResolvedValue({
         id: "system",
         hoaLogoUrl: "/uploads/hoa-logo-1732094400000-abc123.jpg",
@@ -189,14 +206,24 @@ describe("Admin Upload Logo API - /api/admin/upload-logo", () => {
 
       const body = await res.json();
       expect(body.url).toMatch(/\.jpg$/);
+
+      // Verify old logo file was deleted
+      expect(fs.default.unlinkSync).toHaveBeenCalledWith(
+        expect.stringContaining("public/uploads/old-logo.jpg")
+      );
     });
 
     it("successfully uploads SVG logo", async () => {
       (verifyToken as any).mockResolvedValue({ adminId: "admin1" });
       (fs.default.existsSync as any).mockReturnValue(true);
+      (fs.default.unlinkSync as any).mockImplementation(() => {});
       (path.join as any).mockImplementation((...args: string[]) =>
         args.join("/")
       );
+      (prisma.systemConfig.findUnique as any).mockResolvedValue({
+        id: "system",
+        hoaLogoUrl: "/uploads/old-logo.svg",
+      });
       (prisma.systemConfig.upsert as any).mockResolvedValue({
         id: "system",
         hoaLogoUrl: "/uploads/hoa-logo-1732094400000-abc123.svg",
@@ -236,6 +263,11 @@ describe("Admin Upload Logo API - /api/admin/upload-logo", () => {
 
       const body = await res.json();
       expect(body.url).toMatch(/\.svg$/);
+
+      // Verify old logo file was deleted
+      expect(fs.default.unlinkSync).toHaveBeenCalledWith(
+        expect.stringContaining("public/uploads/old-logo.svg")
+      );
     });
 
     it("returns 401 when not authenticated", async () => {
