@@ -572,6 +572,13 @@ export default function DashboardPage() {
                           ? "Loading..."
                           : "Remind Non-Respondent"}
                       </button>
+
+                      <button
+                        onClick={() => router.push(`/dashboard/surveys/${survey.id}/non-respondents`)}
+                        className="w-full px-4 py-2 text-sm bg-green-500 text-white rounded-lg hover:bg-green-600"
+                      >
+                        View Non-Respondents
+                      </button>
                     </>
                   ) : null
                 }

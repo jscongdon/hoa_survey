@@ -37,6 +37,7 @@ export async function GET(
             id: true,
             name: true,
             lot: true,
+            address: true,
           },
         },
       },
@@ -49,6 +50,8 @@ export async function GET(
         id: response.member.id,
         name: response.member.name,
         lotNumber: response.member.lot,
+        address: response.member.address,
+        token: response.token,
       };
     });
 

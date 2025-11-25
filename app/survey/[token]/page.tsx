@@ -47,6 +47,7 @@ export default function SurveyPage({
   const [validationErrors, setValidationErrors] = useState<
     Record<string, string>
   >({});
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     params.then((resolvedParams) => {
@@ -94,6 +95,17 @@ export default function SurveyPage({
 
           setAnswers(mappedAnswers);
           setOriginalAnswers(mappedAnswers);
+        }
+
+        // Check if admin is logged in
+        try {
+          const authRes = await fetch("/api/auth/me", { credentials: "include" });
+          if (authRes.ok) {
+            const authData = await authRes.json();
+            setIsAdmin(!!authData.adminId);
+          }
+        } catch (error) {
+          console.error("Failed to check admin auth:", error);
         }
       } catch (error) {
         console.error("Failed to fetch survey:", error);
@@ -227,7 +239,7 @@ export default function SurveyPage({
       await fetch(`/api/responses/${token}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ answers }),
+        body: JSON.stringify({ answers, submittedByAdmin: isAdmin }),
       });
       const isEdit = !!survey?.submittedAt;
       setWasEditing(isEdit);

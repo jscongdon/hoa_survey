@@ -89,6 +89,7 @@ export async function PUT(
     if (!answers || typeof answers !== "object") {
       answers = {};
     }
+    const submittedByAdmin = body?.submittedByAdmin === true;
     const { token } = await params;
     // (no-op) incoming answers are processed below
 
@@ -206,7 +207,7 @@ export async function PUT(
       }));
 
     // Determine whether this survey requires a digital signature
-    const requiresSignature = surveyWithQuestions?.requireSignature !== false;
+    const requiresSignature = surveyWithQuestions?.requireSignature !== false && !submittedByAdmin;
 
     const signatureToken = requiresSignature
       ? crypto.randomBytes(32).toString("hex")
