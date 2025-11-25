@@ -56,6 +56,25 @@ export default function SurveyResultsPage({
   const [expandedResponseId, setExpandedResponseId] = useState<string | null>(
     null
   );
+  const [lotFilter, setLotFilter] = useState("");
+  const [nameFilter, setNameFilter] = useState("");
+  const [submittedAtFilter, setSubmittedAtFilter] = useState("");
+
+  const filteredResponses = data?.responses.filter((response) => {
+    const lotMatch =
+      lotFilter === "" ||
+      response.member.lot.toLowerCase().includes(lotFilter.toLowerCase());
+    const nameMatch =
+      nameFilter === "" ||
+      response.member.name.toLowerCase().includes(nameFilter.toLowerCase());
+    const submittedAtMatch =
+      submittedAtFilter === "" ||
+      new Date(response.submittedAt)
+        .toLocaleString()
+        .toLowerCase()
+        .includes(submittedAtFilter.toLowerCase());
+    return lotMatch && nameMatch && submittedAtMatch;
+  }) || [];
 
   useEffect(() => {
     params.then((resolvedParams) => {
@@ -374,9 +393,44 @@ export default function SurveyResultsPage({
             Individual Responses
           </h2>
           
+          <div className="mb-4 grid grid-cols-1 md:grid-cols-4 gap-4">
+            <input
+              type="text"
+              placeholder="Filter by Lot"
+              value={lotFilter}
+              onChange={(e) => setLotFilter(e.target.value)}
+              className="px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <input
+              type="text"
+              placeholder="Filter by Name"
+              value={nameFilter}
+              onChange={(e) => setNameFilter(e.target.value)}
+              className="px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <input
+              type="text"
+              placeholder="Filter by Date/Time"
+              value={submittedAtFilter}
+              onChange={(e) => setSubmittedAtFilter(e.target.value)}
+              className="px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <button
+              onClick={() => {
+                setLotFilter("");
+                setNameFilter("");
+                setSubmittedAtFilter("");
+              }}
+              className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed"
+              disabled={!lotFilter && !nameFilter && !submittedAtFilter}
+            >
+              Clear Filters
+            </button>
+          </div>
+          
           {/* Mobile Card Layout */}
           <div className="block md:hidden space-y-4">
-            {data.responses.map((response) => (
+            {filteredResponses.map((response) => (
               <div key={response.id} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 border border-gray-200 dark:border-gray-600">
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex-1 min-w-0">
@@ -512,7 +566,7 @@ export default function SurveyResultsPage({
                 </tr>
               </thead>
               <tbody>
-                {data.responses.map((response) => (
+                {filteredResponses.map((response) => (
                   <React.Fragment key={response.id}>
                     <tr className="border-b border-gray-100 dark:border-gray-700">
                       <td className="px-4 py-3 text-gray-900 dark:text-white">

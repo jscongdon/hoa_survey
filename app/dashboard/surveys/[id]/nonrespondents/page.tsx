@@ -104,7 +104,7 @@ export default function NonRespondentsPage() {
               </button>
             </div>
             <>
-              <div className="mb-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="mb-4 grid grid-cols-1 md:grid-cols-4 gap-4">
                 <input
                   type="text"
                   placeholder="Filter by Lot"
@@ -126,6 +126,17 @@ export default function NonRespondentsPage() {
                   onChange={(e) => setAddressFilter(e.target.value)}
                   className="px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
+                <button
+                  onClick={() => {
+                    setLotFilter("");
+                    setNameFilter("");
+                    setAddressFilter("");
+                  }}
+                  className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed"
+                  disabled={!lotFilter && !nameFilter && !addressFilter}
+                >
+                  Clear Filters
+                </button>
               </div>
               <div className="overflow-x-auto">
                 {/* Desktop Table Layout */}
