@@ -99,7 +99,9 @@ export default function SurveyPage({
 
         // Check if admin is logged in
         try {
-          const authRes = await fetch("/api/auth/me", { credentials: "include" });
+          const authRes = await fetch("/api/auth/me", {
+            credentials: "include",
+          });
           if (authRes.ok) {
             const authData = await authRes.json();
             setIsAdmin(!!authData.adminId);

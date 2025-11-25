@@ -25,9 +25,16 @@ export default function NonRespondentsPage() {
   const [addressFilter, setAddressFilter] = useState("");
 
   const filteredNonRespondents = nonRespondents.filter((respondent) => {
-    const lotMatch = lotFilter === "" || respondent.lotNumber.toLowerCase().includes(lotFilter.toLowerCase());
-    const nameMatch = nameFilter === "" || respondent.name.toLowerCase().includes(nameFilter.toLowerCase());
-    const addressMatch = addressFilter === "" || (respondent.address && respondent.address.toLowerCase().includes(addressFilter.toLowerCase()));
+    const lotMatch =
+      lotFilter === "" ||
+      respondent.lotNumber.toLowerCase().includes(lotFilter.toLowerCase());
+    const nameMatch =
+      nameFilter === "" ||
+      respondent.name.toLowerCase().includes(nameFilter.toLowerCase());
+    const addressMatch =
+      addressFilter === "" ||
+      (respondent.address &&
+        respondent.address.toLowerCase().includes(addressFilter.toLowerCase()));
     return lotMatch && nameMatch && addressMatch;
   });
 
@@ -72,7 +79,9 @@ export default function NonRespondentsPage() {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center text-red-600 dark:text-red-400">{error}</div>
+          <div className="text-center text-red-600 dark:text-red-400">
+            {error}
+          </div>
         </div>
       </div>
     );
@@ -139,13 +148,19 @@ export default function NonRespondentsPage() {
                   <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                     {nonRespondents.length === 0 ? (
                       <tr>
-                        <td colSpan={4} className="px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-400">
+                        <td
+                          colSpan={4}
+                          className="px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-400"
+                        >
                           All members have responded to this survey.
                         </td>
                       </tr>
                     ) : filteredNonRespondents.length === 0 ? (
                       <tr>
-                        <td colSpan={4} className="px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-400">
+                        <td
+                          colSpan={4}
+                          className="px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-400"
+                        >
                           No non-respondents match the current filters.
                         </td>
                       </tr>
@@ -163,7 +178,9 @@ export default function NonRespondentsPage() {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                             <button
-                              onClick={() => router.push(`/survey/${respondent.token}`)}
+                              onClick={() =>
+                                router.push(`/survey/${respondent.token}`)
+                              }
                               className="px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600"
                             >
                               Submit Response
@@ -176,7 +193,6 @@ export default function NonRespondentsPage() {
                 </table>
               </div>
             </>
-
           </div>
         </div>
       </div>

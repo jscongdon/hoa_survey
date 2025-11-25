@@ -207,7 +207,8 @@ export async function PUT(
       }));
 
     // Determine whether this survey requires a digital signature
-    const requiresSignature = surveyWithQuestions?.requireSignature !== false && !submittedByAdmin;
+    const requiresSignature =
+      surveyWithQuestions?.requireSignature !== false && !submittedByAdmin;
 
     const signatureToken = requiresSignature
       ? crypto.randomBytes(32).toString("hex")

@@ -1,7 +1,7 @@
-import { log, error as logError } from '@/lib/logger'
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { verifyToken } from '@/lib/auth/jwt';
+import { log, error as logError } from "@/lib/logger";
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { verifyToken } from "@/lib/auth/jwt";
 
 export async function GET(
   req: NextRequest,
@@ -9,21 +9,31 @@ export async function GET(
 ) {
   try {
     // Verify authentication
-    let adminId = req.headers.get('x-admin-id');
-    
+    let adminId = req.headers.get("x-admin-id");
+
     if (!adminId) {
-      const token = req.cookies.get('auth-token')?.value;
+      const token = req.cookies.get("auth-token")?.value;
       if (!token) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
       const payload = await verifyToken(token as string);
       if (!payload?.adminId) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
       adminId = payload.adminId;
     }
 
     const { id } = await context.params;
+
+    // Check if survey exists
+    const survey = await prisma.survey.findUnique({
+      where: { id },
+      select: { id: true },
+    });
+
+    if (!survey) {
+      return NextResponse.json({ error: "Survey not found" }, { status: 404 });
+    }
 
     // Fetch all responses for this survey where submittedAt is null
     const nonRespondents = await prisma.response.findMany({
@@ -64,9 +74,9 @@ export async function GET(
 
     return NextResponse.json(formattedNonRespondents);
   } catch (error) {
-    logError('[NON_RESPONDENTS_GET]', error);
+    logError("[NON_RESPONDENTS_GET]", error);
     return NextResponse.json(
-      { error: 'Failed to fetch non-respondents' },
+      { error: "Failed to fetch non-respondents" },
       { status: 500 }
     );
   }
