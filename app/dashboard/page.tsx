@@ -547,19 +547,21 @@ export default function DashboardPage() {
                   </button>
                 )}
 
-                {survey.initialSentAt &&
+                {
                   // Hide reminder buttons when survey has reached 100% completion
                   // (either responseRate is 100 or submittedCount >= totalRecipients)
-                  (survey.responseRate < 100 &&
+                  survey.responseRate < 100 &&
                   survey.submittedCount < survey.totalRecipients ? (
                     <>
-                      <button
-                        onClick={() => handleSendReminder(survey.id)}
-                        disabled={!!reminderStatus[survey.id]}
-                        className="w-full px-4 py-2 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
-                      >
-                        Remind Non-Respondents
-                      </button>
+                      {survey.initialSentAt ? (
+                        <button
+                          onClick={() => handleSendReminder(survey.id)}
+                          disabled={!!reminderStatus[survey.id]}
+                          className="w-full px-4 py-2 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                        >
+                          Remind Non-Respondents
+                        </button>
+                      ) : null}
 
                       <button
                         onClick={() => toggleNonRespondents(survey.id)}
@@ -571,7 +573,8 @@ export default function DashboardPage() {
                           : "Remind Non-Respondent"}
                       </button>
                     </>
-                  ) : null)}
+                  ) : null
+                }
               </div>
               {showNonRespondents[survey.id] && nonRespondents[survey.id] && (
                 <div className="mt-2 border border-gray-300 dark:border-gray-700 rounded-lg p-3 bg-gray-50 dark:bg-gray-800">
