@@ -93,30 +93,31 @@ export default function Header() {
   }
 
   return (
-    <header className="w-full py-4 flex items-center justify-between border-b border-gray-200 dark:border-gray-700 mb-8 px-4 sm:px-6 lg:px-8">
-      <div className="flex items-center">
+    <header className="w-full py-3 sm:py-4 flex items-center justify-between border-b border-gray-200 dark:border-gray-700 mb-6 sm:mb-8 px-4 sm:px-6 lg:px-8">
+      <div className="flex items-center min-w-0 flex-1">
         <Image
           src={hoaLogoUrl || "/hoasurvey_logo.png"}
           alt={hoaName ? `${hoaName} logo` : "HOA Survey Logo"}
-          width={48}
-          height={48}
-          className="mr-3"
+          width={40}
+          height={40}
+          className="mr-2 sm:mr-3 flex-shrink-0"
         />
-        <span className="text-2xl font-bold tracking-tight">
-          {hoaName + " Surveys"}
+        <span className="text-lg sm:text-2xl font-bold tracking-tight truncate">
+          <span className="hidden sm:inline">{hoaName + " Surveys"}</span>
+          <span className="sm:hidden">{hoaName}</span>
         </span>
       </div>
 
-      <div className="relative">
+      <div className="relative ml-2">
         <button
           onClick={() => setOpen((s) => !s)}
           aria-expanded={open}
           aria-haspopup="menu"
-          className="inline-flex items-center px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
+          className="inline-flex items-center px-2 sm:px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
         >
-          Menu
+          <span className="hidden sm:inline">Menu</span>
           <svg
-            className="ml-2 h-4 w-4"
+            className="h-5 w-5 sm:ml-2"
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 20 20"
             fill="currentColor"
