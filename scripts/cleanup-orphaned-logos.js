@@ -24,10 +24,10 @@ async function main() {
     }
 
     const files = fs.readdirSync(uploadsDir);
-    const logoFiles = files.filter(file => file.startsWith("hoa-logo-"));
+    const logoFiles = files.filter((file) => file.startsWith("hoa-logo-"));
 
     console.log(`Found ${logoFiles.length} logo files:`);
-    logoFiles.forEach(file => console.log(`  - ${file}`));
+    logoFiles.forEach((file) => console.log(`  - ${file}`));
 
     if (!currentLogoUrl) {
       console.log("No current logo set - all logo files are orphaned");
@@ -41,7 +41,7 @@ async function main() {
       const expectedFilename = path.basename(currentLogoUrl);
       fileToKeep = expectedFilename;
 
-      filesToDelete = logoFiles.filter(file => file !== expectedFilename);
+      filesToDelete = logoFiles.filter((file) => file !== expectedFilename);
       console.log(`Keeping current logo: ${expectedFilename}`);
     } else {
       // No current logo, delete all
@@ -67,7 +67,6 @@ async function main() {
     console.log(`- Files kept: ${fileToKeep ? 1 : 0}`);
 
     await prisma.$disconnect();
-
   } catch (error) {
     console.error("Error during logo cleanup:", error);
     process.exit(1);
