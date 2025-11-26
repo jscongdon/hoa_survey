@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { formatDate } from "@/lib/dateFormatter";
 import { useAuth } from "@/lib/auth/AuthContext";
+import { DashboardLayout } from "@/components/layouts";
 
 interface Survey {
   id: string;
@@ -405,26 +406,19 @@ export default function DashboardPage() {
   }, []);
 
   if (loading) {
-    return <div className="text-center py-8">Loading...</div>;
+    return (
+      <DashboardLayout
+        title="Dashboard"
+        subtitle="Loading dashboard..."
+      />
+    );
   }
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-              Dashboard
-            </h1>
-            {adminEmail && (
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                Logged in as: {adminEmail}
-              </p>
-            )}
-          </div>
-        </div>
-      </div>
-
+    <DashboardLayout
+      title="Dashboard"
+      subtitle={adminEmail ? `Logged in as: ${adminEmail}` : undefined}
+    >
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
         {surveys
           .filter((s) => new Date(s.closesAt) > new Date())
@@ -832,6 +826,6 @@ export default function DashboardPage() {
           </tbody>
         </table>
       </div>
-    </div>
+    </DashboardLayout>
   );
 }

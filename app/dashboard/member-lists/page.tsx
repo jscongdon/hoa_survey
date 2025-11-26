@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { formatDate } from "@/lib/dateFormatter";
+import { ListLayout } from "@/components/layouts";
 
 interface MemberList {
   id: string;
@@ -170,31 +171,38 @@ export default function MemberListsPage() {
   };
 
   if (loading) {
-    return <div className="text-center py-8">Loading...</div>;
+    return (
+      <ListLayout
+        title="Member Lists"
+        subtitle="Manage member lists for surveys"
+        isLoading={true}
+      >
+        <div />
+      </ListLayout>
+    );
   }
 
+  const actions = [
+    {
+      label: showUpload ? "Cancel" : "Create New List",
+      onClick: () => setShowUpload(!showUpload),
+      variant: "primary" as const,
+    },
+    {
+      label: "Back to Settings",
+      href: "/dashboard/settings",
+      variant: "secondary" as const,
+    },
+  ];
+
   return (
-    <div>
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-          Member Lists
-        </h1>
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => setShowUpload(!showUpload)}
-            className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 font-medium"
-          >
-            {showUpload ? "Cancel" : "Create New List"}
-          </button>
-
-          <Link href="/dashboard/settings">
-            <button className="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 font-medium">
-              Back to Settings
-            </button>
-          </Link>
-        </div>
-      </div>
-
+    <ListLayout
+      title="Member Lists"
+      subtitle="Manage member lists for surveys"
+      actions={actions}
+      isEmpty={lists.length === 0 && !showUpload}
+      emptyMessage="No member lists yet. Create your first list to get started."
+    >
       {showUpload && (
         <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-6 mb-8">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
@@ -241,13 +249,7 @@ export default function MemberListsPage() {
         </div>
       )}
 
-      {lists.length === 0 ? (
-        <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-12 text-center">
-          <p className="text-gray-500 dark:text-gray-400 mb-4">
-            No member lists yet. Create your first list to get started.
-          </p>
-        </div>
-      ) : (
+      {lists.length > 0 && (
         <div className="bg-white dark:bg-gray-900 rounded-lg shadow overflow-hidden">
           <table className="w-full">
             <thead className="bg-gray-100 dark:bg-gray-800">
@@ -346,6 +348,6 @@ export default function MemberListsPage() {
           </table>
         </div>
       )}
-    </div>
+    </ListLayout>
   );
 }
