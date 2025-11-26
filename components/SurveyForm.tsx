@@ -305,6 +305,167 @@ export default function SurveyForm({
             </label>
           </div>
         </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Require Signature
+        </label>
+        <div className="space-y-2">
+          <div className="flex items-center">
+            <input
+              type="checkbox"
+              id="requireSignature"
+              checked={requireSignature}
+              onChange={(e) => setRequireSignature(e.target.checked)}
+              className="w-4 h-4 text-blue-500"
+            />
+            <label
+              htmlFor="requireSignature"
+              className="ml-2 text-sm text-gray-700 dark:text-gray-300"
+            >
+              Require digital signature on survey responses
+            </label>
+          </div>
+          <div className="flex items-center">
+            <input
+              type="checkbox"
+              id="notifyOnMinResponses"
+              checked={notifyOnMinResponses}
+              onChange={(e) => setNotifyOnMinResponses(e.target.checked)}
+              className="w-4 h-4 text-blue-500"
+            />
+            <label
+              htmlFor="notifyOnMinResponses"
+              className="ml-2 text-sm text-gray-700 dark:text-gray-300"
+            >
+              Notify when minimum responses reached
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div className="flex items-center justify-between mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Member List *</label>
+          {memberListLocked && (
+            <span
+              className="text-xs ml-3 px-2 py-1 rounded bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+              title="List locked after submissions"
+            >
+              Locked
+            </span>
+          )}
+        </div>
+        {memberListNote && (
+          <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">{memberListNote}</p>
+        )}
+        <div className="mt-2">
+          <select
+            value={memberListId}
+            onChange={(e) => setMemberListId(e.target.value)}
+            required
+            disabled={disableMemberList}
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+          >
+            <option value="">Select a member list</option>
+            {lists.map((list) => (
+              <option key={list.id} value={list.id}>
+                {list.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Survey Title *
+        </label>
+        <input
+          type="text"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          required
+          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Description
+        </label>
+        <textarea
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          rows={4}
+          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+        />
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Opens At *
+          </label>
+          <input
+            type="datetime-local"
+            value={opensAt}
+            onChange={(e) => setOpensAt(e.target.value)}
+            required
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Closes At *
+          </label>
+          <input
+            type="datetime-local"
+            value={closesAt}
+            onChange={(e) => setClosesAt(e.target.value)}
+            required
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+          />
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Minimum Responses Required (Optional)
+        </label>
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 mb-2">
+          <input
+            type="number"
+            min={0}
+            value={minResponses}
+            onChange={(e) => setMinResponses(e.target.value)}
+            disabled={minResponsesAll}
+            className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+            placeholder={
+              minResponsesAll
+                ? memberListId
+                  ? `${currentMemberCount} members`
+                  : "Select a member list first"
+                : "Leave empty for no minimum"
+            }
+          />
+          <div className="flex items-center">
+            <input
+              type="checkbox"
+              id="minResponsesAll"
+              checked={minResponsesAll}
+              onChange={(e) => setMinResponsesAll(e.target.checked)}
+              className="w-4 h-4 text-blue-500"
+            />
+            <label
+              htmlFor="minResponsesAll"
+              className="ml-2 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap"
+            >
+              All Members
+            </label>
+          </div>
+        </div>
         <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
           {minResponsesAll
             ? memberListId
@@ -391,6 +552,18 @@ export default function SurveyForm({
           />
         )}
       </div>
+
+      {mode === "create" && (
+        <div className="flex justify-end pt-6 border-t border-gray-200 dark:border-gray-700">
+          <button
+            type="submit"
+            disabled={loading}
+            className="px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? "Creating..." : "Create Survey"}
+          </button>
+        </div>
+      )}
 
       <div className="flex items-center">
         <input

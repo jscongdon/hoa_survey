@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import SurveyForm from "@/components/SurveyForm";
 import { toLocalDatetimeString } from "@/lib/dateFormatter";
+import { PageLayout } from "@/components/layouts";
 
 export default function EditSurveyPage({
   params,
@@ -244,21 +245,32 @@ export default function EditSurveyPage({
     }
   }
 
-  if (!survey) return <div className="p-8">Loading...</div>;
+  if (!survey) {
+    return (
+      <PageLayout
+        title="Edit Survey"
+        subtitle="Loading survey..."
+      >
+        <div className="flex justify-center items-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        </div>
+      </PageLayout>
+    );
+  }
 
   return (
-    <main className="max-w-2xl mx-auto p-8">
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-bold">Edit Survey</h1>
-        <button
-          type="button"
-          onClick={() => router.push("/dashboard")}
-          className="px-4 py-2 bg-gray-300 text-gray-900 rounded hover:bg-gray-400"
-        >
-          Dashboard
-        </button>
-      </div>
-      <div className="space-y-4">
+    <PageLayout
+      title="Edit Survey"
+      actions={[
+        {
+          label: "Dashboard",
+          onClick: () => router.push("/dashboard"),
+          variant: "secondary"
+        }
+      ]}
+    >
+      <div className="max-w-2xl mx-auto">
+        <div className="space-y-4">
         <SurveyForm
           mode="edit"
           initialValues={{
@@ -334,6 +346,7 @@ export default function EditSurveyPage({
         />
       </div>
       {status && <div className="mt-4 text-green-600">{status}</div>}
-    </main>
+      </div>
+    </PageLayout>
   );
 }

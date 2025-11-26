@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
@@ -12,6 +12,7 @@ export default function Header() {
   const [open, setOpen] = useState(false);
   const [hoaName, setHoaName] = useState<string>("HOA Survey");
   const [hoaLogoUrl, setHoaLogoUrl] = useState<string | null>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -75,6 +76,23 @@ export default function Header() {
     };
   }, []);
 
+  // Close menu when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    }
+
+    if (open) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [open]);
+
   async function handleLogout() {
     try {
       await fetch("/api/auth/logout", { method: "POST" });
@@ -108,7 +126,7 @@ export default function Header() {
         </span>
       </div>
 
-      <div className="relative ml-2">
+      <div className="relative ml-2" ref={menuRef}>
         <button
           onClick={() => setOpen((s) => !s)}
           aria-expanded={open}

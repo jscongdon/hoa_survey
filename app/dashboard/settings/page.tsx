@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, type ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
+import { PageLayout } from "@/components/layouts";
 
 interface EnvVariable {
   key: string;
@@ -382,25 +383,27 @@ export default function SettingsPage() {
 
   if (currentAdminRole !== "FULL") {
     return (
-      <div className="p-8">
-        <p className="text-gray-500">Access denied. Redirecting...</p>
-      </div>
+      <PageLayout title="Settings" subtitle="Access denied">
+        <div className="text-center py-8">
+          <p className="text-gray-500">Access denied. Redirecting...</p>
+        </div>
+      </PageLayout>
     );
   }
 
   return (
-    <div className="p-8">
+    <PageLayout
+      title="Settings"
+      subtitle="Manage application settings, users, and configuration"
+      actions={[
+        {
+          label: "Dashboard",
+          onClick: () => router.push("/dashboard"),
+          variant: "secondary"
+        }
+      ]}
+    >
       <div className="max-w-4xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold">Settings</h1>
-          <button
-            onClick={() => router.push("/dashboard")}
-            className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
-          >
-            Dashboard
-          </button>
-        </div>
-
         <div className="space-y-6">
           {/* Member Lists Section */}
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
@@ -781,6 +784,6 @@ export default function SettingsPage() {
           </div>
         </div>
       </div>
-    </div>
+    </PageLayout>
   );
 }

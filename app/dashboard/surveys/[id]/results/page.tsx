@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { PageLayout, DashboardLayout } from "@/components/layouts";
 
 interface QuestionStats {
   questionId: string;
@@ -161,38 +162,42 @@ export default function SurveyResultsPage({
 
   if (loading)
     return (
-      <div className="p-8 text-center text-gray-900 dark:text-white">
-        Loading results...
-      </div>
+      <PageLayout
+        title="Survey Results"
+        subtitle="Loading survey results..."
+      >
+        <div className="flex justify-center items-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        </div>
+      </PageLayout>
     );
   if (!data)
     return (
-      <div className="p-8 text-center text-gray-900 dark:text-white">
-        Survey not found
-      </div>
+      <PageLayout
+        title="Survey Results"
+        subtitle="Survey not found"
+      >
+        <div className="text-center py-8">
+          <p className="text-gray-600 dark:text-gray-400">
+            The requested survey could not be found or you don't have permission to view it.
+          </p>
+        </div>
+      </PageLayout>
     );
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 sm:p-6 lg:p-8">
+    <PageLayout
+      title={data.survey.title}
+      subtitle={`Created by ${data.survey.createdByName || 'Unknown'}`}
+      actions={[
+        {
+          label: "Dashboard",
+          onClick: () => router.push("/dashboard"),
+          variant: "secondary"
+        }
+      ]}
+    >
       <div className="max-w-6xl mx-auto">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 gap-3">
-          <div className="min-w-0 flex-1">
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white truncate">
-              {data.survey.title}
-            </h1>
-            {data.survey.createdByName && (
-              <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                Created by {data.survey.createdByName}
-              </div>
-            )}
-          </div>
-          <button
-            onClick={() => router.push("/dashboard")}
-            className="px-4 py-2 bg-gray-300 dark:bg-gray-700 text-gray-900 dark:text-white rounded hover:bg-gray-400 dark:hover:bg-gray-600 text-sm sm:text-base self-start sm:self-auto"
-          >
-            Dashboard
-          </button>
-        </div>
 
         {data.survey.description && (
           <div className="bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-700 rounded-lg p-4 mb-6">
@@ -631,6 +636,6 @@ export default function SurveyResultsPage({
           </div>
         </div>
       </div>
-    </div>
+    </PageLayout>
   );
 }

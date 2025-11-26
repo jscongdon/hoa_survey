@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
+import { ListLayout } from "@/components/layouts";
 
 interface NonRespondent {
   responseId: string;
@@ -67,44 +68,42 @@ export default function NonRespondentsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">Loading...</div>
+      <ListLayout
+        title="Nonrespondents"
+        subtitle="Loading nonrespondents..."
+      >
+        <div className="flex justify-center items-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
         </div>
-      </div>
+      </ListLayout>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center text-red-600 dark:text-red-400">
-            {error}
-          </div>
+      <ListLayout
+        title="Nonrespondents"
+        subtitle={error}
+      >
+        <div className="text-center text-red-600 dark:text-red-400 py-8">
+          {error}
         </div>
-      </div>
+      </ListLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-white dark:bg-gray-800 shadow rounded-lg">
-          <div className="px-4 py-5 sm:p-6">
-            <div className="flex justify-between items-center mb-6">
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                Nonrespondents
-              </h1>
-              <button
-                onClick={() => router.back()}
-                className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
-              >
-                Dashboard
-              </button>
-            </div>
-            <>
-              <div className="mb-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+    <ListLayout
+      title="Nonrespondents"
+      actions={[
+        {
+          label: "Dashboard",
+          onClick: () => router.push("/dashboard"),
+          variant: "secondary"
+        }
+      ]}
+    >
+      <div className="mb-4 grid grid-cols-1 md:grid-cols-3 gap-4">
                 <input
                   type="text"
                   placeholder="Filter by Lot"
@@ -241,10 +240,6 @@ export default function NonRespondentsPage() {
                   )}
                 </div>
               </div>
-            </>
-          </div>
-        </div>
-      </div>
-    </div>
+    </ListLayout>
   );
 }
