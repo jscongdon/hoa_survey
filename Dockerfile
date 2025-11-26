@@ -1,5 +1,8 @@
 FROM node:20-bullseye-slim
 
+# Install wget
+RUN apt-get update && apt-get install -y wget && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
 # Copy package files early to install dependencies
