@@ -78,7 +78,10 @@ describe("Admin Upload Logo API - /api/admin/upload-logo", () => {
       (fs.mkdirSync as any).mockImplementation(() => {});
       (fs.writeFileSync as any).mockImplementation(() => {});
       (fs.unlinkSync as any).mockImplementation(() => {});
-      (fs.readdirSync as any).mockReturnValue(["hoa-logo-orphaned.png", "other-file.txt"]);
+      (fs.readdirSync as any).mockReturnValue([
+        "hoa-logo-orphaned.png",
+        "other-file.txt",
+      ]);
       (path.join as any).mockImplementation((...args: string[]) =>
         args.join("/")
       );

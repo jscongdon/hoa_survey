@@ -32,31 +32,31 @@ This document catalogs all pages/routes in the HOA Survey application, organized
 
 #### **Setup/Onboarding Pages**
 
-5. **Setup Page** (`/setup`)
+1. **Setup Page** (`/setup`)
    - Route: `app/setup/page.tsx`
    - Purpose: Initial application setup
    - Access: First-time setup
 
-6. **JWT Secret Setup** (`/setup/jwt-secret`)
+2. **JWT Secret Setup** (`/setup/jwt-secret`)
    - Route: `app/setup/jwt-secret/page.tsx`
    - Purpose: JWT secret configuration
    - Access: Setup process
 
 #### **Survey Response Pages**
 
-7. **Survey Response** (`/survey/[token]`)
+1. **Survey Response** (`/survey/[token]`)
    - Route: `app/survey/[token]/page.tsx`
    - Purpose: Public survey response form
    - Access: Public (with valid token)
 
-8. **Survey Signature** (`/survey/[token]/sign/[signatureToken]`)
+2. **Survey Signature** (`/survey/[token]/sign/[signatureToken]`)
    - Route: `app/survey/[token]/sign/[signatureToken]/page.tsx`
    - Purpose: Digital signature for survey responses
    - Access: Public (with valid tokens)
 
 #### **Invitation Pages**
 
-9. **Accept Invitation** (`/invite/[token]`)
+1. **Accept Invitation** (`/invite/[token]`)
    - Route: `app/invite/[token]/page.tsx`
    - Purpose: Admin invitation acceptance
    - Access: Public (with valid token)
@@ -65,70 +65,70 @@ This document catalogs all pages/routes in the HOA Survey application, organized
 
 #### **Main Dashboard**
 
-10. **Dashboard Home** (`/dashboard`)
-    - Route: `app/dashboard/page.tsx`
-    - Purpose: Main dashboard with survey overview
-    - Access: Authenticated admins
+1. **Dashboard Home** (`/dashboard`)
+   - Route: `app/dashboard/page.tsx`
+   - Purpose: Main dashboard with survey overview
+   - Access: Authenticated admins
 
 #### **Admin Management**
 
-11. **Admin List** (`/dashboard/admins`)
-    - Route: `app/dashboard/admins/page.tsx`
-    - Purpose: Manage admin users
-    - Access: Full admin access
+1. **Admin List** (`/dashboard/admins`)
+   - Route: `app/dashboard/admins/page.tsx`
+   - Purpose: Manage admin users
+   - Access: Full admin access
 
-12. **Invite Admin** (`/dashboard/invite`)
-    - Route: `app/dashboard/invite/page.tsx`
-    - Purpose: Send admin invitations
-    - Access: Full admin access
+2. **Invite Admin** (`/dashboard/invite`)
+   - Route: `app/dashboard/invite/page.tsx`
+   - Purpose: Send admin invitations
+   - Access: Full admin access
 
 #### **Survey Management**
 
-13. **Create Survey** (`/dashboard/surveys/create`)
-    - Route: `app/dashboard/surveys/create/page.tsx`
-    - Purpose: Create new surveys
-    - Access: Authenticated admins
+1. **Create Survey** (`/dashboard/surveys/create`)
+   - Route: `app/dashboard/surveys/create/page.tsx`
+   - Purpose: Create new surveys
+   - Access: Authenticated admins
 
-14. **Edit Survey** (`/dashboard/surveys/[id]/edit`)
-    - Route: `app/dashboard/surveys/[id]/edit/page.tsx`
-    - Purpose: Edit existing surveys
-    - Access: Survey owner or full admin
+2. **Edit Survey** (`/dashboard/surveys/[id]/edit`)
+   - Route: `app/dashboard/surveys/[id]/edit/page.tsx`
+   - Purpose: Edit existing surveys
+   - Access: Survey owner or full admin
 
-15. **Survey Results** (`/dashboard/surveys/[id]/results`)
-    - Route: `app/dashboard/surveys/[id]/results/page.tsx`
-    - Purpose: View survey responses and analytics
-    - Access: Survey owner or full admin
+3. **Survey Results** (`/dashboard/surveys/[id]/results`)
+   - Route: `app/dashboard/surveys/[id]/results/page.tsx`
+   - Purpose: View survey responses and analytics
+   - Access: Survey owner or full admin
 
-16. **Non-Respondents** (`/dashboard/surveys/[id]/nonrespondents`)
-    - Route: `app/dashboard/surveys/[id]/nonrespondents/page.tsx`
-    - Purpose: View and manage non-responding members
-    - Access: Survey owner or full admin
+4. **Non-Respondents** (`/dashboard/surveys/[id]/nonrespondents`)
+   - Route: `app/dashboard/surveys/[id]/nonrespondents/page.tsx`
+   - Purpose: View and manage non-responding members
+   - Access: Survey owner or full admin
 
 #### **Member List Management**
 
-17. **Member Lists Overview** (`/dashboard/member-lists`)
-    - Route: `app/dashboard/member-lists/page.tsx`
-    - Purpose: Manage member lists
-    - Access: Authenticated admins
+1. **Member Lists Overview** (`/dashboard/member-lists`)
+   - Route: `app/dashboard/member-lists/page.tsx`
+   - Purpose: Manage member lists
+   - Access: Authenticated admins
 
-18. **Member List Details** (`/dashboard/member-lists/[id]`)
-    - Route: `app/dashboard/member-lists/[id]/page.tsx`
-    - Purpose: View/edit specific member list
-    - Access: Authenticated admins
+2. **Member List Details** (`/dashboard/member-lists/[id]`)
+   - Route: `app/dashboard/member-lists/[id]/page.tsx`
+   - Purpose: View/edit specific member list
+   - Access: Authenticated admins
 
 #### **Settings & Configuration**
 
-19. **Settings** (`/dashboard/settings`)
-    - Route: `app/dashboard/settings/page.tsx`
-    - Purpose: Application settings
-    - Access: Authenticated admins
+1. **Settings** (`/dashboard/settings`)
+   - Route: `app/dashboard/settings/page.tsx`
+   - Purpose: Application settings
+   - Access: Authenticated admins
 
 #### **Testing & Development**
 
-20. **Test Email** (`/dashboard/test-email`)
-    - Route: `app/dashboard/test-email/page.tsx`
-    - Purpose: Test email functionality
-    - Access: Authenticated admins
+1. **Test Email** (`/dashboard/test-email`)
+   - Route: `app/dashboard/test-email/page.tsx`
+   - Purpose: Test email functionality
+   - Access: Authenticated admins
 
 ## API Routes Structure
 
@@ -258,7 +258,7 @@ This document catalogs all pages/routes in the HOA Survey application, organized
 
 ### Recommended Structure
 
-```
+```text
 components/
 ├── layouts/          # Page layout components
 ├── forms/           # Form components

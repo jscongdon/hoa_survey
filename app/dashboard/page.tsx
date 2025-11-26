@@ -102,14 +102,15 @@ export default function DashboardPage() {
         data={surveys.filter((s) => new Date(s.closesAt) > new Date())}
         cardProps={{
           title: (survey) => survey.title,
-          subtitle: (survey) => `Closes: ${new Date(survey.closesAt).toLocaleString(undefined, {
-            month: "short",
-            day: "numeric",
-            year: "numeric",
-            hour: "numeric",
-            minute: "2-digit",
-            hour12: true,
-          })}`,
+          subtitle: (survey) =>
+            `Closes: ${new Date(survey.closesAt).toLocaleString(undefined, {
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+              hour: "numeric",
+              minute: "2-digit",
+              hour12: true,
+            })}`,
           content: (survey) => (
             <div className="mb-3">
               <div className="flex justify-between items-center mb-2">
@@ -127,8 +128,8 @@ export default function DashboardPage() {
                       ? "✓"
                       : "○"
                     : "✓"}{" "}
-                  Responses: {survey.submittedCount} of{" "}
-                  {survey.totalRecipients} ({survey.responseRate}%)
+                  Responses: {survey.submittedCount} of {survey.totalRecipients}{" "}
+                  ({survey.responseRate}%)
                 </p>
                 {survey.minResponses &&
                   survey.submittedCount < survey.minResponses && (
@@ -301,8 +302,6 @@ export default function DashboardPage() {
         Past Surveys
       </h2>
 
-
-
       {/* Desktop Table Layout */}
       <DataTable
         data={surveys.filter((s) => new Date(s.closesAt) <= new Date())}
@@ -326,13 +325,15 @@ export default function DashboardPage() {
             key: "responseRate",
             header: "Response Rate",
             render: (value, survey) => (
-              <div className={`text-sm ${
-                survey.minResponses
-                  ? survey.submittedCount >= survey.minResponses
-                    ? "text-green-600 dark:text-green-400"
-                    : "text-orange-600 dark:text-orange-400"
-                  : "text-green-600 dark:text-green-400"
-              }`}>
+              <div
+                className={`text-sm ${
+                  survey.minResponses
+                    ? survey.submittedCount >= survey.minResponses
+                      ? "text-green-600 dark:text-green-400"
+                      : "text-orange-600 dark:text-orange-400"
+                    : "text-green-600 dark:text-green-400"
+                }`}
+              >
                 {survey.minResponses
                   ? survey.submittedCount >= survey.minResponses
                     ? "✓"

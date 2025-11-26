@@ -70,11 +70,7 @@ export default function MemberListsPage() {
             Create New Member List
           </h2>
           <form onSubmit={handleUpload}>
-            <FormField
-              label="List Name"
-              required
-              className="mb-4"
-            >
+            <FormField label="List Name" required className="mb-4">
               <Input
                 type="text"
                 value={newListName}
@@ -113,7 +109,7 @@ export default function MemberListsPage() {
             {
               key: "name",
               header: "Name",
-              render: (value, list) => (
+              render: (value, list) =>
                 editingId === list.id ? (
                   <input
                     type="text"
@@ -124,8 +120,7 @@ export default function MemberListsPage() {
                   />
                 ) : (
                   <span className="font-medium">{value}</span>
-                )
-              ),
+                ),
             },
             {
               key: "members",

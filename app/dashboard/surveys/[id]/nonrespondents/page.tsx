@@ -68,10 +68,7 @@ export default function NonRespondentsPage() {
 
   if (loading) {
     return (
-      <ListLayout
-        title="Nonrespondents"
-        subtitle="Loading nonrespondents..."
-      >
+      <ListLayout title="Nonrespondents" subtitle="Loading nonrespondents...">
         <div className="flex justify-center items-center py-8">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
         </div>
@@ -81,10 +78,7 @@ export default function NonRespondentsPage() {
 
   if (error) {
     return (
-      <ListLayout
-        title="Nonrespondents"
-        subtitle={error}
-      >
+      <ListLayout title="Nonrespondents" subtitle={error}>
         <div className="text-center text-red-600 dark:text-red-400 py-8">
           {error}
         </div>
@@ -99,158 +93,159 @@ export default function NonRespondentsPage() {
         {
           label: "Dashboard",
           onClick: () => router.push("/dashboard"),
-          variant: "secondary"
-        }
+          variant: "secondary",
+        },
       ]}
     >
       <div className="mb-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-                <input
-                  type="text"
-                  placeholder="Filter by Lot"
-                  value={lotFilter}
-                  onChange={(e) => setLotFilter(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <input
-                  type="text"
-                  placeholder="Filter by Name"
-                  value={nameFilter}
-                  onChange={(e) => setNameFilter(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <input
-                  type="text"
-                  placeholder="Filter by Address"
-                  value={addressFilter}
-                  onChange={(e) => setAddressFilter(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <button
-                  onClick={() => {
-                    setLotFilter("");
-                    setNameFilter("");
-                    setAddressFilter("");
-                  }}
-                  className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed"
-                  disabled={!lotFilter && !nameFilter && !addressFilter}
-                >
-                  Clear Filters
-                </button>
-              </div>
-              <div className="overflow-x-auto">
-                {/* Desktop Table Layout */}
-                <div className="hidden md:block">
-                  <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                    <thead className="bg-gray-50 dark:bg-gray-700">
-                      <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                          Lot
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                          Name
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                          Address
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                          Actions
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                      {nonRespondents.length === 0 ? (
-                        <tr>
-                          <td
-                            colSpan={4}
-                            className="px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-400"
-                          >
-                            All members have responded to this survey.
-                          </td>
-                        </tr>
-                      ) : filteredNonRespondents.length === 0 ? (
-                        <tr>
-                          <td
-                            colSpan={4}
-                            className="px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-400"
-                          >
-                            No nonrespondents match the current filters.
-                          </td>
-                        </tr>
-                      ) : (
-                        filteredNonRespondents.map((respondent) => (
-                          <tr key={respondent.responseId}>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                              {respondent.lotNumber}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                              {respondent.name}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                              {respondent.address || "N/A"}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                              <button
-                                onClick={() =>
-                                  router.push(`/survey/${respondent.token}`)
-                                }
-                                className="px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600"
-                              >
-                                Submit Response
-                              </button>
-                            </td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
+        <input
+          type="text"
+          placeholder="Filter by Lot"
+          value={lotFilter}
+          onChange={(e) => setLotFilter(e.target.value)}
+          className="px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        <input
+          type="text"
+          placeholder="Filter by Name"
+          value={nameFilter}
+          onChange={(e) => setNameFilter(e.target.value)}
+          className="px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        <input
+          type="text"
+          placeholder="Filter by Address"
+          value={addressFilter}
+          onChange={(e) => setAddressFilter(e.target.value)}
+          className="px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        <button
+          onClick={() => {
+            setLotFilter("");
+            setNameFilter("");
+            setAddressFilter("");
+          }}
+          className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed"
+          disabled={!lotFilter && !nameFilter && !addressFilter}
+        >
+          Clear Filters
+        </button>
+      </div>
+      <div className="overflow-x-auto">
+        {/* Desktop Table Layout */}
+        <div className="hidden md:block">
+          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead className="bg-gray-50 dark:bg-gray-700">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  Lot
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  Name
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  Address
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+              {nonRespondents.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={4}
+                    className="px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-400"
+                  >
+                    All members have responded to this survey.
+                  </td>
+                </tr>
+              ) : filteredNonRespondents.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={4}
+                    className="px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-400"
+                  >
+                    No nonrespondents match the current filters.
+                  </td>
+                </tr>
+              ) : (
+                filteredNonRespondents.map((respondent) => (
+                  <tr key={respondent.responseId}>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                      {respondent.lotNumber}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                      {respondent.name}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                      {respondent.address || "N/A"}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                      <button
+                        onClick={() =>
+                          router.push(`/survey/${respondent.token}`)
+                        }
+                        className="px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600"
+                      >
+                        Submit Response
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Mobile Card Layout */}
+        <div className="block md:hidden space-y-4">
+          {nonRespondents.length === 0 ? (
+            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+              All members have responded to this survey.
+            </div>
+          ) : filteredNonRespondents.length === 0 ? (
+            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+              No nonrespondents match the current filters.
+            </div>
+          ) : (
+            filteredNonRespondents.map((respondent) => (
+              <div
+                key={respondent.responseId}
+                className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 border border-gray-200 dark:border-gray-600"
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-medium text-gray-900 dark:text-white truncate">
+                        {respondent.name}
+                      </span>
+                    </div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                      Lot {respondent.lotNumber}
+                    </div>
+                    {respondent.address && (
+                      <div className="text-sm text-gray-500 dark:text-gray-500 mt-1">
+                        {respondent.address}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
-                {/* Mobile Card Layout */}
-                <div className="block md:hidden space-y-4">
-                  {nonRespondents.length === 0 ? (
-                    <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                      All members have responded to this survey.
-                    </div>
-                  ) : filteredNonRespondents.length === 0 ? (
-                    <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                      No nonrespondents match the current filters.
-                    </div>
-                  ) : (
-                    filteredNonRespondents.map((respondent) => (
-                      <div key={respondent.responseId} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 border border-gray-200 dark:border-gray-600">
-                        <div className="flex items-start justify-between mb-3">
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="font-medium text-gray-900 dark:text-white truncate">
-                                {respondent.name}
-                              </span>
-                            </div>
-                            <div className="text-sm text-gray-600 dark:text-gray-400">
-                              Lot {respondent.lotNumber}
-                            </div>
-                            {respondent.address && (
-                              <div className="text-sm text-gray-500 dark:text-gray-500 mt-1">
-                                {respondent.address}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                        
-                        <div className="flex justify-end">
-                          <button
-                            onClick={() =>
-                              router.push(`/survey/${respondent.token}`)
-                            }
-                            className="px-4 py-2 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600 w-full sm:w-auto"
-                          >
-                            Submit Response
-                          </button>
-                        </div>
-                      </div>
-                    ))
-                  )}
+                <div className="flex justify-end">
+                  <button
+                    onClick={() => router.push(`/survey/${respondent.token}`)}
+                    className="px-4 py-2 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600 w-full sm:w-auto"
+                  >
+                    Submit Response
+                  </button>
                 </div>
               </div>
+            ))
+          )}
+        </div>
+      </div>
     </ListLayout>
   );
 }

@@ -29,8 +29,14 @@ export interface UseSurveysReturn {
   sendSpecificReminder: (surveyId: string) => Promise<void>;
   handleCloseSurvey: (surveyId: string) => Promise<void>;
   handleExport: (surveyId: string, surveyTitle: string) => Promise<void>;
-  handleDelete: (surveyId: string, title: string, force?: boolean) => Promise<void>;
-  setSelectedNonRespondent: React.Dispatch<React.SetStateAction<{ [key: string]: string }>>;
+  handleDelete: (
+    surveyId: string,
+    title: string,
+    force?: boolean
+  ) => Promise<void>;
+  setSelectedNonRespondent: React.Dispatch<
+    React.SetStateAction<{ [key: string]: string }>
+  >;
   refetchSurveys: () => Promise<void>;
 }
 
@@ -38,12 +44,24 @@ export function useSurveys(): UseSurveysReturn {
   const { addError } = useError();
   const [surveys, setSurveys] = useState<Survey[]>([]);
   const [loading, setLoading] = useState(true);
-  const [reminderStatus, setReminderStatus] = useState<{ [key: string]: string }>({});
-  const [initialSendStatus, setInitialSendStatus] = useState<{ [key: string]: string }>({});
-  const [showNonRespondents, setShowNonRespondents] = useState<{ [key: string]: boolean }>({});
-  const [nonRespondents, setNonRespondents] = useState<{ [key: string]: any[] }>({});
-  const [loadingNonRespondents, setLoadingNonRespondents] = useState<{ [key: string]: boolean }>({});
-  const [selectedNonRespondent, setSelectedNonRespondent] = useState<{ [key: string]: string }>({});
+  const [reminderStatus, setReminderStatus] = useState<{
+    [key: string]: string;
+  }>({});
+  const [initialSendStatus, setInitialSendStatus] = useState<{
+    [key: string]: string;
+  }>({});
+  const [showNonRespondents, setShowNonRespondents] = useState<{
+    [key: string]: boolean;
+  }>({});
+  const [nonRespondents, setNonRespondents] = useState<{
+    [key: string]: any[];
+  }>({});
+  const [loadingNonRespondents, setLoadingNonRespondents] = useState<{
+    [key: string]: boolean;
+  }>({});
+  const [selectedNonRespondent, setSelectedNonRespondent] = useState<{
+    [key: string]: string;
+  }>({});
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const fetchSurveys = async () => {
@@ -314,11 +332,17 @@ export function useSurveys(): UseSurveysReturn {
     }
   };
 
-  const handleDelete = async (surveyId: string, title: string, force = false) => {
+  const handleDelete = async (
+    surveyId: string,
+    title: string,
+    force = false
+  ) => {
     if (!force) {
       setDeletingId(surveyId);
       try {
-        const res = await fetch(`/api/surveys/${surveyId}/delete`, { method: "DELETE" });
+        const res = await fetch(`/api/surveys/${surveyId}/delete`, {
+          method: "DELETE",
+        });
         const data = await res.json();
 
         if (res.status === 409 && data.requiresConfirmation) {
@@ -346,7 +370,9 @@ export function useSurveys(): UseSurveysReturn {
     } else {
       // Force delete
       try {
-        const res = await fetch(`/api/surveys/${surveyId}/delete?force=true`, { method: "DELETE" });
+        const res = await fetch(`/api/surveys/${surveyId}/delete?force=true`, {
+          method: "DELETE",
+        });
         const data = await res.json();
 
         if (res.ok) {
