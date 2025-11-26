@@ -5,43 +5,30 @@ import { useRouter } from "next/navigation";
 import { formatDate } from "@/lib/dateFormatter";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { DashboardLayout } from "@/components/layouts";
-
-interface Survey {
-  id: string;
-  title: string;
-  opensAt: string;
-  closesAt: string;
-  responseRate: number;
-  totalRecipients: number;
-  submittedCount: number;
-  minResponses?: number;
-  initialSentAt?: string | null;
-}
+import { useSurveys } from "@/lib/hooks";
 
 export default function DashboardPage() {
   const router = useRouter();
   const { refreshAuth } = useAuth();
-  const [surveys, setSurveys] = useState<Survey[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [reminderStatus, setReminderStatus] = useState<{
-    [key: string]: string;
-  }>({});
-  const [initialSendStatus, setInitialSendStatus] = useState<{
-    [key: string]: string;
-  }>({});
-  const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [showNonRespondents, setShowNonRespondents] = useState<{
-    [key: string]: boolean;
-  }>({});
-  const [nonRespondents, setNonRespondents] = useState<{
-    [key: string]: any[];
-  }>({});
-  const [loadingNonRespondents, setLoadingNonRespondents] = useState<{
-    [key: string]: boolean;
-  }>({});
-  const [selectedNonRespondent, setSelectedNonRespondent] = useState<{
-    [key: string]: string;
-  }>({});
+  const {
+    surveys,
+    loading,
+    reminderStatus,
+    initialSendStatus,
+    showNonRespondents,
+    nonRespondents,
+    loadingNonRespondents,
+    selectedNonRespondent,
+    deletingId,
+    handleSendReminder,
+    handleSendInitial,
+    toggleNonRespondents,
+    sendSpecificReminder,
+    handleCloseSurvey,
+    handleExport,
+    handleDelete,
+    setSelectedNonRespondent,
+  } = useSurveys();
   const [currentAdminRole, setCurrentAdminRole] = useState<string | null>(null);
   const [adminEmail, setAdminEmail] = useState<string>("");
   const INACTIVITY_TIMEOUT = 15 * 60 * 1000; // 15 minutes
@@ -51,293 +38,6 @@ export default function DashboardPage() {
     await fetch("/api/auth/logout", { method: "POST" });
     await refreshAuth();
     router.push("/login");
-  };
-
-  const handleSendReminder = async (surveyId: string) => {
-    setReminderStatus({ ...reminderStatus, [surveyId]: "Sending..." });
-    try {
-      const res = await fetch(`/api/surveys/${surveyId}/remind`, {
-        method: "POST",
-      });
-      if (res.ok) {
-        setReminderStatus({ ...reminderStatus, [surveyId]: "Reminders sent!" });
-        setTimeout(() => {
-          setReminderStatus((prev) => {
-            const next = { ...prev };
-            delete next[surveyId];
-            return next;
-          });
-        }, 3000);
-      } else {
-        const data = await res.json();
-        setReminderStatus({
-          ...reminderStatus,
-          [surveyId]: data?.error || "Failed to send reminders",
-        });
-        setTimeout(() => {
-          setReminderStatus((prev) => {
-            const next = { ...prev };
-            delete next[surveyId];
-            return next;
-          });
-        }, 3000);
-      }
-    } catch (error) {
-      setReminderStatus({
-        ...reminderStatus,
-        [surveyId]: "Error sending reminders",
-      });
-      setTimeout(() => {
-        setReminderStatus((prev) => {
-          const next = { ...prev };
-          delete next[surveyId];
-          return next;
-        });
-      }, 3000);
-    }
-  };
-
-  const handleSendInitial = async (surveyId: string) => {
-    setInitialSendStatus({ ...initialSendStatus, [surveyId]: "Sending..." });
-    try {
-      const res = await fetch(`/api/surveys/${surveyId}/send-initial`, {
-        method: "POST",
-        credentials: "include",
-      });
-      if (res.ok) {
-        setInitialSendStatus({
-          ...initialSendStatus,
-          [surveyId]: "Initial notices sent",
-        });
-        // update local state so button hides
-        setSurveys((prev) =>
-          prev.map((s) =>
-            s.id === surveyId
-              ? { ...s, initialSentAt: new Date().toISOString() }
-              : s
-          )
-        );
-        setTimeout(() => {
-          setInitialSendStatus((prev) => {
-            const next = { ...prev };
-            delete next[surveyId];
-            return next;
-          });
-        }, 3000);
-      } else {
-        const data = await res.json();
-        setInitialSendStatus({
-          ...initialSendStatus,
-          [surveyId]: data?.error || "Failed to send initial notices",
-        });
-        setTimeout(() => {
-          setInitialSendStatus((prev) => {
-            const next = { ...prev };
-            delete next[surveyId];
-            return next;
-          });
-        }, 3000);
-      }
-    } catch (error) {
-      setInitialSendStatus({
-        ...initialSendStatus,
-        [surveyId]: "Error sending initial notices",
-      });
-      setTimeout(() => {
-        setInitialSendStatus((prev) => {
-          const next = { ...prev };
-          delete next[surveyId];
-          return next;
-        });
-      }, 3000);
-    }
-  };
-
-  const toggleNonRespondents = async (surveyId: string) => {
-    const isCurrentlyShowing = showNonRespondents[surveyId];
-
-    if (!isCurrentlyShowing) {
-      // Fetch nonrespondents if not already loaded
-      if (!nonRespondents[surveyId]) {
-        setLoadingNonRespondents({
-          ...loadingNonRespondents,
-          [surveyId]: true,
-        });
-        try {
-          const res = await fetch(`/api/surveys/${surveyId}/nonrespondents`, {
-            credentials: "include",
-          });
-          if (res.ok) {
-            const data = await res.json();
-            setNonRespondents({ ...nonRespondents, [surveyId]: data });
-          }
-        } catch (error) {
-          console.error("Failed to fetch nonrespondents:", error);
-        } finally {
-          setLoadingNonRespondents({
-            ...loadingNonRespondents,
-            [surveyId]: false,
-          });
-        }
-      }
-    }
-
-    setShowNonRespondents({
-      ...showNonRespondents,
-      [surveyId]: !isCurrentlyShowing,
-    });
-  };
-
-  const sendSpecificReminder = async (surveyId: string) => {
-    const responseId = selectedNonRespondent[surveyId];
-    if (!responseId) {
-      setReminderStatus({
-        ...reminderStatus,
-        [surveyId]: "Please select a member",
-      });
-      setTimeout(() => {
-        setReminderStatus((prev) => {
-          const next = { ...prev };
-          delete next[surveyId];
-          return next;
-        });
-      }, 2000);
-      return;
-    }
-
-    const member = nonRespondents[surveyId]?.find(
-      (m: any) => m.responseId === responseId
-    );
-    const memberName = member ? member.name : "member";
-
-    setReminderStatus({
-      ...reminderStatus,
-      [surveyId]: `Sending to ${memberName}...`,
-    });
-    try {
-      const res = await fetch(`/api/surveys/${surveyId}/remind/${responseId}`, {
-        method: "POST",
-        credentials: "include",
-      });
-      if (res.ok) {
-        setReminderStatus({
-          ...reminderStatus,
-          [surveyId]: `Reminder sent to ${memberName}!`,
-        });
-        // Clear selection after successful send
-        setSelectedNonRespondent({ ...selectedNonRespondent, [surveyId]: "" });
-        setTimeout(() => {
-          setReminderStatus((prev) => {
-            const next = { ...prev };
-            delete next[surveyId];
-            return next;
-          });
-        }, 3000);
-      } else {
-        const data = await res.json();
-        setReminderStatus({
-          ...reminderStatus,
-          [surveyId]: data?.error || "Failed to send reminder",
-        });
-      }
-    } catch (error) {
-      setReminderStatus({
-        ...reminderStatus,
-        [surveyId]: "Error sending reminder",
-      });
-    }
-  };
-
-  const handleDeleteSurvey = async (surveyId: string, force = false) => {
-    setDeletingId(surveyId);
-    try {
-      const url = force
-        ? `/api/surveys/${surveyId}/delete?force=true`
-        : `/api/surveys/${surveyId}/delete`;
-
-      const res = await fetch(url, { method: "DELETE" });
-      const data = await res.json();
-
-      if (res.status === 409 && data.requiresConfirmation) {
-        const confirmed = window.confirm(
-          `This survey has ${data.submittedCount} submitted response(s). Are you sure you want to delete it? This cannot be undone.`
-        );
-        if (confirmed) {
-          await handleDeleteSurvey(surveyId, true);
-        } else {
-          setDeletingId(null);
-        }
-        return;
-      }
-
-      if (res.ok) {
-        setSurveys(surveys.filter((s) => s.id !== surveyId));
-      } else {
-        alert(data.error || "Failed to delete survey");
-      }
-    } catch (error) {
-      alert("Error deleting survey");
-    } finally {
-      setDeletingId(null);
-    }
-  };
-
-  const handleCloseSurvey = async (surveyId: string) => {
-    if (
-      !window.confirm(
-        "Close this survey now? This will set the close date to the current time."
-      )
-    ) {
-      return;
-    }
-
-    try {
-      const res = await fetch(`/api/surveys/${surveyId}/close`, {
-        method: "POST",
-      });
-
-      if (res.ok) {
-        // Refresh the surveys list
-        const surveysRes = await fetch("/api/surveys");
-        const data = await surveysRes.json();
-        if (Array.isArray(data)) {
-          setSurveys(data);
-        } else if (data && Array.isArray((data as any).surveys)) {
-          setSurveys((data as any).surveys);
-        }
-      } else {
-        const data = await res.json();
-        alert(data.error || "Failed to close survey");
-      }
-    } catch (error) {
-      console.error("Failed to close survey:", error);
-      alert("Error closing survey");
-    }
-  };
-
-  const handleExportSurvey = async (surveyId: string, surveyTitle: string) => {
-    try {
-      const res = await fetch(`/api/surveys/${surveyId}/export`);
-
-      if (!res.ok) {
-        const data = await res.json();
-        alert(data.error || "Failed to export survey");
-        return;
-      }
-
-      const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${surveyTitle.replace(/[^a-z0-9]/gi, "_")}_results.csv`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-    } catch (error) {
-      console.error("Failed to export survey:", error);
-      alert("Error exporting survey");
-    }
   };
 
   const resetInactivityTimer = () => {
@@ -366,28 +66,6 @@ export default function DashboardPage() {
   }, [router]);
 
   useEffect(() => {
-    const fetchSurveys = async () => {
-      try {
-        const res = await fetch("/api/surveys");
-        const data = await res.json();
-        // API may return an object on error; ensure we only set an array
-        if (!res.ok) {
-          console.error("Failed to fetch surveys:", data);
-          setSurveys([]);
-        } else if (Array.isArray(data)) {
-          setSurveys(data);
-        } else if (data && Array.isArray((data as any).surveys)) {
-          setSurveys((data as any).surveys);
-        } else {
-          setSurveys([]);
-        }
-      } catch (error) {
-        console.error("Failed to fetch surveys:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     const fetchAdminRole = async () => {
       try {
         const res = await fetch("/api/auth/me");
@@ -401,7 +79,6 @@ export default function DashboardPage() {
       }
     };
 
-    fetchSurveys();
     fetchAdminRole();
   }, []);
 
@@ -467,11 +144,7 @@ export default function DashboardPage() {
                         Edit
                       </button>
                       <button
-                        onClick={() => {
-                          if (window.confirm("Delete this survey?")) {
-                            handleDeleteSurvey(survey.id);
-                          }
-                        }}
+                        onClick={() => handleDelete(survey.id, survey.title)}
                         disabled={deletingId === survey.id}
                         className="px-3 py-1.5 bg-red-500 text-white text-sm rounded-lg hover:bg-red-600 disabled:bg-gray-400 order-4 sm:order-2"
                       >
@@ -685,7 +358,7 @@ export default function DashboardPage() {
                   View Results
                 </button>
                 <button
-                  onClick={() => handleExportSurvey(survey.id, survey.title)}
+                  onClick={() => handleExport(survey.id, survey.title)}
                   className="px-3 py-1.5 bg-green-500 text-white text-sm rounded-lg hover:bg-green-600 flex-1 min-w-0"
                 >
                   Export
@@ -701,11 +374,7 @@ export default function DashboardPage() {
                       Edit
                     </button>
                     <button
-                      onClick={() => {
-                        if (window.confirm("Delete this survey?")) {
-                          handleDeleteSurvey(survey.id);
-                        }
-                      }}
+                      onClick={() => handleDelete(survey.id, survey.title)}
                       disabled={deletingId === survey.id}
                       className="px-3 py-1.5 bg-red-500 text-white text-sm rounded-lg hover:bg-red-600 disabled:bg-gray-400 flex-1 min-w-0"
                     >
@@ -785,11 +454,7 @@ export default function DashboardPage() {
                             Edit
                           </button>
                           <button
-                            onClick={() => {
-                              if (window.confirm("Delete this survey?")) {
-                                handleDeleteSurvey(survey.id);
-                              }
-                            }}
+                            onClick={() => handleDelete(survey.id, survey.title)}
                             disabled={deletingId === survey.id}
                             className="px-3 py-1 bg-red-500 text-white text-sm rounded-lg hover:bg-red-600 disabled:bg-gray-400"
                           >
@@ -807,7 +472,7 @@ export default function DashboardPage() {
                       </button>
                       <button
                         onClick={() =>
-                          handleExportSurvey(survey.id, survey.title)
+                          handleExport(survey.id, survey.title)
                         }
                         className="px-3 py-1 bg-green-500 text-white text-sm rounded-lg hover:bg-green-600"
                       >
