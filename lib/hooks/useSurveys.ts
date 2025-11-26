@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useError } from "@/lib/error/ErrorContext";
 
 export interface Survey {
   id: string;
@@ -34,6 +35,7 @@ export interface UseSurveysReturn {
 }
 
 export function useSurveys(): UseSurveysReturn {
+  const { addError } = useError();
   const [surveys, setSurveys] = useState<Survey[]>([]);
   const [loading, setLoading] = useState(true);
   const [reminderStatus, setReminderStatus] = useState<{ [key: string]: string }>({});
@@ -279,11 +281,11 @@ export function useSurveys(): UseSurveysReturn {
         await fetchSurveys();
       } else {
         const data = await res.json();
-        alert(`Failed to close survey: ${data?.error || "Unknown error"}`);
+        addError(`Failed to close survey: ${data?.error || "Unknown error"}`);
       }
     } catch (error) {
       console.error("Failed to close survey:", error);
-      alert("Failed to close survey");
+      addError("Failed to close survey");
     }
   };
 
@@ -293,7 +295,7 @@ export function useSurveys(): UseSurveysReturn {
 
       if (!res.ok) {
         const data = await res.json();
-        alert(data.error || "Failed to export survey");
+        addError(data.error || "Failed to export survey");
         return;
       }
 
@@ -308,7 +310,7 @@ export function useSurveys(): UseSurveysReturn {
       document.body.removeChild(a);
     } catch (error) {
       console.error("Failed to export survey:", error);
-      alert("Error exporting survey");
+      addError("Error exporting survey");
     }
   };
 
@@ -334,10 +336,10 @@ export function useSurveys(): UseSurveysReturn {
         if (res.ok) {
           setSurveys(surveys.filter((s) => s.id !== surveyId));
         } else {
-          alert(data.error || "Failed to delete survey");
+          addError(data.error || "Failed to delete survey");
         }
       } catch (error) {
-        alert("Error deleting survey");
+        addError("Error deleting survey");
       } finally {
         setDeletingId(null);
       }
@@ -350,10 +352,10 @@ export function useSurveys(): UseSurveysReturn {
         if (res.ok) {
           setSurveys(surveys.filter((s) => s.id !== surveyId));
         } else {
-          alert(data.error || "Failed to delete survey");
+          addError(data.error || "Failed to delete survey");
         }
       } catch (error) {
-        alert("Error deleting survey");
+        addError("Error deleting survey");
       } finally {
         setDeletingId(null);
       }

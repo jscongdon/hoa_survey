@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useError } from "@/lib/error/ErrorContext";
 
 export interface MemberList {
   id: string;
@@ -32,6 +33,7 @@ export interface UseMemberListsReturn {
 }
 
 export function useMemberLists(): UseMemberListsReturn {
+  const { addError } = useError();
   const [lists, setLists] = useState<MemberList[]>([]);
   const [loading, setLoading] = useState(true);
   const [showUpload, setShowUpload] = useState(false);
@@ -64,7 +66,7 @@ export function useMemberLists(): UseMemberListsReturn {
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newListName.trim()) {
-      alert("Please enter a list name");
+      addError("Please enter a list name");
       return;
     }
 
@@ -83,7 +85,7 @@ export function useMemberLists(): UseMemberListsReturn {
 
       if (!res.ok) {
         const error = await res.json();
-        alert(`Error creating list: ${error.error}`);
+        addError(`Error creating list: ${error.error}`);
         return;
       }
 
@@ -102,12 +104,12 @@ export function useMemberLists(): UseMemberListsReturn {
         setCsvFile(null);
         setShowUpload(false);
       } else {
-        alert("Unexpected response from server");
+        addError("Unexpected response from server");
         console.error("Invalid response:", newList);
       }
     } catch (error) {
       console.error("Failed to upload member list:", error);
-      alert("Failed to upload member list");
+      addError("Failed to upload member list");
     } finally {
       setUploading(false);
     }
@@ -129,14 +131,14 @@ export function useMemberLists(): UseMemberListsReturn {
 
       if (!res.ok) {
         const error = await res.json();
-        alert(`Error deleting list: ${error.error}`);
+        addError(`Error deleting list: ${error.error}`);
         return;
       }
 
       setLists(lists.filter((l) => l.id !== id));
     } catch (error) {
       console.error("Failed to delete member list:", error);
-      alert("Failed to delete member list");
+      addError("Failed to delete member list");
     }
   };
 
@@ -147,7 +149,7 @@ export function useMemberLists(): UseMemberListsReturn {
 
   const handleEditSave = async (id: string) => {
     if (!editingName.trim()) {
-      alert("List name cannot be empty");
+      addError("List name cannot be empty");
       return;
     }
 
@@ -160,7 +162,7 @@ export function useMemberLists(): UseMemberListsReturn {
 
       if (!res.ok) {
         const error = await res.json();
-        alert(`Error updating list: ${error.error}`);
+        addError(`Error updating list: ${error.error}`);
         return;
       }
 
@@ -172,7 +174,7 @@ export function useMemberLists(): UseMemberListsReturn {
       setEditingName("");
     } catch (error) {
       console.error("Failed to update member list:", error);
-      alert("Failed to update member list");
+      addError("Failed to update member list");
     }
   };
 
