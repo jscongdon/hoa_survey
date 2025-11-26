@@ -1,13 +1,13 @@
 "use client";
 
-import React from 'react';
-import Link from 'next/link';
+import React from "react";
+import Link from "next/link";
 
 export interface ActionButton {
   label: string;
   onClick?: () => void;
   href?: string;
-  variant?: 'primary' | 'secondary';
+  variant?: "primary" | "secondary";
   disabled?: boolean;
 }
 
@@ -29,9 +29,9 @@ export default function PageLayout({
   title,
   subtitle,
   actions,
-  className = '',
-  maxWidth = 'max-w-7xl',
-  padding = 'p-6',
+  className = "",
+  maxWidth = "max-w-7xl",
+  padding = "p-6",
   showBackButton = false,
   onBack,
   breadcrumbs,
@@ -88,8 +88,18 @@ export default function PageLayout({
                       className="flex items-center text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
                       aria-label="Go back"
                     >
-                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                      <svg
+                        className="w-5 h-5 mr-2"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M15 19l-7-7 7-7"
+                        />
                       </svg>
                       <span className="hidden sm:inline">Back</span>
                     </button>
@@ -105,9 +115,10 @@ export default function PageLayout({
                 {actions && actions.length > 0 && (
                   <div className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-3">
                     {actions.map((action, index) => {
-                      const buttonClasses = action.variant === 'primary'
-                        ? 'px-4 py-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
-                        : 'px-4 py-2 bg-gray-500 hover:bg-gray-600 dark:bg-gray-700 dark:hover:bg-gray-600 text-white rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
+                      const buttonClasses =
+                        action.variant === "primary"
+                          ? "px-4 py-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          : "px-4 py-2 bg-gray-500 hover:bg-gray-600 dark:bg-gray-700 dark:hover:bg-gray-600 text-white rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed";
 
                       if (action.href) {
                         return (
@@ -146,7 +157,9 @@ export default function PageLayout({
         )}
 
         {/* Main Content */}
-        <div className={`bg-white dark:bg-gray-800 rounded-lg shadow ${padding}`}>
+        <div
+          className={`bg-white dark:bg-gray-800 rounded-lg shadow ${padding}`}
+        >
           {children}
         </div>
       </div>

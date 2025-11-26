@@ -18,7 +18,7 @@ export default function TestFormLayout() {
     setError("");
 
     // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise((resolve) => setTimeout(resolve, 2000));
 
     if (!formData.name || !formData.email) {
       setError("Please fill in all required fields");
@@ -39,7 +39,7 @@ export default function TestFormLayout() {
       error={error}
       submitLabel="Send Message"
       cancelLabel="Back to Test Page"
-      onCancel={() => window.location.href = '/test-layout'}
+      onCancel={() => (window.location.href = "/test-layout")}
     >
       <div className="space-y-4">
         <div>
@@ -63,7 +63,9 @@ export default function TestFormLayout() {
           <input
             type="email"
             value={formData.email}
-            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            onChange={(e) =>
+              setFormData({ ...formData, email: e.target.value })
+            }
             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
             placeholder="your@email.com"
             required
@@ -76,7 +78,9 @@ export default function TestFormLayout() {
           </label>
           <textarea
             value={formData.message}
-            onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+            onChange={(e) =>
+              setFormData({ ...formData, message: e.target.value })
+            }
             rows={4}
             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
             placeholder="Your message..."

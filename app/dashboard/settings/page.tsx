@@ -399,8 +399,8 @@ export default function SettingsPage() {
         {
           label: "Dashboard",
           onClick: () => router.push("/dashboard"),
-          variant: "secondary"
-        }
+          variant: "secondary",
+        },
       ]}
     >
       <div className="max-w-4xl mx-auto">

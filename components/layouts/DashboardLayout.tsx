@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React from "react";
 
 export interface DashboardCard {
   id: string;
@@ -34,16 +34,14 @@ export interface DashboardLayoutProps {
 
 function DashboardCard({ card }: { card: DashboardCard }) {
   return (
-    <div className={`bg-white dark:bg-gray-800 rounded-lg shadow p-6 border border-gray-200 dark:border-gray-700 ${card.className || ''}`}>
+    <div
+      className={`bg-white dark:bg-gray-800 rounded-lg shadow p-6 border border-gray-200 dark:border-gray-700 ${card.className || ""}`}
+    >
       <div className="flex items-center justify-between">
         <div className="flex-1">
           <div className="flex items-center">
-            {card.icon && (
-              <div className="flex-shrink-0">
-                {card.icon}
-              </div>
-            )}
-            <div className={card.icon ? 'ml-4' : ''}>
+            {card.icon && <div className="flex-shrink-0">{card.icon}</div>}
+            <div className={card.icon ? "ml-4" : ""}>
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
                 {card.title}
               </p>
@@ -59,12 +57,15 @@ function DashboardCard({ card }: { card: DashboardCard }) {
               )}
               {card.trend && (
                 <div className="flex items-center mt-2">
-                  <span className={`text-sm font-medium ${
-                    card.trend.isPositive
-                      ? 'text-green-600 dark:text-green-400'
-                      : 'text-red-600 dark:text-red-400'
-                  }`}>
-                    {card.trend.isPositive ? '+' : ''}{card.trend.value}%
+                  <span
+                    className={`text-sm font-medium ${
+                      card.trend.isPositive
+                        ? "text-green-600 dark:text-green-400"
+                        : "text-red-600 dark:text-red-400"
+                    }`}
+                  >
+                    {card.trend.isPositive ? "+" : ""}
+                    {card.trend.value}%
                   </span>
                   <span className="text-sm text-gray-500 dark:text-gray-400 ml-2">
                     {card.trend.label}
@@ -95,7 +96,7 @@ export default function DashboardLayout({
   subtitle,
   actions,
   cards = [],
-  className = '',
+  className = "",
   showBackButton = false,
   onBack,
   breadcrumbs,
@@ -151,8 +152,18 @@ export default function DashboardLayout({
                     className="flex items-center text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
                     aria-label="Go back"
                   >
-                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    <svg
+                      className="w-5 h-5 mr-2"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 19l-7-7 7-7"
+                      />
                     </svg>
                     <span className="hidden sm:inline">Back</span>
                   </button>
@@ -191,9 +202,7 @@ export default function DashboardLayout({
         {/* Main Content */}
         {children && (
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
-            <div className="p-6">
-              {children}
-            </div>
+            <div className="p-6">{children}</div>
           </div>
         )}
       </div>

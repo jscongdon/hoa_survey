@@ -1,6 +1,7 @@
 # HOA Survey Application - Page Catalog
 
 ## Overview
+
 This document catalogs all pages/routes in the HOA Survey application, organized by functional areas and user roles.
 
 ## Application Structure
@@ -8,6 +9,7 @@ This document catalogs all pages/routes in the HOA Survey application, organized
 ### Core Application Pages
 
 #### **Public/Unauthenticated Pages**
+
 1. **Landing/Home Page** (`/`)
    - Route: `app/page.tsx`
    - Purpose: Main landing page for the application
@@ -29,6 +31,7 @@ This document catalogs all pages/routes in the HOA Survey application, organized
    - Access: Public (with token)
 
 #### **Setup/Onboarding Pages**
+
 5. **Setup Page** (`/setup`)
    - Route: `app/setup/page.tsx`
    - Purpose: Initial application setup
@@ -40,6 +43,7 @@ This document catalogs all pages/routes in the HOA Survey application, organized
    - Access: Setup process
 
 #### **Survey Response Pages**
+
 7. **Survey Response** (`/survey/[token]`)
    - Route: `app/survey/[token]/page.tsx`
    - Purpose: Public survey response form
@@ -51,6 +55,7 @@ This document catalogs all pages/routes in the HOA Survey application, organized
    - Access: Public (with valid tokens)
 
 #### **Invitation Pages**
+
 9. **Accept Invitation** (`/invite/[token]`)
    - Route: `app/invite/[token]/page.tsx`
    - Purpose: Admin invitation acceptance
@@ -59,12 +64,14 @@ This document catalogs all pages/routes in the HOA Survey application, organized
 ### Dashboard Pages (Authenticated Admin)
 
 #### **Main Dashboard**
+
 10. **Dashboard Home** (`/dashboard`)
     - Route: `app/dashboard/page.tsx`
     - Purpose: Main dashboard with survey overview
     - Access: Authenticated admins
 
 #### **Admin Management**
+
 11. **Admin List** (`/dashboard/admins`)
     - Route: `app/dashboard/admins/page.tsx`
     - Purpose: Manage admin users
@@ -76,6 +83,7 @@ This document catalogs all pages/routes in the HOA Survey application, organized
     - Access: Full admin access
 
 #### **Survey Management**
+
 13. **Create Survey** (`/dashboard/surveys/create`)
     - Route: `app/dashboard/surveys/create/page.tsx`
     - Purpose: Create new surveys
@@ -97,6 +105,7 @@ This document catalogs all pages/routes in the HOA Survey application, organized
     - Access: Survey owner or full admin
 
 #### **Member List Management**
+
 17. **Member Lists Overview** (`/dashboard/member-lists`)
     - Route: `app/dashboard/member-lists/page.tsx`
     - Purpose: Manage member lists
@@ -108,12 +117,14 @@ This document catalogs all pages/routes in the HOA Survey application, organized
     - Access: Authenticated admins
 
 #### **Settings & Configuration**
+
 19. **Settings** (`/dashboard/settings`)
     - Route: `app/dashboard/settings/page.tsx`
     - Purpose: Application settings
     - Access: Authenticated admins
 
 #### **Testing & Development**
+
 20. **Test Email** (`/dashboard/test-email`)
     - Route: `app/dashboard/test-email/page.tsx`
     - Purpose: Test email functionality
@@ -122,6 +133,7 @@ This document catalogs all pages/routes in the HOA Survey application, organized
 ## API Routes Structure
 
 ### Authentication APIs (`/api/auth/`)
+
 - `login` - User login
 - `logout` - User logout
 - `me` - Get current user info
@@ -136,12 +148,14 @@ This document catalogs all pages/routes in the HOA Survey application, organized
 - `signup` - User registration
 
 ### Admin Management APIs (`/api/admins/`)
+
 - `GET /api/admins` - List all admins
 - `GET /api/admins/[id]` - Get specific admin
 - `PUT /api/admins/[id]` - Update admin
 - `DELETE /api/admins/[id]` - Delete admin
 
 ### Survey APIs (`/api/surveys/`)
+
 - `GET /api/surveys` - List surveys
 - `POST /api/surveys` - Create survey
 - `GET /api/surveys/[id]` - Get survey details
@@ -157,12 +171,14 @@ This document catalogs all pages/routes in the HOA Survey application, organized
 - `POST /api/surveys/[id]/remind/[responseId]` - Send individual reminders
 
 ### Response APIs (`/api/responses/`)
+
 - `GET /api/responses/[token]` - Get survey response form
 - `POST /api/responses/[token]` - Submit survey response
 - `POST /api/responses/[token]/request-signature` - Request digital signature
 - `GET /api/responses/[token]/sign/[signatureToken]` - Get signature page
 
 ### Member List APIs (`/api/member-lists/`)
+
 - `GET /api/member-lists` - List member lists
 - `POST /api/member-lists` - Create member list
 - `GET /api/member-lists/[id]` - Get member list details
@@ -175,11 +191,13 @@ This document catalogs all pages/routes in the HOA Survey application, organized
 - `DELETE /api/member-lists/[id]/members/[memberId]` - Delete member
 
 ### Settings APIs (`/api/settings/`)
+
 - `GET /api/settings/env` - Get environment settings
 - `POST /api/settings/restart` - Restart application
 - `GET /api/settings/development-mode` - Get dev mode status
 
 ### Setup APIs (`/api/setup/`)
+
 - `GET /api/setup/status` - Get setup status
 - `POST /api/setup/complete` - Complete setup
 - `POST /api/setup/jwt-secret` - Set JWT secret
@@ -187,33 +205,37 @@ This document catalogs all pages/routes in the HOA Survey application, organized
 - `POST /api/setup/verify` - Verify setup
 
 ### Public APIs (`/api/public/`)
+
 - `GET /api/public/hoa-name` - Get HOA name and logo
 
 ### Testing APIs (`/api/test-email/`)
+
 - `POST /api/test-email` - Send test email
 
 ### Debug APIs (`/api/_debug/`)
+
 - Various debugging endpoints
 
 ## Component Structure
 
 ### Shared Components (`/components/`)
-- `CsvUpload.tsx` - CSV file upload component
+
 - `Footer.tsx` - Application footer
 - `Header.tsx` - Application header
-- `ProgressBar.tsx` - Progress indicator
 - `SurveyBuilder.tsx` - Survey creation/editing interface
 - `ThemeToggle.tsx` - Dark/light theme toggle
 
 ## Page Organization Analysis
 
 ### Current Issues
+
 1. **Mixed Concerns**: Some pages handle both UI and business logic
 2. **Large Components**: Dashboard pages are quite large and handle multiple responsibilities
 3. **Repeated Patterns**: Similar responsive layouts across different pages
 4. **API Coupling**: Pages are tightly coupled to specific API endpoints
 
 ### Modularization Opportunities
+
 1. **Layout Components**: Extract common page layouts (forms, lists, details)
 2. **Business Logic Hooks**: Separate data fetching and state management
 3. **Shared UI Components**: Create reusable form fields, tables, cards
@@ -221,6 +243,7 @@ This document catalogs all pages/routes in the HOA Survey application, organized
 5. **API Abstraction**: Create service layers for API calls
 
 ### Recommended Structure
+
 ```
 components/
 ├── layouts/          # Page layout components

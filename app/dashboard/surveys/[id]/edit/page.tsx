@@ -247,10 +247,7 @@ export default function EditSurveyPage({
 
   if (!survey) {
     return (
-      <PageLayout
-        title="Edit Survey"
-        subtitle="Loading survey..."
-      >
+      <PageLayout title="Edit Survey" subtitle="Loading survey...">
         <div className="flex justify-center items-center py-8">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
         </div>
@@ -265,87 +262,87 @@ export default function EditSurveyPage({
         {
           label: "Dashboard",
           onClick: () => router.push("/dashboard"),
-          variant: "secondary"
-        }
+          variant: "secondary",
+        },
       ]}
     >
       <div className="max-w-2xl mx-auto">
         <div className="space-y-4">
-        <SurveyForm
-          mode="edit"
-          initialValues={{
-            title: survey.title,
-            description: survey.description || "",
-            opensAt: survey.opensAt || null,
-            closesAt: survey.closesAt || null,
-            memberListId: survey.memberListId || "",
-            minResponses: survey.minResponses ?? null,
-            minResponsesAll: survey.minResponsesAll || false,
-            requireSignature:
-              typeof survey.requireSignature === "boolean"
-                ? survey.requireSignature
-                : true,
-            notifyOnMinResponses:
-              typeof survey.notifyOnMinResponses === "boolean"
-                ? survey.notifyOnMinResponses
-                : false,
-            questions: questions || [],
-          }}
-          disableMemberList={submittedResponses > 0}
-          lockQuestions={submittedResponses > 0}
-          memberListLocked={submittedResponses > 0}
-          memberListNote={
-            submittedResponses > 0
-              ? `Member list locked (${submittedResponses}/${totalResponses} responses submitted).`
-              : totalResponses > 0
-                ? `${submittedResponses}/${totalResponses} responses submitted. You can still change the list until submissions begin.`
-                : "No responses yet."
-          }
-          onSubmit={async (payload) => {
-            setStatus(null);
-            try {
-              const res = await fetch(`/api/surveys/${surveyId}`, {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload),
-              });
-              if (res.ok) {
-                setStatus("Survey updated!");
-                setOriginalData({
-                  title: payload.title,
-                  description: payload.description || "",
-                  opensAt: payload.opensAt
-                    ? new Date(payload.opensAt).toISOString()
-                    : null,
-                  closesAt: payload.closesAt
-                    ? new Date(payload.closesAt).toISOString()
-                    : null,
-                  memberListId: payload.memberListId || "",
-                  requireSignature: payload.requireSignature,
-                  notifyOnMinResponses: payload.notifyOnMinResponses,
-                  minResponses: payload.minResponses
-                    ? String(payload.minResponses)
-                    : "",
-                  minResponsesAll: !!payload.minResponsesAll,
-                  questions: payload.questions || [],
-                });
-                setHasChanges(false);
-              } else {
-                let message = "Error updating survey";
-                try {
-                  const data = await res.json();
-                  if (data?.error) message = data.error;
-                } catch {}
-                setStatus(message);
-              }
-            } catch (err) {
-              console.error(err);
-              setStatus("Error updating survey");
+          <SurveyForm
+            mode="edit"
+            initialValues={{
+              title: survey.title,
+              description: survey.description || "",
+              opensAt: survey.opensAt || null,
+              closesAt: survey.closesAt || null,
+              memberListId: survey.memberListId || "",
+              minResponses: survey.minResponses ?? null,
+              minResponsesAll: survey.minResponsesAll || false,
+              requireSignature:
+                typeof survey.requireSignature === "boolean"
+                  ? survey.requireSignature
+                  : true,
+              notifyOnMinResponses:
+                typeof survey.notifyOnMinResponses === "boolean"
+                  ? survey.notifyOnMinResponses
+                  : false,
+              questions: questions || [],
+            }}
+            disableMemberList={submittedResponses > 0}
+            lockQuestions={submittedResponses > 0}
+            memberListLocked={submittedResponses > 0}
+            memberListNote={
+              submittedResponses > 0
+                ? `Member list locked (${submittedResponses}/${totalResponses} responses submitted).`
+                : totalResponses > 0
+                  ? `${submittedResponses}/${totalResponses} responses submitted. You can still change the list until submissions begin.`
+                  : "No responses yet."
             }
-          }}
-        />
-      </div>
-      {status && <div className="mt-4 text-green-600">{status}</div>}
+            onSubmit={async (payload) => {
+              setStatus(null);
+              try {
+                const res = await fetch(`/api/surveys/${surveyId}`, {
+                  method: "PUT",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify(payload),
+                });
+                if (res.ok) {
+                  setStatus("Survey updated!");
+                  setOriginalData({
+                    title: payload.title,
+                    description: payload.description || "",
+                    opensAt: payload.opensAt
+                      ? new Date(payload.opensAt).toISOString()
+                      : null,
+                    closesAt: payload.closesAt
+                      ? new Date(payload.closesAt).toISOString()
+                      : null,
+                    memberListId: payload.memberListId || "",
+                    requireSignature: payload.requireSignature,
+                    notifyOnMinResponses: payload.notifyOnMinResponses,
+                    minResponses: payload.minResponses
+                      ? String(payload.minResponses)
+                      : "",
+                    minResponsesAll: !!payload.minResponsesAll,
+                    questions: payload.questions || [],
+                  });
+                  setHasChanges(false);
+                } else {
+                  let message = "Error updating survey";
+                  try {
+                    const data = await res.json();
+                    if (data?.error) message = data.error;
+                  } catch {}
+                  setStatus(message);
+                }
+              } catch (err) {
+                console.error(err);
+                setStatus("Error updating survey");
+              }
+            }}
+          />
+        </div>
+        {status && <div className="mt-4 text-green-600">{status}</div>}
       </div>
     </PageLayout>
   );

@@ -23,8 +23,8 @@ export default function TestPageLayout() {
     >
       <div className="space-y-4">
         <p className="text-gray-700 dark:text-gray-300">
-          This is the content area of the page. The PageLayout component provides
-          consistent styling and responsive behavior across all pages.
+          This is the content area of the page. The PageLayout component
+          provides consistent styling and responsive behavior across all pages.
         </p>
 
         <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
@@ -41,13 +41,17 @@ export default function TestPageLayout() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
-            <h4 className="font-semibold text-green-900 dark:text-green-100">Column 1</h4>
+            <h4 className="font-semibold text-green-900 dark:text-green-100">
+              Column 1
+            </h4>
             <p className="text-green-800 dark:text-green-200 text-sm mt-1">
               Content in the first column
             </p>
           </div>
           <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg">
-            <h4 className="font-semibold text-purple-900 dark:text-purple-100">Column 2</h4>
+            <h4 className="font-semibold text-purple-900 dark:text-purple-100">
+              Column 2
+            </h4>
             <p className="text-purple-800 dark:text-purple-200 text-sm mt-1">
               Content in the second column
             </p>

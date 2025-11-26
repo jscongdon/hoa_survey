@@ -18,8 +18,8 @@ export default function CreateSurveyPage() {
         {
           label: "Dashboard",
           onClick: () => router.push("/dashboard"),
-          variant: "secondary"
-        }
+          variant: "secondary",
+        },
       ]}
     >
       <SurveyForm

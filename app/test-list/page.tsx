@@ -20,16 +20,21 @@ export default function TestListLayout() {
 
   const handleDelete = (id: string) => {
     if (confirm("Are you sure you want to delete this item?")) {
-      setItems(items.filter(item => item.id !== id));
+      setItems(items.filter((item) => item.id !== id));
     }
   };
 
   const handleToggleStatus = (id: string) => {
-    setItems(items.map(item =>
-      item.id === id
-        ? { ...item, status: item.status === "active" ? "inactive" : "active" }
-        : item
-    ));
+    setItems(
+      items.map((item) =>
+        item.id === id
+          ? {
+              ...item,
+              status: item.status === "active" ? "inactive" : "active",
+            }
+          : item
+      )
+    );
   };
 
   const actions = [
@@ -40,7 +45,7 @@ export default function TestListLayout() {
           id: Date.now().toString(),
           name: `Item ${items.length + 1}`,
           status: "active",
-          createdAt: new Date().toISOString().split('T')[0],
+          createdAt: new Date().toISOString().split("T")[0],
         };
         setItems([...items, newItem]);
       },

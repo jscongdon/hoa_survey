@@ -186,7 +186,9 @@ export default function SurveyForm({
     <form onSubmit={handleSubmit} className="space-y-6">
       <div>
         <div className="flex items-center justify-between mb-1">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Member List *</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            Member List *
+          </label>
           {memberListLocked && (
             <span
               className="text-xs ml-3 px-2 py-1 rounded bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
@@ -197,7 +199,9 @@ export default function SurveyForm({
           )}
         </div>
         {memberListNote && (
-          <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">{memberListNote}</p>
+          <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
+            {memberListNote}
+          </p>
         )}
         <div className="mt-2">
           <select
@@ -347,7 +351,9 @@ export default function SurveyForm({
 
       <div>
         <div className="flex items-center justify-between mb-1">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Member List *</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            Member List *
+          </label>
           {memberListLocked && (
             <span
               className="text-xs ml-3 px-2 py-1 rounded bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
@@ -358,7 +364,9 @@ export default function SurveyForm({
           )}
         </div>
         {memberListNote && (
-          <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">{memberListNote}</p>
+          <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
+            {memberListNote}
+          </p>
         )}
         <div className="mt-2">
           <select
@@ -515,18 +523,29 @@ export default function SurveyForm({
             {questions && questions.length > 0 ? (
               <div className="space-y-3">
                 {questions.map((q, i) => (
-                  <div key={i} className="border border-gray-300 dark:border-gray-600 rounded p-4 bg-gray-50 dark:bg-gray-800">
+                  <div
+                    key={i}
+                    className="border border-gray-300 dark:border-gray-600 rounded p-4 bg-gray-50 dark:bg-gray-800"
+                  >
                     <div className="flex justify-between items-start mb-2">
-                      <h4 className="font-semibold text-gray-900 dark:text-white">{q.text}</h4>
-                      <span className="text-xs bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white px-2 py-1 rounded">{q.type}</span>
+                      <h4 className="font-semibold text-gray-900 dark:text-white">
+                        {q.text}
+                      </h4>
+                      <span className="text-xs bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white px-2 py-1 rounded">
+                        {q.type}
+                      </span>
                     </div>
                     {((q.options && q.options.length > 0) || q.writeIn) && (
                       <div className="mt-2">
-                        <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Options:</p>
+                        <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">
+                          Options:
+                        </p>
                         <ul className="list-disc list-inside text-sm text-gray-700 dark:text-gray-300">
-                          {Array.isArray(q.options) && q.options.length > 0 && q.options.map((opt: string, idx: number) => (
-                            <li key={idx}>{opt}</li>
-                          ))}
+                          {Array.isArray(q.options) &&
+                            q.options.length > 0 &&
+                            q.options.map((opt: string, idx: number) => (
+                              <li key={idx}>{opt}</li>
+                            ))}
                           {q.writeIn && (
                             <li>
                               <em>Write-In</em>
@@ -536,7 +555,9 @@ export default function SurveyForm({
                       </div>
                     )}
                     {q.maxSelections && (
-                      <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">Max selections: {q.maxSelections}</p>
+                      <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">
+                        Max selections: {q.maxSelections}
+                      </p>
                     )}
                   </div>
                 ))}

@@ -124,16 +124,19 @@ API Routes (app/api/)
 ## Data Flow Patterns
 
 ### Authentication Flow
+
 ```
 User Request → Middleware → API Route → Database → Response → UI Update
 ```
 
 ### Survey Management Flow
+
 ```
 Admin Action → API Route → Database → Email Service → UI Update
 ```
 
 ### Response Submission Flow
+
 ```
 User Form → Validation → API Route → Database → Email Notification → Confirmation
 ```
@@ -141,21 +144,25 @@ User Form → Validation → API Route → Database → Email Notification → C
 ## Current Issues Identified
 
 ### 1. **Component Size & Complexity**
+
 - Large page components handling multiple responsibilities
 - Mixed UI logic, business logic, and API calls
 - Difficult to test and maintain
 
 ### 2. **Code Duplication**
+
 - Similar responsive patterns across pages
 - Repeated form handling logic
 - Duplicate API error handling
 
 ### 3. **Tight Coupling**
+
 - Pages directly coupled to API endpoints
 - UI components mixed with business logic
 - Hard to reuse components across different contexts
 
 ### 4. **State Management**
+
 - Local state scattered across components
 - No centralized state management
 - Complex prop drilling
@@ -163,21 +170,25 @@ User Form → Validation → API Route → Database → Email Notification → C
 ## Modularization Strategy
 
 ### Phase 1: Extract Shared Components
+
 - Create reusable layout components
 - Extract common form patterns
 - Build shared data display components
 
 ### Phase 2: Separate Business Logic
+
 - Create custom hooks for API calls
 - Extract business logic into service functions
 - Implement proper error handling
 
 ### Phase 3: State Management
+
 - Implement context providers for global state
 - Create typed state management
 - Add proper loading and error states
 
 ### Phase 4: Testing & Documentation
+
 - Add comprehensive tests
 - Create component documentation
 - Establish coding standards
@@ -193,17 +204,20 @@ User Form → Validation → API Route → Database → Email Notification → C
 ## Implementation Priority
 
 ### High Priority (Immediate)
+
 - Extract common layout patterns
 - Create shared form components
 - Implement consistent error handling
 
 ### Medium Priority (Next Sprint)
+
 - Separate API logic into hooks
 - Create reusable data display components
 - Add proper TypeScript types
 
 ### Low Priority (Future)
+
 - Implement global state management
 - Add comprehensive testing
 - Create design system documentation</content>
-<parameter name="filePath">/Users/jasoncongdon/projects/hoa_survey/ARCHITECTURE_OVERVIEW.md
+  <parameter name="filePath">/Users/jasoncongdon/projects/hoa_survey/ARCHITECTURE_OVERVIEW.md

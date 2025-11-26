@@ -1,13 +1,13 @@
 "use client";
 
-import React from 'react';
-import Link from 'next/link';
+import React from "react";
+import Link from "next/link";
 
 export interface ActionButton {
   label: string;
   onClick?: () => void;
   href?: string;
-  variant?: 'primary' | 'secondary';
+  variant?: "primary" | "secondary";
   disabled?: boolean;
 }
 
@@ -35,7 +35,7 @@ export default function ListLayout({
   isEmpty = false,
   emptyMessage = "No items found",
   emptyAction,
-  className = '',
+  className = "",
   showBackButton = false,
   onBack,
   breadcrumbs,
@@ -92,8 +92,18 @@ export default function ListLayout({
                       className="flex items-center text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
                       aria-label="Go back"
                     >
-                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                      <svg
+                        className="w-5 h-5 mr-2"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M15 19l-7-7 7-7"
+                        />
                       </svg>
                       <span className="hidden sm:inline">Back</span>
                     </button>
@@ -109,9 +119,10 @@ export default function ListLayout({
                 {actions && actions.length > 0 && (
                   <div className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-3">
                     {actions.map((action, index) => {
-                      const buttonClasses = action.variant === 'primary'
-                        ? 'px-4 py-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
-                        : 'px-4 py-2 bg-gray-500 hover:bg-gray-600 dark:bg-gray-700 dark:hover:bg-gray-600 text-white rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
+                      const buttonClasses =
+                        action.variant === "primary"
+                          ? "px-4 py-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          : "px-4 py-2 bg-gray-500 hover:bg-gray-600 dark:bg-gray-700 dark:hover:bg-gray-600 text-white rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed";
 
                       if (action.href) {
                         return (
@@ -154,31 +165,52 @@ export default function ListLayout({
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
               <div className="flex items-center space-x-3">
-                <svg className="animate-spin h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                <svg
+                  className="animate-spin h-6 w-6 text-blue-600"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  />
                 </svg>
-                <span className="text-gray-600 dark:text-gray-400">Loading...</span>
+                <span className="text-gray-600 dark:text-gray-400">
+                  Loading...
+                </span>
               </div>
             </div>
           ) : isEmpty ? (
             <div className="flex flex-col items-center justify-center py-12 px-6">
-              <svg className="w-12 h-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              <svg
+                className="w-12 h-12 text-gray-400 mb-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1}
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
               </svg>
               <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
                 {emptyMessage}
               </h3>
-              {emptyAction && (
-                <div className="mt-4">
-                  {emptyAction}
-                </div>
-              )}
+              {emptyAction && <div className="mt-4">{emptyAction}</div>}
             </div>
           ) : (
-            <div className="p-6">
-              {children}
-            </div>
+            <div className="p-6">{children}</div>
           )}
         </div>
       </div>

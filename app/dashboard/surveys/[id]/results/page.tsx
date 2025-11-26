@@ -61,21 +61,22 @@ export default function SurveyResultsPage({
   const [nameFilter, setNameFilter] = useState("");
   const [submittedAtFilter, setSubmittedAtFilter] = useState("");
 
-  const filteredResponses = data?.responses.filter((response) => {
-    const lotMatch =
-      lotFilter === "" ||
-      response.member.lot.toLowerCase().includes(lotFilter.toLowerCase());
-    const nameMatch =
-      nameFilter === "" ||
-      response.member.name.toLowerCase().includes(nameFilter.toLowerCase());
-    const submittedAtMatch =
-      submittedAtFilter === "" ||
-      new Date(response.submittedAt)
-        .toLocaleString()
-        .toLowerCase()
-        .includes(submittedAtFilter.toLowerCase());
-    return lotMatch && nameMatch && submittedAtMatch;
-  }) || [];
+  const filteredResponses =
+    data?.responses.filter((response) => {
+      const lotMatch =
+        lotFilter === "" ||
+        response.member.lot.toLowerCase().includes(lotFilter.toLowerCase());
+      const nameMatch =
+        nameFilter === "" ||
+        response.member.name.toLowerCase().includes(nameFilter.toLowerCase());
+      const submittedAtMatch =
+        submittedAtFilter === "" ||
+        new Date(response.submittedAt)
+          .toLocaleString()
+          .toLowerCase()
+          .includes(submittedAtFilter.toLowerCase());
+      return lotMatch && nameMatch && submittedAtMatch;
+    }) || [];
 
   useEffect(() => {
     params.then((resolvedParams) => {
@@ -181,10 +182,7 @@ export default function SurveyResultsPage({
 
   if (loading)
     return (
-      <PageLayout
-        title="Survey Results"
-        subtitle="Loading survey results..."
-      >
+      <PageLayout title="Survey Results" subtitle="Loading survey results...">
         <div className="flex justify-center items-center py-8">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
         </div>
@@ -192,13 +190,11 @@ export default function SurveyResultsPage({
     );
   if (!data)
     return (
-      <PageLayout
-        title="Survey Results"
-        subtitle="Survey not found"
-      >
+      <PageLayout title="Survey Results" subtitle="Survey not found">
         <div className="text-center py-8">
           <p className="text-gray-600 dark:text-gray-400">
-            The requested survey could not be found or you don't have permission to view it.
+            The requested survey could not be found or you don't have permission
+            to view it.
           </p>
         </div>
       </PageLayout>
@@ -207,17 +203,16 @@ export default function SurveyResultsPage({
   return (
     <PageLayout
       title={data.survey.title}
-      subtitle={`Created by ${data.survey.createdByName || 'Unknown'}`}
+      subtitle={`Created by ${data.survey.createdByName || "Unknown"}`}
       actions={[
         {
           label: "Dashboard",
           onClick: () => router.push("/dashboard"),
-          variant: "secondary"
-        }
+          variant: "secondary",
+        },
       ]}
     >
       <div className="max-w-6xl mx-auto">
-
         {data.survey.description && (
           <div className="bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-700 rounded-lg p-4 mb-6">
             <p className="text-gray-700 dark:text-gray-300">
@@ -397,7 +392,7 @@ export default function SurveyResultsPage({
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
             Individual Responses
           </h2>
-          
+
           <div className="mb-4 grid grid-cols-1 md:grid-cols-4 gap-4">
             <input
               type="text"
@@ -432,11 +427,14 @@ export default function SurveyResultsPage({
               Clear Filters
             </button>
           </div>
-          
+
           {/* Mobile Card Layout */}
           <div className="block md:hidden space-y-4">
             {filteredResponses.map((response) => (
-              <div key={response.id} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 border border-gray-200 dark:border-gray-600">
+              <div
+                key={response.id}
+                className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 border border-gray-200 dark:border-gray-600"
+              >
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
@@ -469,14 +467,12 @@ export default function SurveyResultsPage({
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="flex flex-wrap gap-2">
                   <button
                     onClick={() =>
                       setExpandedResponseId(
-                        expandedResponseId === response.id
-                          ? null
-                          : response.id
+                        expandedResponseId === response.id ? null : response.id
                       )
                     }
                     className="px-3 py-1 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600 flex-1 min-w-0"
@@ -491,13 +487,11 @@ export default function SurveyResultsPage({
                       disabled={deletingId === response.id}
                       className="px-3 py-1 bg-red-500 text-white text-sm rounded-lg hover:bg-red-600 disabled:bg-gray-400 disabled:cursor-not-allowed flex-1 min-w-0"
                     >
-                      {deletingId === response.id
-                        ? "Deleting..."
-                        : "Delete"}
+                      {deletingId === response.id ? "Deleting..." : "Delete"}
                     </button>
                   )}
                 </div>
-                
+
                 {expandedResponseId === response.id && (
                   <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
                     <h3 className="font-semibold text-gray-900 dark:text-white mb-3">
@@ -529,8 +523,7 @@ export default function SurveyResultsPage({
                                     )
                                     .join(", ")
                                 ) : typeof answer === "object" &&
-                                  (answer as any).choice ===
-                                    "__WRITE_IN__" ? (
+                                  (answer as any).choice === "__WRITE_IN__" ? (
                                   String((answer as any).writeIn || "")
                                 ) : (
                                   String(answer)

@@ -25,15 +25,29 @@ export default function DashboardOverviewPage() {
 
         // Calculate stats
         const now = new Date();
-        const activeSurveys = surveys.filter((s: any) => new Date(s.closesAt) > now);
-        const totalResponses = surveys.reduce((sum: number, s: any) => sum + s.submittedCount, 0);
-        const totalPossible = surveys.reduce((sum: number, s: any) => sum + s.totalRecipients, 0);
-        const responseRate = totalPossible > 0 ? Math.round((totalResponses / totalPossible) * 100) : 0;
+        const activeSurveys = surveys.filter(
+          (s: any) => new Date(s.closesAt) > now
+        );
+        const totalResponses = surveys.reduce(
+          (sum: number, s: any) => sum + s.submittedCount,
+          0
+        );
+        const totalPossible = surveys.reduce(
+          (sum: number, s: any) => sum + s.totalRecipients,
+          0
+        );
+        const responseRate =
+          totalPossible > 0
+            ? Math.round((totalResponses / totalPossible) * 100)
+            : 0;
 
         // Fetch member count (simplified - you might have a dedicated API for this)
         const membersRes = await fetch("/api/member-lists");
         const memberLists = membersRes.ok ? await membersRes.json() : [];
-        const totalMembers = memberLists.reduce((sum: number, list: any) => sum + list._count.members, 0);
+        const totalMembers = memberLists.reduce(
+          (sum: number, list: any) => sum + list._count.members,
+          0
+        );
 
         // Mock recent activity (last 7 days)
         const recentActivity = Math.floor(Math.random() * 50) + 10;
@@ -92,7 +106,10 @@ export default function DashboardOverviewPage() {
       value: stats.totalSurveys.toString(),
       subtitle: `${stats.activeSurveys} currently active`,
       icon: "📊",
-      trend: stats.totalSurveys > 0 ? { value: 15, label: "from last month", isPositive: true } : undefined,
+      trend:
+        stats.totalSurveys > 0
+          ? { value: 15, label: "from last month", isPositive: true }
+          : undefined,
     },
     {
       id: "response-rate",
@@ -100,7 +117,10 @@ export default function DashboardOverviewPage() {
       value: `${stats.responseRate}%`,
       subtitle: `${stats.totalResponses} total responses`,
       icon: "📈",
-      trend: stats.responseRate > 0 ? { value: 8, label: "from last month", isPositive: true } : undefined,
+      trend:
+        stats.responseRate > 0
+          ? { value: 8, label: "from last month", isPositive: true }
+          : undefined,
     },
     {
       id: "active-surveys",
@@ -108,7 +128,10 @@ export default function DashboardOverviewPage() {
       value: stats.activeSurveys.toString(),
       subtitle: "Currently collecting responses",
       icon: "📝",
-      trend: stats.activeSurveys > 0 ? { value: 2, label: "new this week", isPositive: true } : undefined,
+      trend:
+        stats.activeSurveys > 0
+          ? { value: 2, label: "new this week", isPositive: true }
+          : undefined,
     },
     {
       id: "total-members",
@@ -116,7 +139,10 @@ export default function DashboardOverviewPage() {
       value: stats.totalMembers.toString(),
       subtitle: "Across all member lists",
       icon: "👥",
-      trend: stats.totalMembers > 0 ? { value: 12, label: "from last month", isPositive: true } : undefined,
+      trend:
+        stats.totalMembers > 0
+          ? { value: 12, label: "from last month", isPositive: true }
+          : undefined,
     },
     {
       id: "recent-activity",
@@ -129,10 +155,23 @@ export default function DashboardOverviewPage() {
     {
       id: "completion-rate",
       title: "Survey Completion",
-      value: stats.responseRate >= 80 ? "Excellent" : stats.responseRate >= 60 ? "Good" : "Needs Attention",
+      value:
+        stats.responseRate >= 80
+          ? "Excellent"
+          : stats.responseRate >= 60
+            ? "Good"
+            : "Needs Attention",
       subtitle: `${stats.responseRate}% average completion`,
-      icon: stats.responseRate >= 80 ? "✅" : stats.responseRate >= 60 ? "⚠️" : "❌",
-      trend: stats.responseRate >= 80 ? { value: 5, label: "improvement", isPositive: true } : undefined,
+      icon:
+        stats.responseRate >= 80
+          ? "✅"
+          : stats.responseRate >= 60
+            ? "⚠️"
+            : "❌",
+      trend:
+        stats.responseRate >= 80
+          ? { value: 5, label: "improvement", isPositive: true }
+          : undefined,
     },
   ];
 

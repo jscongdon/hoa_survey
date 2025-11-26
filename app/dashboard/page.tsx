@@ -407,10 +407,7 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <DashboardLayout
-        title="Dashboard"
-        subtitle="Loading dashboard..."
-      />
+      <DashboardLayout title="Dashboard" subtitle="Loading dashboard..." />
     );
   }
 
@@ -673,7 +670,8 @@ export default function DashboardPage() {
                       ? "✓"
                       : "○"
                     : "✓"}{" "}
-                  {survey.responseRate}% ({survey.submittedCount}/{survey.totalRecipients})
+                  {survey.responseRate}% ({survey.submittedCount}/
+                  {survey.totalRecipients})
                 </div>
               </div>
 
@@ -687,9 +685,7 @@ export default function DashboardPage() {
                   View Results
                 </button>
                 <button
-                  onClick={() =>
-                    handleExportSurvey(survey.id, survey.title)
-                  }
+                  onClick={() => handleExportSurvey(survey.id, survey.title)}
                   className="px-3 py-1.5 bg-green-500 text-white text-sm rounded-lg hover:bg-green-600 flex-1 min-w-0"
                 >
                   Export
@@ -698,9 +694,7 @@ export default function DashboardPage() {
                   <>
                     <button
                       onClick={() =>
-                        router.push(
-                          `/dashboard/surveys/${survey.id}/edit`
-                        )
+                        router.push(`/dashboard/surveys/${survey.id}/edit`)
                       }
                       className="px-3 py-1.5 bg-yellow-500 text-white text-sm rounded-lg hover:bg-yellow-600 flex-1 min-w-0"
                     >
