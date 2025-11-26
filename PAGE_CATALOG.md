@@ -225,6 +225,14 @@ This document catalogs all pages/routes in the HOA Survey application, organized
 - `SurveyBuilder.tsx` - Survey creation/editing interface
 - `ThemeToggle.tsx` - Dark/light theme toggle
 
+### Form Components (`/components/forms/`)
+
+- `FormField.tsx` - Form field wrapper with label, error, and help text
+- `Input.tsx` - Styled input component
+- `Textarea.tsx` - Styled textarea component
+- `Select.tsx` - Styled select dropdown component
+- `FileInput.tsx` - Styled file input component
+
 ## Page Organization Analysis
 
 ### Current Issues
