@@ -1,174 +1,32 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { formatDate } from "@/lib/dateFormatter";
 import { ListLayout } from "@/components/layouts";
-
-interface MemberList {
-  id: string;
-  name: string;
-  createdAt: string;
-  _count: {
-    members: number;
-    surveys: number;
-  };
-}
+import { useMemberLists } from "@/lib/hooks";
 
 export default function MemberListsPage() {
   const router = useRouter();
-  const [lists, setLists] = useState<MemberList[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [showUpload, setShowUpload] = useState(false);
-  const [newListName, setNewListName] = useState("");
-  const [csvFile, setCsvFile] = useState<File | null>(null);
-  const [uploading, setUploading] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editingName, setEditingName] = useState("");
-
-  useEffect(() => {
-    const fetchLists = async () => {
-      try {
-        const res = await fetch("/api/member-lists");
-        const data = await res.json();
-        if (!res.ok) {
-          console.error("Failed to fetch member lists:", data);
-          setLists([]);
-        } else if (Array.isArray(data)) {
-          setLists(data);
-        } else {
-          setLists([]);
-        }
-      } catch (error) {
-        console.error("Failed to fetch member lists:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchLists();
-  }, []);
-
-  const handleUpload = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newListName.trim()) {
-      alert("Please enter a list name");
-      return;
-    }
-
-    setUploading(true);
-    try {
-      const formData = new FormData();
-      formData.append("name", newListName);
-      if (csvFile) {
-        formData.append("csv", csvFile);
-      }
-
-      const res = await fetch("/api/member-lists", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!res.ok) {
-        const error = await res.json();
-        alert(`Error creating list: ${error.error}`);
-        return;
-      }
-
-      const newList = await res.json();
-      if (newList && newList.id) {
-        // Ensure the list has the expected structure
-        const listWithDefaults = {
-          ...newList,
-          _count: newList._count || {
-            members: newList.members?.length || 0,
-            surveys: 0,
-          },
-        };
-        setLists([listWithDefaults, ...lists]);
-        setNewListName("");
-        setCsvFile(null);
-        setShowUpload(false);
-      } else {
-        alert("Unexpected response from server");
-        console.error("Invalid response:", newList);
-      }
-    } catch (error) {
-      console.error("Failed to upload member list:", error);
-      alert("Failed to upload member list");
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const handleDelete = async (id: string, name: string) => {
-    if (
-      !confirm(
-        `Are you sure you want to delete "${name}"? This action cannot be undone.`
-      )
-    ) {
-      return;
-    }
-
-    try {
-      const res = await fetch(`/api/member-lists/${id}`, {
-        method: "DELETE",
-      });
-
-      if (!res.ok) {
-        const error = await res.json();
-        alert(`Error deleting list: ${error.error}`);
-        return;
-      }
-
-      setLists(lists.filter((l) => l.id !== id));
-    } catch (error) {
-      console.error("Failed to delete member list:", error);
-      alert("Failed to delete member list");
-    }
-  };
-
-  const handleEditStart = (id: string, currentName: string) => {
-    setEditingId(id);
-    setEditingName(currentName);
-  };
-
-  const handleEditSave = async (id: string) => {
-    if (!editingName.trim()) {
-      alert("List name cannot be empty");
-      return;
-    }
-
-    try {
-      const res = await fetch(`/api/member-lists/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: editingName }),
-      });
-
-      if (!res.ok) {
-        const error = await res.json();
-        alert(`Error updating list: ${error.error}`);
-        return;
-      }
-
-      const updatedList = await res.json();
-      setLists(
-        lists.map((l) => (l.id === id ? { ...l, name: updatedList.name } : l))
-      );
-      setEditingId(null);
-      setEditingName("");
-    } catch (error) {
-      console.error("Failed to update member list:", error);
-      alert("Failed to update member list");
-    }
-  };
-
-  const handleEditCancel = () => {
-    setEditingId(null);
-    setEditingName("");
-  };
+  const {
+    lists,
+    loading,
+    showUpload,
+    newListName,
+    csvFile,
+    uploading,
+    editingId,
+    editingName,
+    setShowUpload,
+    setNewListName,
+    setCsvFile,
+    handleUpload,
+    handleDelete,
+    handleEditStart,
+    handleEditSave,
+    handleEditCancel,
+  } = useMemberLists();
 
   if (loading) {
     return (
