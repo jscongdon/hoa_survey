@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { DataTable } from '@/components/data';
 
 interface Member {
   id: string;

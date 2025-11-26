@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { ListLayout } from "@/components/layouts";
+import { DataTable } from "@/components/data";
 
 interface NonRespondent {
   responseId: string;
@@ -134,69 +135,42 @@ export default function NonRespondentsPage() {
       <div className="overflow-x-auto">
         {/* Desktop Table Layout */}
         <div className="hidden md:block">
-          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-            <thead className="bg-gray-50 dark:bg-gray-700">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                  Lot
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                  Name
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                  Address
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-              {nonRespondents.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={4}
-                    className="px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-400"
+          <DataTable
+            data={filteredNonRespondents}
+            keyField="responseId"
+            emptyMessage={nonRespondents.length === 0 ? "All members have responded to this survey." : "No nonrespondents match the current filters."}
+            columns={[
+              {
+                key: "lotNumber",
+                header: "Lot",
+                render: (value) => <span className="font-medium">{value}</span>,
+              },
+              {
+                key: "name",
+                header: "Name",
+                render: (value) => <span className="font-medium">{value}</span>,
+              },
+              {
+                key: "address",
+                header: "Address",
+                render: (value) => value || "N/A",
+              },
+              {
+                key: "actions",
+                header: "Actions",
+                render: (value, respondent) => (
+                  <button
+                    onClick={() =>
+                      router.push(`/survey/${respondent.token}`)
+                    }
+                    className="px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600"
                   >
-                    All members have responded to this survey.
-                  </td>
-                </tr>
-              ) : filteredNonRespondents.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={4}
-                    className="px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-400"
-                  >
-                    No nonrespondents match the current filters.
-                  </td>
-                </tr>
-              ) : (
-                filteredNonRespondents.map((respondent) => (
-                  <tr key={respondent.responseId}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                      {respondent.lotNumber}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                      {respondent.name}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                      {respondent.address || "N/A"}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                      <button
-                        onClick={() =>
-                          router.push(`/survey/${respondent.token}`)
-                        }
-                        className="px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600"
-                      >
-                        Submit Response
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                    Submit Response
+                  </button>
+                ),
+              },
+            ]}
+          />
         </div>
 
         {/* Mobile Card Layout */}
