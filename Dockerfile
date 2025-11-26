@@ -1,7 +1,7 @@
 FROM node:20-bullseye-slim
 
-# Install wget
-RUN apt-get update && apt-get install -y wget && rm -rf /var/lib/apt/lists/*
+# Install wget and sqlite3
+RUN apt-get update && apt-get install -y wget sqlite3 && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 

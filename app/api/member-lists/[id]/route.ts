@@ -106,9 +106,17 @@ export async function DELETE(
   }
 
   try {
-    // Delete the member list (cascades to members via Prisma schema relations)
+    // Delete the member list (database constraints will clean up relationships)
     await prisma.memberList.delete({
       where: { id },
+    })
+
+    // Clean up orphaned members that have no responses
+    await prisma.member.deleteMany({
+      where: {
+        lists: { none: {} }, // No lists
+        responses: { none: {} } // No responses
+      }
     })
 
     return NextResponse.json({ success: true })

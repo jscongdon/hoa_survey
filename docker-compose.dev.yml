@@ -4,7 +4,7 @@ services:
     build: .
     working_dir: /app
     # Install once (if node_modules missing), generate prisma client, sync jwt secret, then run dev
-    command: bash -lc "if [ ! -d node_modules ]; then npm ci --legacy-peer-deps; fi && npx prisma generate && (node ./scripts/sync-jwt-secret.js || true) && npm run dev"
+    command: bash -lc "if [ ! -d node_modules ]; then npm ci --legacy-peer-deps; fi && npx prisma generate && npm run dev"
     ports:
       - "3000:3000"
     volumes:
