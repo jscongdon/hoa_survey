@@ -55,36 +55,38 @@ export async function GET(
     });
 
     // Format the response - include member `name` and lot number
-    const formattedNonRespondents = await Promise.all(nonRespondents.map(async (response) => {
-      try {
-        const decryptedData = await decryptMemberData({
-          name: response.member.name,
-          email: "", // Not needed for this endpoint
-          address: response.member.address || "",
-          lot: response.member.lot,
-        });
+    const formattedNonRespondents = await Promise.all(
+      nonRespondents.map(async (response) => {
+        try {
+          const decryptedData = await decryptMemberData({
+            name: response.member.name,
+            email: "", // Not needed for this endpoint
+            address: response.member.address || "",
+            lot: response.member.lot,
+          });
 
-        return {
-          responseId: response.id,
-          id: response.member.id,
-          name: decryptedData.name,
-          lotNumber: decryptedData.lot,
-          address: decryptedData.address,
-          token: response.token,
-        };
-      } catch (error) {
-        // If decryption fails, return encrypted data (for backward compatibility)
-        logError("Failed to decrypt member data in nonrespondents:", error);
-        return {
-          responseId: response.id,
-          id: response.member.id,
-          name: response.member.name,
-          lotNumber: response.member.lot,
-          address: response.member.address,
-          token: response.token,
-        };
-      }
-    }));
+          return {
+            responseId: response.id,
+            id: response.member.id,
+            name: decryptedData.name,
+            lotNumber: decryptedData.lot,
+            address: decryptedData.address,
+            token: response.token,
+          };
+        } catch (error) {
+          // If decryption fails, return encrypted data (for backward compatibility)
+          logError("Failed to decrypt member data in nonrespondents:", error);
+          return {
+            responseId: response.id,
+            id: response.member.id,
+            name: response.member.name,
+            lotNumber: response.member.lot,
+            address: response.member.address,
+            token: response.token,
+          };
+        }
+      })
+    );
 
     // Sort by lot number (assuming lot is a string that may contain numbers)
     formattedNonRespondents.sort((a, b) => {

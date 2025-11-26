@@ -1,5 +1,7 @@
 const { PrismaClient } = require("@prisma/client");
-const { encryptMemberData: encryptMemberDataFn } = require("../lib/encryption.ts");
+const {
+  encryptMemberData: encryptMemberDataFn,
+} = require("../lib/encryption.ts");
 
 const prisma = new PrismaClient();
 
@@ -18,8 +20,9 @@ async function encryptExistingMemberData() {
     // Encrypt each member's data (only if not already encrypted)
     for (const member of members) {
       // Skip if data appears to already be encrypted (starts with hex characters)
-      const isEncrypted = /^[a-f0-9]{64,}/.test(member.name) || 
-                         /^[a-f0-9]{64,}/.test(member.email);
+      const isEncrypted =
+        /^[a-f0-9]{64,}/.test(member.name) ||
+        /^[a-f0-9]{64,}/.test(member.email);
 
       if (isEncrypted) {
         console.log(`Skipping already encrypted member ${member.id}`);
@@ -27,7 +30,9 @@ async function encryptExistingMemberData() {
         continue;
       }
 
-      console.log(`Processing member ${member.id}: name="${member.name}", email="${member.email}"`);
+      console.log(
+        `Processing member ${member.id}: name="${member.name}", email="${member.email}"`
+      );
 
       const encryptedData = await encryptMemberDataFn({
         name: member.name,
@@ -36,7 +41,9 @@ async function encryptExistingMemberData() {
         lot: member.lot,
       });
 
-      console.log(`Encrypted member ${member.id}: name="${encryptedData.name}", email="${encryptedData.email}"`);
+      console.log(
+        `Encrypted member ${member.id}: name="${encryptedData.name}", email="${encryptedData.email}"`
+      );
 
       await prisma.member.update({
         where: { id: member.id },
@@ -53,7 +60,9 @@ async function encryptExistingMemberData() {
     }
 
     console.log("Member data encryption migration completed successfully");
-    console.log(`Encrypted ${encryptedCount} members, skipped ${skippedCount} already encrypted members`);
+    console.log(
+      `Encrypted ${encryptedCount} members, skipped ${skippedCount} already encrypted members`
+    );
   } catch (error) {
     console.error("Error during member data encryption migration:", error);
     throw error;

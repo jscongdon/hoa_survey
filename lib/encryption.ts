@@ -22,7 +22,7 @@ async function getEncryptionKey(): Promise<CryptoKey> {
     false,
     ["deriveKey"]
   );
-  
+
   return subtle.deriveKey(
     {
       name: "PBKDF2",

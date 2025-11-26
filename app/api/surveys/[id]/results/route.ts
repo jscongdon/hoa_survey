@@ -50,64 +50,66 @@ export async function GET(
     }
 
     // Convert answers array to object with questionId as key
-    const responses = await Promise.all(survey.responses.map(async (response) => {
-      try {
-        const decryptedData = await decryptMemberData({
-          name: response.member.name,
-          email: "", // Not needed for this endpoint
-          address: "", // Not needed for this endpoint
-          lot: response.member.lot,
-        });
-
-        return {
-          id: response.id,
-          member: {
-            lot: decryptedData.lot,
-            name: decryptedData.name,
-          },
-          answers: response.answers.reduce(
-            (acc, answer) => {
-              // Parse arrays stored as JSON strings
-              try {
-                acc[answer.questionId] = JSON.parse(answer.value);
-              } catch {
-                acc[answer.questionId] = answer.value;
-              }
-              return acc;
-            },
-            {} as Record<string, any>
-          ),
-          submittedAt: response.submittedAt,
-          signed: response.signed,
-          signedAt: response.signedAt,
-        };
-      } catch (error) {
-        // If decryption fails, return encrypted data (for backward compatibility)
-        logError("Failed to decrypt member data in results:", error);
-        return {
-          id: response.id,
-          member: {
-            lot: response.member.lot,
+    const responses = await Promise.all(
+      survey.responses.map(async (response) => {
+        try {
+          const decryptedData = await decryptMemberData({
             name: response.member.name,
-          },
-          answers: response.answers.reduce(
-            (acc, answer) => {
-              // Parse arrays stored as JSON strings
-              try {
-                acc[answer.questionId] = JSON.parse(answer.value);
-              } catch {
-                acc[answer.questionId] = answer.value;
-              }
-              return acc;
+            email: "", // Not needed for this endpoint
+            address: "", // Not needed for this endpoint
+            lot: response.member.lot,
+          });
+
+          return {
+            id: response.id,
+            member: {
+              lot: decryptedData.lot,
+              name: decryptedData.name,
             },
-            {} as Record<string, any>
-          ),
-          submittedAt: response.submittedAt,
-          signed: response.signed,
-          signedAt: response.signedAt,
-        };
-      }
-    }));
+            answers: response.answers.reduce(
+              (acc, answer) => {
+                // Parse arrays stored as JSON strings
+                try {
+                  acc[answer.questionId] = JSON.parse(answer.value);
+                } catch {
+                  acc[answer.questionId] = answer.value;
+                }
+                return acc;
+              },
+              {} as Record<string, any>
+            ),
+            submittedAt: response.submittedAt,
+            signed: response.signed,
+            signedAt: response.signedAt,
+          };
+        } catch (error) {
+          // If decryption fails, return encrypted data (for backward compatibility)
+          logError("Failed to decrypt member data in results:", error);
+          return {
+            id: response.id,
+            member: {
+              lot: response.member.lot,
+              name: response.member.name,
+            },
+            answers: response.answers.reduce(
+              (acc, answer) => {
+                // Parse arrays stored as JSON strings
+                try {
+                  acc[answer.questionId] = JSON.parse(answer.value);
+                } catch {
+                  acc[answer.questionId] = answer.value;
+                }
+                return acc;
+              },
+              {} as Record<string, any>
+            ),
+            submittedAt: response.submittedAt,
+            signed: response.signed,
+            signedAt: response.signedAt,
+          };
+        }
+      })
+    );
 
     log(
       "[RESULTS] Survey questions:",

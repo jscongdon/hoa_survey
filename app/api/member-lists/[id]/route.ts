@@ -37,42 +37,49 @@ export async function GET(
   }
 
   // Decrypt member data before returning
-  const decryptedMembers = await Promise.all(list.members.map(async member => {
-    try {
-      const decryptedData = await decryptMemberData({
-        name: member.name,
-        email: member.email,
-        address: member.address || "",
-        lot: member.lot,
-      });
+  const decryptedMembers = await Promise.all(
+    list.members.map(async (member) => {
+      try {
+        const decryptedData = await decryptMemberData({
+          name: member.name,
+          email: member.email,
+          address: member.address || "",
+          lot: member.lot,
+        });
 
-      return {
-        ...member,
-        name: decryptedData.name,
-        email: decryptedData.email,
-        address: decryptedData.address,
-        lot: decryptedData.lot,
-        createdAt: typeof member.createdAt === "string" && member.createdAt.startsWith("DT:")
-          ? new Date(member.createdAt.substring(3))
-          : member.createdAt,
-      };
-    } catch (error) {
-      // If decryption fails, return encrypted data (for backward compatibility)
-      logError("Failed to decrypt member data:", error);
-      return {
-        ...member,
-        createdAt: typeof member.createdAt === "string" && member.createdAt.startsWith("DT:")
-          ? new Date(member.createdAt.substring(3))
-          : member.createdAt,
-      };
-    }
-  }));
+        return {
+          ...member,
+          name: decryptedData.name,
+          email: decryptedData.email,
+          address: decryptedData.address,
+          lot: decryptedData.lot,
+          createdAt:
+            typeof member.createdAt === "string" &&
+            member.createdAt.startsWith("DT:")
+              ? new Date(member.createdAt.substring(3))
+              : member.createdAt,
+        };
+      } catch (error) {
+        // If decryption fails, return encrypted data (for backward compatibility)
+        logError("Failed to decrypt member data:", error);
+        return {
+          ...member,
+          createdAt:
+            typeof member.createdAt === "string" &&
+            member.createdAt.startsWith("DT:")
+              ? new Date(member.createdAt.substring(3))
+              : member.createdAt,
+        };
+      }
+    })
+  );
 
   const decryptedList = {
     ...list,
-    createdAt: typeof list.createdAt === "string" && list.createdAt.startsWith("DT:")
-      ? new Date(list.createdAt.substring(3))
-      : list.createdAt,
+    createdAt:
+      typeof list.createdAt === "string" && list.createdAt.startsWith("DT:")
+        ? new Date(list.createdAt.substring(3))
+        : list.createdAt,
     members: decryptedMembers,
   };
 
