@@ -61,6 +61,7 @@ export default function MemberListsPage() {
       title="Member Lists"
       subtitle="Manage member lists for surveys"
       actions={actions}
+      isLoading={loading}
       isEmpty={lists.length === 0 && !showUpload}
       emptyMessage="No member lists yet. Create your first list to get started."
     >

@@ -5,7 +5,7 @@ import { formatDateTime } from "@/lib/dateFormatter";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ListLayout } from "@/components/layouts";
-import { DataTable } from "@/components/data";
+import { DataGrid } from "@/components/data";
 
 interface Admin {
   id: string;
@@ -267,24 +267,26 @@ export default function AdminManagementPage() {
 
   const canManageAdmins = currentAdminRole === "FULL";
 
-  const actions = canManageAdmins ? [
-    {
-      label: "Invite Admin",
-      onClick: () => setShowInviteForm(true),
-      variant: "primary" as const,
-    },
-    {
-      label: "Back to Settings",
-      href: "/dashboard/settings",
-      variant: "secondary" as const,
-    },
-  ] : [
-    {
-      label: "Back to Settings",
-      href: "/dashboard/settings",
-      variant: "secondary" as const,
-    },
-  ];
+  const actions = canManageAdmins
+    ? [
+        {
+          label: "Invite Admin",
+          onClick: () => setShowInviteForm(true),
+          variant: "primary" as const,
+        },
+        {
+          label: "Settings",
+          href: "/dashboard/settings",
+          variant: "secondary" as const,
+        },
+      ]
+    : [
+        {
+          label: "Settings",
+          href: "/dashboard/settings",
+          variant: "secondary" as const,
+        },
+      ];
 
   return (
     <ListLayout
@@ -365,129 +367,125 @@ export default function AdminManagementPage() {
         </div>
       )}
 
-      <DataTable
+      <DataGrid
         data={admins}
-        keyField="id"
-        columns={[
-          {
-            key: "name",
-            header: "Name",
-            render: (value, admin) => (
+        cardProps={{
+          title: (admin) => admin.name || "N/A",
+          subtitle: (admin) => admin.email,
+          content: (admin) => (
+            <div className="space-y-3">
               <div className="flex items-center gap-2">
-                <span>{value || "N/A"}</span>
                 {admin.id === currentAdminId && (
-                  <span className="text-xs text-blue-600 dark:text-blue-400">
-                    (You)
+                  <span className="px-2 py-1 text-xs font-medium text-white bg-blue-500 rounded-full">
+                    You
+                  </span>
+                )}
+                {admin.inviteExpires && (
+                  <span className="px-2 py-1 text-xs font-medium text-white bg-yellow-500 rounded-full">
+                    Pending
+                  </span>
+                )}
+                {!admin.inviteExpires && (
+                  <span
+                    className={`px-2 py-1 text-xs font-medium text-white rounded-full ${
+                      admin.role === "FULL" ? "bg-purple-500" : "bg-blue-500"
+                    }`}
+                  >
+                    {admin.role === "FULL" ? "Full Access" : "View Only"}
                   </span>
                 )}
               </div>
-            ),
-          },
-          {
-            key: "email",
-            header: "Email",
-            render: (value, admin) => (
-              <div>
-                <div>{value}</div>
-                {admin.inviteExpires && (
-                  <div className="text-xs text-yellow-700 dark:text-yellow-300 mt-1">
-                    Pending invite — expires{" "}
-                    {formatDateTime(admin.inviteExpires)}
-                  </div>
-                )}
-              </div>
-            ),
-          },
-          {
-            key: "role",
-            header: "Role",
-            render: (value, admin) => {
-              if (canManageAdmins && admin.id !== currentAdminId) {
-                return (
+
+              {admin.inviteExpires && (
+                <div className="text-sm text-yellow-700 dark:text-yellow-300">
+                  Pending invite — expires {formatDateTime(admin.inviteExpires)}
+                </div>
+              )}
+
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  Role:
+                </span>
+                {canManageAdmins && admin.id !== currentAdminId ? (
                   <select
-                    value={value}
-                    onChange={(e) =>
-                      handleUpdateRole(admin.id, e.target.value)
-                    }
+                    value={admin.role}
+                    onChange={(e) => handleUpdateRole(admin.id, e.target.value)}
                     className="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
                   >
                     <option value="VIEW_ONLY">View Only</option>
                     <option value="FULL">Full Access</option>
                   </select>
-                );
-              }
-              return (
-                <span
-                  className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                    value === "FULL"
-                      ? "bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200"
-                      : "bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200"
+                ) : (
+                  <span
+                    className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                      admin.role === "FULL"
+                        ? "bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200"
+                        : "bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200"
+                    }`}
+                  >
+                    {admin.role === "FULL" ? "Full Access" : "View Only"}
+                  </span>
+                )}
+              </div>
+
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  2FA:
+                </span>
+                <button
+                  onClick={() => handleToggle2FA(admin.id, admin.twoFactor)}
+                  className={`px-3 py-1 rounded text-xs font-semibold ${
+                    admin.twoFactor
+                      ? "bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200"
+                      : "bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200"
                   }`}
                 >
-                  {value === "FULL" ? "Full Access" : "View Only"}
-                </span>
-              );
-            },
-          },
-          {
-            key: "twoFactor",
-            header: "2FA",
-            render: (value, admin) => (
-              <button
-                onClick={() => handleToggle2FA(admin.id, value)}
-                className={`px-3 py-1 rounded text-xs font-semibold ${
-                  value
-                    ? "bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200"
-                    : "bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200"
-                }`}
-              >
-                {value ? "Enabled" : "Disabled"}
-              </button>
-            ),
-          },
-          {
-            key: "invitedBy",
-            header: "Invited By",
-            render: (value) => (
-              <span className="text-gray-500 dark:text-gray-400">
-                {value
-                  ? `${value.name || value.email}`
-                  : "N/A"}
-              </span>
-            ),
-          },
-          ...(canManageAdmins ? [{
-            key: "actions",
-            header: "Actions",
-            render: (value, admin) => {
-              if (admin.id === currentAdminId) return null;
-              return (
-                <div className="flex flex-col gap-2 items-start">
-                  {admin.inviteExpires && (
-                    <button
-                      onClick={() => handleResendInvite(admin.id)}
-                      className="text-blue-600 dark:text-blue-400 hover:underline"
-                    >
-                      Resend Invite
-                    </button>
-                  )}
-                  <button
-                    onClick={() => handleResetPassword(admin.id)}
-                    className="text-orange-600 dark:text-orange-400 hover:underline"
-                  >
-                    Reset Password
-                  </button>
-                  <button
-                    onClick={() => handleDeleteAdmin(admin.id)}
-                    className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
-                  >
-                    Delete
-                  </button>
+                  {admin.twoFactor ? "Enabled" : "Disabled"}
+                </button>
+              </div>
+
+              {admin.invitedBy && (
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                    Invited by:
+                  </span>
+                  <span className="text-sm text-gray-500 dark:text-gray-400">
+                    {admin.invitedBy.name || admin.invitedBy.email}
+                  </span>
                 </div>
-              );
-            },
-          }] : []),
-        ]}
+              )}
+            </div>
+          ),
+          actions: (admin) => {
+            if (!canManageAdmins || admin.id === currentAdminId) return null;
+
+            return (
+              <div className="flex flex-wrap gap-2">
+                {admin.inviteExpires && (
+                  <button
+                    onClick={() => handleResendInvite(admin.id)}
+                    className="px-3 py-1 text-xs bg-blue-500 hover:bg-blue-600 text-white rounded transition-colors"
+                  >
+                    Resend Invite
+                  </button>
+                )}
+                <button
+                  onClick={() => handleResetPassword(admin.id)}
+                  className="px-3 py-1 text-xs bg-orange-500 hover:bg-orange-600 text-white rounded transition-colors"
+                >
+                  Reset Password
+                </button>
+                <button
+                  onClick={() => handleDeleteAdmin(admin.id)}
+                  className="px-3 py-1 text-xs bg-red-500 hover:bg-red-600 text-white rounded transition-colors"
+                >
+                  Delete
+                </button>
+              </div>
+            );
+          },
+        }}
+        columns={{ default: 1, md: 2, lg: 3 }}
       />
 
       {!canManageAdmins && (

@@ -97,6 +97,7 @@ export default function NonRespondentsPage() {
           variant: "secondary",
         },
       ]}
+      isLoading={loading}
     >
       <div className="mb-4 grid grid-cols-1 md:grid-cols-3 gap-4">
         <input
@@ -138,7 +139,11 @@ export default function NonRespondentsPage() {
           <DataTable
             data={filteredNonRespondents}
             keyField="responseId"
-            emptyMessage={nonRespondents.length === 0 ? "All members have responded to this survey." : "No nonrespondents match the current filters."}
+            emptyMessage={
+              nonRespondents.length === 0
+                ? "All members have responded to this survey."
+                : "No nonrespondents match the current filters."
+            }
             columns={[
               {
                 key: "lotNumber",
@@ -160,9 +165,7 @@ export default function NonRespondentsPage() {
                 header: "Actions",
                 render: (value, respondent) => (
                   <button
-                    onClick={() =>
-                      router.push(`/survey/${respondent.token}`)
-                    }
+                    onClick={() => router.push(`/survey/${respondent.token}`)}
                     className="px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600"
                   >
                     Submit Response

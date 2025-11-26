@@ -220,7 +220,7 @@ export default function DashboardPage() {
                     <button
                       onClick={() => handleSendInitial(survey.id)}
                       disabled={!!initialSendStatus[survey.id]}
-                      className="w-full px-4 py-2 text-sm bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                      className="px-3 py-1.5 text-sm bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
                     >
                       {initialSendStatus[survey.id]
                         ? initialSendStatus[survey.id]
@@ -235,34 +235,32 @@ export default function DashboardPage() {
                         <button
                           onClick={() => handleSendReminder(survey.id)}
                           disabled={!!reminderStatus[survey.id]}
-                          className="w-full px-4 py-2 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                          className="px-3 py-1.5 text-sm bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
                         >
                           Send Reminders
                         </button>
                       ) : null}
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        <button
-                          onClick={() => toggleNonRespondents(survey.id)}
-                          disabled={loadingNonRespondents[survey.id]}
-                          className="px-3 py-2 text-sm bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
-                        >
-                          {loadingNonRespondents[survey.id]
-                            ? "Loading..."
-                            : "Remind Individual"}
-                        </button>
+                      <button
+                        onClick={() => toggleNonRespondents(survey.id)}
+                        disabled={loadingNonRespondents[survey.id]}
+                        className="px-3 py-1.5 text-sm bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                      >
+                        {loadingNonRespondents[survey.id]
+                          ? "Loading..."
+                          : "Remind Individual"}
+                      </button>
 
-                        <button
-                          onClick={() =>
-                            router.push(
-                              `/dashboard/surveys/${survey.id}/nonrespondents`
-                            )
-                          }
-                          className="px-3 py-2 text-sm bg-green-500 text-white rounded-lg hover:bg-green-600"
-                        >
-                          View Nonrespondents
-                        </button>
-                      </div>
+                      <button
+                        onClick={() =>
+                          router.push(
+                            `/dashboard/surveys/${survey.id}/nonrespondents`
+                          )
+                        }
+                        className="px-3 py-1.5 text-sm bg-green-500 text-white rounded-lg hover:bg-green-600"
+                      >
+                        View Nonrespondents
+                      </button>
                     </>
                   ) : null}
 

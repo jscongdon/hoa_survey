@@ -210,7 +210,7 @@ export default function ListLayout({
               {emptyAction && <div className="mt-4">{emptyAction}</div>}
             </div>
           ) : (
-            <div className="p-6">{children}</div>
+            <div className="p-4 sm:p-6">{children}</div>
           )}
         </div>
       </div>
