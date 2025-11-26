@@ -27,11 +27,14 @@ vi.mock("fs", () => ({
 }));
 
 vi.mock("path", () => ({
-  __esModule: true,
   default: {
     join: vi.fn(),
   },
 }));
+
+// Mock process.cwd
+const originalCwd = process.cwd;
+process.cwd = vi.fn().mockReturnValue("/mock/project/root");
 
 vi.mock("../lib/logger", () => ({
   error: vi.fn(),
@@ -43,8 +46,7 @@ import {
 } from "../app/api/admin/upload-logo/route";
 import { verifyToken } from "../lib/auth/jwt";
 import prisma from "../lib/prisma";
-import * as fs from "fs";
-import path from "path";
+import fs from "fs";
 import path from "path";
 
 describe("Admin Upload Logo API - /api/admin/upload-logo", () => {
@@ -56,6 +58,7 @@ describe("Admin Upload Logo API - /api/admin/upload-logo", () => {
 
   afterEach(() => {
     vi.useRealTimers();
+    process.cwd = originalCwd;
   });
 
   describe("POST /api/admin/upload-logo", () => {
@@ -65,17 +68,17 @@ describe("Admin Upload Logo API - /api/admin/upload-logo", () => {
 
       // Mock file system
       let existsSyncCallCount = 0;
-      (fs.default.existsSync as any).mockImplementation((path: string) => {
+      (fs.existsSync as any).mockImplementation((path: string) => {
         existsSyncCallCount++;
         if (path.includes("public/uploads")) {
           return existsSyncCallCount > 1; // false for directory check, true for file check
         }
         return false;
       });
-      (fs.default.mkdirSync as any).mockImplementation(() => {});
-      (fs.default.writeFileSync as any).mockImplementation(() => {});
-      (fs.default.unlinkSync as any).mockImplementation(() => {});
-      (fs.default.readdirSync as any).mockReturnValue(["hoa-logo-orphaned.png", "other-file.txt"]);
+      (fs.mkdirSync as any).mockImplementation(() => {});
+      (fs.writeFileSync as any).mockImplementation(() => {});
+      (fs.unlinkSync as any).mockImplementation(() => {});
+      (fs.readdirSync as any).mockReturnValue(["hoa-logo-orphaned.png", "other-file.txt"]);
       (path.join as any).mockImplementation((...args: string[]) =>
         args.join("/")
       );
@@ -145,15 +148,15 @@ describe("Admin Upload Logo API - /api/admin/upload-logo", () => {
       });
 
       // Verify old logo file was deleted
-      expect(fs.default.unlinkSync).toHaveBeenCalledWith(
+      expect(fs.unlinkSync).toHaveBeenCalledWith(
         expect.stringContaining("public/uploads/old-logo.png")
       );
     });
 
     it("successfully uploads JPEG logo", async () => {
       (verifyToken as any).mockResolvedValue({ adminId: "admin1" });
-      (fs.default.existsSync as any).mockReturnValue(true);
-      (fs.default.unlinkSync as any).mockImplementation(() => {});
+      (fs.existsSync as any).mockReturnValue(true);
+      (fs.unlinkSync as any).mockImplementation(() => {});
       (path.join as any).mockImplementation((...args: string[]) =>
         args.join("/")
       );
@@ -208,15 +211,15 @@ describe("Admin Upload Logo API - /api/admin/upload-logo", () => {
       expect(body.url).toMatch(/\.jpg$/);
 
       // Verify old logo file was deleted
-      expect(fs.default.unlinkSync).toHaveBeenCalledWith(
+      expect(fs.unlinkSync).toHaveBeenCalledWith(
         expect.stringContaining("public/uploads/old-logo.jpg")
       );
     });
 
     it("successfully uploads SVG logo", async () => {
       (verifyToken as any).mockResolvedValue({ adminId: "admin1" });
-      (fs.default.existsSync as any).mockReturnValue(true);
-      (fs.default.unlinkSync as any).mockImplementation(() => {});
+      (fs.existsSync as any).mockReturnValue(true);
+      (fs.unlinkSync as any).mockImplementation(() => {});
       (path.join as any).mockImplementation((...args: string[]) =>
         args.join("/")
       );
@@ -265,7 +268,7 @@ describe("Admin Upload Logo API - /api/admin/upload-logo", () => {
       expect(body.url).toMatch(/\.svg$/);
 
       // Verify old logo file was deleted
-      expect(fs.default.unlinkSync).toHaveBeenCalledWith(
+      expect(fs.unlinkSync).toHaveBeenCalledWith(
         expect.stringContaining("public/uploads/old-logo.svg")
       );
     });
@@ -423,7 +426,7 @@ describe("Admin Upload Logo API - /api/admin/upload-logo", () => {
 
     it("returns 500 on database error", async () => {
       (verifyToken as any).mockResolvedValue({ adminId: "admin1" });
-      (fs.default.existsSync as any).mockReturnValue(true);
+      (fs.existsSync as any).mockReturnValue(true);
       (path.join as any).mockImplementation((...args: string[]) =>
         args.join("/")
       );
@@ -484,7 +487,7 @@ describe("Admin Upload Logo API - /api/admin/upload-logo", () => {
         id: "system",
         hoaLogoUrl: "/uploads/old-logo.png",
       });
-      (fs.default.existsSync as any).mockReturnValue(true);
+      (fs.existsSync as any).mockReturnValue(true);
       (path.join as any).mockImplementation((...args: string[]) =>
         args.join("/")
       );
@@ -509,7 +512,7 @@ describe("Admin Upload Logo API - /api/admin/upload-logo", () => {
       const body = await res.json();
       expect(body.success).toBe(true);
 
-      expect(fs.default.unlinkSync).toHaveBeenCalled();
+      expect(fs.unlinkSync).toHaveBeenCalled();
       expect(prisma.systemConfig.upsert).toHaveBeenCalledWith({
         where: { id: "system" },
         update: { hoaLogoUrl: null },
@@ -544,7 +547,7 @@ describe("Admin Upload Logo API - /api/admin/upload-logo", () => {
       const body = await res.json();
       expect(body.success).toBe(true);
 
-      expect(fs.default.unlinkSync).not.toHaveBeenCalled();
+      expect(fs.unlinkSync).not.toHaveBeenCalled();
     });
 
     it("returns 401 when not authenticated", async () => {
@@ -611,7 +614,7 @@ describe("Admin Upload Logo API - /api/admin/upload-logo", () => {
         id: "system",
         hoaLogoUrl: "/uploads/old-logo.png",
       });
-      (fs.default.existsSync as any).mockReturnValue(true);
+      (fs.existsSync as any).mockReturnValue(true);
       (path.join as any).mockImplementation((...args: string[]) =>
         args.join("/")
       );
