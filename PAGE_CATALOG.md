@@ -233,6 +233,12 @@ This document catalogs all pages/routes in the HOA Survey application, organized
 - `Select.tsx` - Styled select dropdown component
 - `FileInput.tsx` - Styled file input component
 
+### Data Display Components (`/components/data/`)
+
+- `DataTable.tsx` - Reusable table component with sorting, filtering, and custom rendering
+- `DataCard.tsx` - Reusable card component for displaying item data
+- `DataGrid.tsx` - Grid layout component for displaying cards
+
 ## Page Organization Analysis
 
 ### Current Issues
@@ -273,5 +279,4 @@ types/
 └── api.ts          # Shared type definitions
 ```
 
-This catalog provides a foundation for understanding the current application structure and planning modularization improvements.</content>
-<parameter name="filePath">/Users/jasoncongdon/projects/hoa_survey/PAGE_CATALOG.md
+This catalog provides a foundation for understanding the current application structure and planning modularization improvements.

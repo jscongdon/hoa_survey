@@ -7,6 +7,7 @@ import { formatDate } from "@/lib/dateFormatter";
 import { ListLayout } from "@/components/layouts";
 import { useMemberLists } from "@/lib/hooks";
 import { FormField, Input, FileInput } from "@/components/forms";
+import { DataTable, Column } from "@/components/data";
 
 export default function MemberListsPage() {
   const router = useRouter();
@@ -22,6 +23,7 @@ export default function MemberListsPage() {
     setShowUpload,
     setNewListName,
     setCsvFile,
+    setEditingName,
     handleUpload,
     handleDelete,
     handleEditStart,
@@ -104,103 +106,106 @@ export default function MemberListsPage() {
       )}
 
       {lists.length > 0 && (
-        <div className="bg-white dark:bg-gray-900 rounded-lg shadow overflow-hidden">
-          <table className="w-full">
-            <thead className="bg-gray-100 dark:bg-gray-800">
-              <tr>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">
-                  Name
-                </th>
-                <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900 dark:text-white">
-                  Members
-                </th>
-                <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900 dark:text-white">
-                  Surveys
-                </th>
-                <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900 dark:text-white">
-                  Created
-                </th>
-                <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900 dark:text-white">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {lists.map((list) => (
-                <tr
-                  key={list.id}
-                  className="border-t border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-                >
-                  <td className="px-6 py-4 text-gray-900 dark:text-white font-medium">
-                    {editingId === list.id ? (
-                      <input
-                        type="text"
-                        value={editingName}
-                        onChange={(e) => setEditingName(e.target.value)}
-                        className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                        autoFocus
-                      />
-                    ) : (
-                      list.name
-                    )}
-                  </td>
-                  <td className="px-6 py-4 text-center text-gray-600 dark:text-gray-400">
-                    {list._count.members}
-                  </td>
-                  <td className="px-6 py-4 text-center text-gray-600 dark:text-gray-400">
-                    {list._count.surveys}
-                  </td>
-                  <td className="px-6 py-4 text-center text-gray-600 dark:text-gray-400 text-sm">
-                    {formatDate(list.createdAt)}
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex gap-3 justify-center items-center">
-                      {editingId === list.id ? (
-                        <>
-                          <button
-                            onClick={() => handleEditSave(list.id)}
-                            className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 text-sm font-medium"
-                          >
-                            Save
-                          </button>
-                          <button
-                            onClick={handleEditCancel}
-                            className="px-3 py-1 bg-gray-500 text-white rounded hover:bg-gray-600 text-sm font-medium"
-                          >
-                            Cancel
-                          </button>
-                        </>
-                      ) : (
-                        <>
-                          <button
-                            onClick={() =>
-                              router.push(`/dashboard/member-lists/${list.id}`)
-                            }
-                            className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm font-medium"
-                          >
-                            View
-                          </button>
-                          <button
-                            onClick={() => handleEditStart(list.id, list.name)}
-                            className="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 text-sm font-medium"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => handleDelete(list.id, list.name)}
-                            className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-sm font-medium"
-                          >
-                            Delete
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <DataTable
+          data={lists}
+          keyField="id"
+          columns={[
+            {
+              key: "name",
+              header: "Name",
+              render: (value, list) => (
+                editingId === list.id ? (
+                  <input
+                    type="text"
+                    value={editingName}
+                    onChange={(e) => setEditingName(e.target.value)}
+                    className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                    autoFocus
+                  />
+                ) : (
+                  <span className="font-medium">{value}</span>
+                )
+              ),
+            },
+            {
+              key: "members",
+              header: "Members",
+              className: "text-center",
+              render: (value, list) => (
+                <span className="text-gray-600 dark:text-gray-400">
+                  {list._count.members}
+                </span>
+              ),
+            },
+            {
+              key: "surveys",
+              header: "Surveys",
+              className: "text-center",
+              render: (value, list) => (
+                <span className="text-gray-600 dark:text-gray-400">
+                  {list._count.surveys}
+                </span>
+              ),
+            },
+            {
+              key: "createdAt",
+              header: "Created",
+              className: "text-center",
+              render: (value) => (
+                <span className="text-gray-600 dark:text-gray-400 text-sm">
+                  {formatDate(value)}
+                </span>
+              ),
+            },
+            {
+              key: "actions",
+              header: "Actions",
+              render: (value, list) => (
+                <div className="flex gap-3 justify-center items-center">
+                  {editingId === list.id ? (
+                    <>
+                      <button
+                        onClick={() => handleEditSave(list.id)}
+                        className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 text-sm font-medium"
+                      >
+                        Save
+                      </button>
+                      <button
+                        onClick={handleEditCancel}
+                        className="px-3 py-1 bg-gray-500 text-white rounded hover:bg-gray-600 text-sm font-medium"
+                      >
+                        Cancel
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() =>
+                          router.push(`/dashboard/member-lists/${list.id}`)
+                        }
+                        className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm font-medium"
+                      >
+                        View
+                      </button>
+                      <button
+                        onClick={() => handleEditStart(list.id, list.name)}
+                        className="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 text-sm font-medium"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDelete(list.id, list.name)}
+                        className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-sm font-medium"
+                      >
+                        Delete
+                      </button>
+                    </>
+                  )}
+                </div>
+              ),
+            },
+          ]}
+        />
       )}
     </ListLayout>
   );

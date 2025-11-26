@@ -22,6 +22,7 @@ export interface UseMemberListsReturn {
   setShowUpload: (show: boolean) => void;
   setNewListName: (name: string) => void;
   setCsvFile: (file: File | null) => void;
+  setEditingName: (name: string) => void;
   handleUpload: (e: React.FormEvent) => Promise<void>;
   handleDelete: (id: string, name: string) => Promise<void>;
   handleEditStart: (id: string, currentName: string) => void;
@@ -196,6 +197,7 @@ export function useMemberLists(): UseMemberListsReturn {
     setShowUpload,
     setNewListName,
     setCsvFile,
+    setEditingName,
     handleUpload,
     handleDelete,
     handleEditStart,
