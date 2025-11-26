@@ -24,7 +24,15 @@ export async function GET(request: NextRequest) {
     orderBy: { createdAt: 'desc' },
   })
 
-  return NextResponse.json(lists)
+  // Transform prefixed strings back to Date objects
+  const transformedLists = lists.map(list => ({
+    ...list,
+    createdAt: typeof list.createdAt === 'string' && list.createdAt.startsWith('DT:')
+      ? new Date(list.createdAt.substring(3))
+      : list.createdAt,
+  }))
+
+  return NextResponse.json(transformedLists)
 }
 
 export async function POST(request: NextRequest) {
@@ -77,20 +85,35 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    const now = new Date()
+    // Transform Date to prefixed string to prevent SQLite integer conversion
+    const prefixedNow = `DT:${now.toISOString()}`
     const memberList = await prisma.memberList.create({
       data: {
         name,
+        createdAt: prefixedNow,
         members: {
           create: members.map((m) => ({
             lot: m.lot,
             name: m.name,
             email: m.email,
             address: m.address,
+            createdAt: prefixedNow,
           })),
         },
       },
       include: { _count: { select: { members: true, surveys: true } } },
     })
+
+    // Transform the result back to Date objects for the API response
+    const transformedResult = {
+      ...memberList,
+      createdAt: now,
+      members: memberList.members?.map(member => ({
+        ...member,
+        createdAt: now,
+      })),
+    }
 
     return NextResponse.json(memberList, { status: 201 })
   } catch (error) {

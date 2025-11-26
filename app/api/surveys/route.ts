@@ -30,7 +30,27 @@ export async function GET(request: NextRequest) {
     orderBy: { createdAt: "desc" },
   });
 
-  const surveysWithStats = surveys.map((survey: any) => ({
+  // Transform prefixed strings back to Date objects
+  const transformedSurveys = surveys.map(survey => ({
+    ...survey,
+    createdAt: typeof survey.createdAt === 'string' && survey.createdAt.startsWith('DT:')
+      ? new Date(survey.createdAt.substring(3))
+      : survey.createdAt,
+    memberList: survey.memberList ? {
+      ...survey.memberList,
+      createdAt: typeof survey.memberList.createdAt === 'string' && survey.memberList.createdAt.startsWith('DT:')
+        ? new Date(survey.memberList.createdAt.substring(3))
+        : survey.memberList.createdAt,
+    } : survey.memberList,
+    responses: survey.responses?.map(response => ({
+      ...response,
+      createdAt: typeof response.createdAt === 'string' && response.createdAt.startsWith('DT:')
+        ? new Date(response.createdAt.substring(3))
+        : response.createdAt,
+    })),
+  }));
+
+  const surveysWithStats = transformedSurveys.map((survey: any) => ({
     ...survey,
     totalRecipients: survey.responses.length,
     submittedCount: survey.responses.filter((r: any) => r.submittedAt).length,
@@ -125,6 +145,7 @@ export async function POST(request: NextRequest) {
             ? notifyOnMinResponses
             : false,
         createdById: adminId || undefined,
+        createdAt: `DT:${new Date().toISOString()}`,
       };
 
       const created = await tx.survey.create({ data: createPayload });
