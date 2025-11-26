@@ -3,8 +3,8 @@ services:
     container_name: hoa_survey_dev
     build: .
     working_dir: /app
-    # Install once (if node_modules missing), generate prisma client, sync jwt secret, then run dev
-    command: bash -lc "if [ ! -d node_modules ]; then npm ci --legacy-peer-deps; fi && npx prisma generate && npm run dev"
+    # Install once (if node_modules missing), then run startup script
+    command: bash -lc "if [ ! -d node_modules ]; then npm ci --legacy-peer-deps; fi && ./startup.sh"
     ports:
       - "3000:3000"
     volumes:

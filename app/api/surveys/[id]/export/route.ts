@@ -2,6 +2,7 @@ import { log, error as logError } from '@/lib/logger'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { verifyToken } from '@/lib/auth/jwt'
+import { decryptMemberData } from '@/lib/encryption'
 
 export async function GET(
   request: NextRequest,
@@ -51,7 +52,7 @@ export async function GET(
     const rows: string[][] = []
     rows.push(headers)
 
-    survey.responses.forEach((response) => {
+    for (const response of survey.responses) {
       // Convert Answer[] to answers object
       const answers = response.answers.reduce((acc, answer) => {
         try {
@@ -62,28 +63,61 @@ export async function GET(
         return acc
       }, {} as Record<string, any>)
       
-      const row = [
-        response.member.lot,
-        response.member.name,
-        response.member.email,
-        response.submittedAt ? new Date(response.submittedAt).toLocaleString() : '',
-        response.signed ? 'Yes' : 'No',
-        response.signedAt ? new Date(response.signedAt).toLocaleString() : '',
-      ]
+      try {
+        const decryptedData = await decryptMemberData({
+          name: response.member.name,
+          email: response.member.email,
+          address: "", // Not needed for export
+          lot: response.member.lot,
+        });
+        
+        const row = [
+          decryptedData.lot,
+          decryptedData.name,
+          decryptedData.email,
+          response.submittedAt ? new Date(response.submittedAt).toLocaleString() : '',
+          response.signed ? 'Yes' : 'No',
+          response.signedAt ? new Date(response.signedAt).toLocaleString() : '',
+        ]
 
-      survey.questions.forEach((q) => {
-        const answer = answers[q.id]
-        if (answer === undefined || answer === null) {
-          row.push('')
-        } else if (Array.isArray(answer)) {
-          row.push(answer.join('; '))
-        } else {
-          row.push(String(answer))
-        }
-      })
+        survey.questions.forEach((q) => {
+          const answer = answers[q.id]
+          if (answer === undefined || answer === null) {
+            row.push('')
+          } else if (Array.isArray(answer)) {
+            row.push(answer.join('; '))
+          } else {
+            row.push(String(answer))
+          }
+        })
 
-      rows.push(row)
-    })
+        rows.push(row)
+      } catch (error) {
+        // If decryption fails, use encrypted data (for backward compatibility)
+        logError('Failed to decrypt member data in export:', error)
+        const row = [
+          response.member.lot,
+          response.member.name,
+          response.member.email,
+          response.submittedAt ? new Date(response.submittedAt).toLocaleString() : '',
+          response.signed ? 'Yes' : 'No',
+          response.signedAt ? new Date(response.signedAt).toLocaleString() : '',
+        ]
+
+        survey.questions.forEach((q) => {
+          const answer = answers[q.id]
+          if (answer === undefined || answer === null) {
+            row.push('')
+          } else if (Array.isArray(answer)) {
+            row.push(answer.join('; '))
+          } else {
+            row.push(String(answer))
+          }
+        })
+
+        rows.push(row)
+      }
+    }
 
     // Convert to CSV string
     const csvContent = rows

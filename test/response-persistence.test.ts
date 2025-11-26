@@ -12,7 +12,12 @@ describe("response persistence transaction", () => {
   let responseId: string | null = null;
 
   beforeAll(async () => {
-    const ml = await prisma.memberList.create({ data: { name: "test-list" } });
+    const ml = await prisma.memberList.create({ 
+      data: { 
+        name: "test-list",
+        createdAt: new Date().toISOString()
+      } 
+    });
     memberListId = ml.id;
 
     const member = await prisma.member.create({
@@ -20,6 +25,7 @@ describe("response persistence transaction", () => {
         lot: "1",
         name: "Test Member",
         email: `test+${Date.now()}@example.com`,
+        createdAt: new Date().toISOString()
       },
     });
     memberId = member.id;
@@ -31,6 +37,7 @@ describe("response persistence transaction", () => {
         closesAt: new Date(Date.now() + 1000 * 60 * 60),
         memberListId: memberListId,
         minResponses: 1,
+        createdAt: new Date().toISOString()
       },
     });
     surveyId = survey.id;
@@ -50,6 +57,7 @@ describe("response persistence transaction", () => {
         surveyId: surveyId,
         memberId: memberId,
         token: `t-${Date.now()}`,
+        createdAt: new Date().toISOString()
       },
     });
     responseId = resp.id;
@@ -77,6 +85,7 @@ describe("response persistence transaction", () => {
       responseId: responseId!,
       questionId: entry.questionId,
       value: entry.value,
+      createdAt: new Date().toISOString()
     }));
 
     await prisma.$transaction(async (tx) => {

@@ -10,12 +10,13 @@
     "lint": "eslint . --ext .ts,.tsx --max-warnings=0",
     "type-check": "tsc --noEmit",
     "test": "npm run test:db",
-    "test:db": "CI=true DATABASE_URL=file:./test.db bash -lc \"npx prisma migrate deploy || npx prisma db push; CI=true DATABASE_URL=file:./test.db vitest; rm -f ./test.db*\"",
+    "test:db": "DATABASE_URL=file:./test.db bash -lc \"npx prisma db push && DATABASE_URL=file:./test.db npx vitest && rm -f ./test.db*\"",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:seed": "node prisma/seed.js",
     "prisma:studio": "prisma studio",
-    "cleanup:logos": "node scripts/cleanup-orphaned-logos.js"
+    "cleanup:logos": "node scripts/cleanup-orphaned-logos.js",
+    "encrypt-members": "npx ts-node --compiler-options '{\"module\":\"CommonJS\",\"target\":\"ES2020\"}' scripts/encrypt-member-data.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.19.0",
@@ -54,6 +55,6 @@
     "prisma": "^6.19.0",
     "ts-node": "^10.9.1",
     "typescript": "5.9.3",
-    "vitest": "^4.0.9"
+    "vitest": "^4.0.14"
   }
 }

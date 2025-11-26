@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendEmail, generateBaseEmail } from "@/lib/email/send";
 import crypto from "crypto";
+import { decryptMemberData } from "@/lib/encryption";
 
 export async function GET(
   request: NextRequest,
@@ -68,8 +69,30 @@ export async function GET(
       }
     : null;
 
+  // Decrypt member data for display
+  let decryptedMember = response.member;
+  try {
+    const decryptedData = await decryptMemberData({
+      name: response.member.name,
+      email: response.member.email,
+      address: response.member.address || "",
+      lot: response.member.lot,
+    });
+    decryptedMember = {
+      ...response.member,
+      name: decryptedData.name,
+      email: decryptedData.email,
+      address: decryptedData.address,
+      lot: decryptedData.lot,
+    };
+  } catch (error) {
+    // If decryption fails, use encrypted data (for backward compatibility)
+    logError("Failed to decrypt member data in response:", error);
+  }
+
   return NextResponse.json({
     ...response,
+    member: decryptedMember,
     survey: parsedSurvey,
     isClosed,
     existingAnswers,

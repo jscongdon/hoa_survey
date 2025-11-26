@@ -25,6 +25,14 @@ else
   fi
 fi
 
+# Run member data encryption migration
+echo "[startup] Running member data encryption migration"
+if npx ts-node --compiler-options '{"module":"CommonJS","target":"ES2020"}' scripts/encrypt-member-data.ts; then
+  echo "[startup] Member data encryption completed"
+else
+  echo "[startup] Member data encryption failed or no data to encrypt"
+fi
+
 # Try to load JWT secret from database
 JWT_SECRET=$(node -e "
 const { PrismaClient } = require('@prisma/client');

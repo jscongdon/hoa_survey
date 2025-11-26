@@ -31,22 +31,29 @@ export async function GET(request: NextRequest) {
   });
 
   // Transform prefixed strings back to Date objects
-  const transformedSurveys = surveys.map(survey => ({
+  const transformedSurveys = surveys.map((survey) => ({
     ...survey,
-    createdAt: typeof survey.createdAt === 'string' && survey.createdAt.startsWith('DT:')
-      ? new Date(survey.createdAt.substring(3))
-      : survey.createdAt,
-    memberList: survey.memberList ? {
-      ...survey.memberList,
-      createdAt: typeof survey.memberList.createdAt === 'string' && survey.memberList.createdAt.startsWith('DT:')
-        ? new Date(survey.memberList.createdAt.substring(3))
-        : survey.memberList.createdAt,
-    } : survey.memberList,
-    responses: survey.responses?.map(response => ({
+    createdAt:
+      typeof survey.createdAt === "string" && survey.createdAt.startsWith("DT:")
+        ? new Date(survey.createdAt.substring(3))
+        : survey.createdAt,
+    memberList: survey.memberList
+      ? {
+          ...survey.memberList,
+          createdAt:
+            typeof survey.memberList.createdAt === "string" &&
+            survey.memberList.createdAt.startsWith("DT:")
+              ? new Date(survey.memberList.createdAt.substring(3))
+              : survey.memberList.createdAt,
+        }
+      : survey.memberList,
+    responses: survey.responses?.map((response) => ({
       ...response,
-      createdAt: typeof response.createdAt === 'string' && response.createdAt.startsWith('DT:')
-        ? new Date(response.createdAt.substring(3))
-        : response.createdAt,
+      createdAt:
+        typeof response.createdAt === "string" &&
+        response.createdAt.startsWith("DT:")
+          ? new Date(response.createdAt.substring(3))
+          : response.createdAt,
     })),
   }));
 
@@ -198,6 +205,7 @@ export async function POST(request: NextRequest) {
             surveyId: created.id,
             memberId: member.id,
             token,
+            createdAt: `DT:${new Date().toISOString()}`,
           },
         });
       }
