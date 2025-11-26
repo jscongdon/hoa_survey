@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { formatDate } from "@/lib/dateFormatter";
 import { ListLayout } from "@/components/layouts";
 import { useMemberLists } from "@/lib/hooks";
+import { FormField, Input, FileInput } from "@/components/forms";
 
 export default function MemberListsPage() {
   const router = useRouter();
@@ -67,34 +68,29 @@ export default function MemberListsPage() {
             Create New Member List
           </h2>
           <form onSubmit={handleUpload}>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
-                List Name *
-              </label>
-              <input
+            <FormField
+              label="List Name"
+              required
+              className="mb-4"
+            >
+              <Input
                 type="text"
                 value={newListName}
                 onChange={(e) => setNewListName(e.target.value)}
                 placeholder="e.g., Active Members 2025"
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
               />
-            </div>
+            </FormField>
 
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
-                CSV File (Optional - can add members later)
-              </label>
-              <input
-                type="file"
+            <FormField
+              label="CSV File (Optional - can add members later)"
+              help="CSV should have columns: lot, name, email, address (optional). You can create an empty list and add members manually later."
+              className="mb-4"
+            >
+              <FileInput
                 accept=".csv"
                 onChange={(e) => setCsvFile(e.target.files?.[0] || null)}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
               />
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                CSV should have columns: lot, name, email, address (optional).
-                You can create an empty list and add members manually later.
-              </p>
-            </div>
+            </FormField>
 
             <button
               type="submit"

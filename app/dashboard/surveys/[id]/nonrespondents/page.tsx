@@ -104,7 +104,6 @@ export default function NonRespondentsPage() {
       ]}
     >
       <div className="mb-4 grid grid-cols-1 md:grid-cols-3 gap-4">
->>>>>>> task/ui-updates
                 <input
                   type="text"
                   placeholder="Filter by Lot"
