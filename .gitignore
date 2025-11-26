@@ -23,7 +23,8 @@ coverage/
 *.sqlite
 *.sqlite3
 hoasurvey-data/
-data/
+*/data/
+!components/data/
 prisma/*.db
 prisma/*.db-journal
 
