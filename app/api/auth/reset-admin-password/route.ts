@@ -5,6 +5,7 @@ import crypto from "crypto";
 import { verifyToken } from "@/lib/auth/jwt";
 import { log } from "@/lib/logger";
 import { getBaseUrl } from "@/lib/app-url";
+import { decryptAdminData } from "@/lib/encryption";
 
 export async function POST(req: Request) {
   try {
@@ -42,6 +43,12 @@ export async function POST(req: Request) {
     const admin = await prisma.admin.findUnique({ where: { id: adminId } });
     if (!admin)
       return NextResponse.json({ error: "Admin not found" }, { status: 404 });
+
+    // Decrypt admin data for email sending
+    const decryptedData = await decryptAdminData({
+      name: admin.name || "",
+      email: admin.email,
+    });
 
     // Generate reset token and expiry
     const tokenStr = crypto.randomBytes(32).toString("hex");
@@ -85,14 +92,14 @@ export async function POST(req: Request) {
 
     const html = generateBaseEmail(
       "Password Reset Request",
-      `<p>Hello ${admin.name || ""},</p>`,
+      `<p>Hello ${decryptedData.name || ""},</p>`,
       bodyHtml,
       { text: "Reset Password", url: resetUrl },
       `This link will expire on ${expiry.toISOString()}.`
     );
 
     await sendEmail({
-      to: admin.email,
+      to: decryptedData.email,
       subject: "HOA Survey — Reset Your Admin Password",
       html,
     });

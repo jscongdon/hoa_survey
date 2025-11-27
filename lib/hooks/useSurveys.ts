@@ -72,16 +72,20 @@ export function useSurveys(options: UseSurveysOptions = {}): UseSurveysReturn {
   const fetchSurveys = async () => {
     try {
       const res = await fetch("/api/surveys");
-      
+
       // Check if response has content before trying to parse JSON
       const contentType = res.headers.get("content-type");
       if (!contentType || !contentType.includes("application/json")) {
-        console.error("Surveys API returned non-JSON response:", contentType, res.status);
+        console.error(
+          "Surveys API returned non-JSON response:",
+          contentType,
+          res.status
+        );
         setSurveys([]);
         setLoading(false);
         return;
       }
-      
+
       const data = await res.json();
       if (!res.ok) {
         console.error("Failed to fetch surveys:", data);

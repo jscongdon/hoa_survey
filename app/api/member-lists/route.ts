@@ -90,27 +90,29 @@ export async function POST(request: NextRequest) {
       data: {
         name,
         members: {
-          create: await Promise.all(members.map(async (m) => {
-            // Encrypt sensitive member data
-            const encryptedData = await encryptMemberData({
-              name: m.name,
-              email: m.email,
-              address: m.address || "",
-              lot: m.lot,
-            });
+          create: await Promise.all(
+            members.map(async (m) => {
+              // Encrypt sensitive member data
+              const encryptedData = await encryptMemberData({
+                name: m.name,
+                email: m.email,
+                address: m.address || "",
+                lot: m.lot,
+              });
 
-            return {
-              lot: encryptedData.lot,
-              name: encryptedData.name,
-              email: encryptedData.email,
-              address: encryptedData.address,
-            };
-          })),
+              return {
+                lot: encryptedData.lot,
+                name: encryptedData.name,
+                email: encryptedData.email,
+                address: encryptedData.address,
+              };
+            })
+          ),
         },
       },
-      include: { 
+      include: {
         members: true,
-        _count: { select: { surveys: true } } 
+        _count: { select: { surveys: true } },
       },
     });
 

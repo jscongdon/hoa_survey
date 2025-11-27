@@ -5,6 +5,7 @@ import crypto from "crypto";
 import { verifyToken } from "@/lib/auth/jwt";
 import { log } from "@/lib/logger";
 import { getBaseUrl } from "@/lib/app-url";
+import { decryptAdminData } from "@/lib/encryption";
 
 export async function POST(req: Request) {
   try {
@@ -46,6 +47,12 @@ export async function POST(req: Request) {
     if (!admin)
       return NextResponse.json({ error: "Admin not found" }, { status: 404 });
 
+    // Decrypt admin data for email sending
+    const decryptedData = await decryptAdminData({
+      name: admin.name || "",
+      email: admin.email,
+    });
+
     // Generate new token and expiry
     const tokenStr = crypto.randomBytes(32).toString("hex");
     const expiryDays = parseInt(process.env.INVITE_EXPIRY_DAYS || "7", 10);
@@ -80,14 +87,14 @@ export async function POST(req: Request) {
 
     const html = generateBaseEmail(
       "Administrator Invitation (Resent)",
-      `<p>Hello ${admin.name || ""},</p>`,
+      `<p>Hello ${decryptedData.name || ""},</p>`,
       bodyHtml,
       { text: "Accept Invitation", url: inviteUrl },
       `This invite expires on ${expiry.toISOString()}.`
     );
 
     await sendEmail({
-      to: admin.email,
+      to: decryptedData.email,
       subject: "HOA Survey Admin Invite (Resent)",
       html,
     });

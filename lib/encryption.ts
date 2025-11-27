@@ -1,5 +1,6 @@
 const { webcrypto } = require("crypto");
 const { subtle } = webcrypto;
+const nodeCrypto = require("crypto");
 
 const ALGORITHM = "aes-256-cbc";
 const KEY_LENGTH = 32; // 256 bits
@@ -17,7 +18,7 @@ async function getEncryptionKey(): Promise<CryptoKey> {
   // Derive a key from the key source using web crypto
   const keyMaterial = await subtle.importKey(
     "raw",
-    Buffer.from(keySource.slice(0, 32)), // Use first 32 chars
+    Buffer.from(keySource, "hex").slice(0, 32), // Decode hex and take first 32 bytes
     "PBKDF2",
     false,
     ["deriveKey"]
@@ -38,13 +39,19 @@ async function getEncryptionKey(): Promise<CryptoKey> {
 }
 
 /**
- * Encrypts a string value using AES-256-GCM
+ * Encrypts a string value using AES-256-CBC
  */
-async function encrypt(text: string): Promise<string> {
+async function encrypt(text: string, fixedIV?: string): Promise<string> {
   if (!text) return text;
 
   const key = await getEncryptionKey();
-  const iv = webcrypto.getRandomValues(new Uint8Array(16));
+  let iv: Buffer | Uint8Array;
+  if (fixedIV) {
+    // Derive a 16-byte IV from the provided fixedIV string deterministically
+    iv = nodeCrypto.createHash("sha256").update(fixedIV).digest().slice(0, 16);
+  } else {
+    iv = webcrypto.getRandomValues(new Uint8Array(16));
+  }
 
   const encrypted = await subtle.encrypt(
     { name: "AES-CBC", iv },
@@ -70,6 +77,11 @@ async function decrypt(encryptedText: string): Promise<string> {
     const key = await getEncryptionKey();
     const encryptedData = Buffer.from(encryptedText, "hex");
 
+    // If the data is too short to contain IV + encrypted data, assume plain text
+    if (encryptedData.length <= 16) {
+      return encryptedText;
+    }
+
     // Extract IV (first 16 bytes) and encrypted data
     const iv = encryptedData.slice(0, 16);
     const encrypted = encryptedData.slice(16);
@@ -83,7 +95,8 @@ async function decrypt(encryptedText: string): Promise<string> {
     return Buffer.from(decrypted).toString("utf8");
   } catch (error) {
     console.error("Decryption failed:", error);
-    throw new Error("Failed to decrypt data");
+    // Assume the data is plain text if decryption fails
+    return encryptedText;
   }
 }
 
@@ -131,4 +144,52 @@ async function decryptMemberData(member: {
   };
 }
 
-export { encrypt, decrypt, encryptMemberData, decryptMemberData };
+/**
+ * Encrypts admin data fields that contain sensitive information
+ */
+async function encryptAdminData(admin: {
+  name?: string;
+  email: string;
+}): Promise<{
+  name?: string;
+  email: string;
+}> {
+  return {
+    name: admin.name ? await encrypt(admin.name, 'admin-name-iv') : admin.name,
+    email: await encrypt(admin.email, 'admin-email-iv'),
+  };
+}
+
+/**
+ * Decrypts admin data fields, handling both encrypted and plain text data
+ */
+async function decryptAdminData(admin: {
+  name?: string;
+  email: string;
+}): Promise<{
+  name?: string;
+  email: string;
+}> {
+  const decryptField = async (field: string): Promise<string> => {
+    try {
+      return await decrypt(field);
+    } catch (error) {
+      // If decryption fails, assume it's plain text and return as-is
+      return field;
+    }
+  };
+
+  return {
+    name: admin.name ? await decryptField(admin.name) : admin.name,
+    email: await decryptField(admin.email),
+  };
+}
+
+export {
+  encrypt,
+  decrypt,
+  encryptMemberData,
+  decryptMemberData,
+  encryptAdminData,
+  decryptAdminData,
+};

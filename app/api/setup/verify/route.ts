@@ -6,27 +6,25 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const token = searchParams.get("token");
-    const email = searchParams.get("email");
 
-    if (!token || !email) {
+    if (!token) {
       return NextResponse.redirect(
         new URL("/setup?error=invalid-link", req.url)
       );
     }
 
-    // Check verification token
-    const pendingVerifications =
-      (global as any).pendingVerifications || new Map();
-    const verification = pendingVerifications.get(token);
+    // Find admin by verification token
+    const admin = await prisma.admin.findUnique({
+      where: { verificationToken: token },
+    });
 
-    if (!verification || verification.email !== email) {
+    if (!admin) {
       return NextResponse.redirect(
         new URL("/setup?error=invalid-token", req.url)
       );
     }
 
-    if (Date.now() > verification.expires) {
-      pendingVerifications.delete(token);
+    if (!admin.verificationExpires || Date.now() > admin.verificationExpires.getTime()) {
       return NextResponse.redirect(
         new URL("/setup?error=expired-token", req.url)
       );
@@ -35,8 +33,12 @@ export async function GET(req: NextRequest) {
     // Update admin role to FULL and mark setup as complete
     const config = await prisma.$transaction(async (tx) => {
       await tx.admin.update({
-        where: { email },
-        data: { role: "FULL" },
+        where: { id: admin.id },
+        data: { 
+          role: "FULL",
+          verificationToken: null,
+          verificationExpires: null,
+        },
       });
 
       const updatedConfig = await tx.systemConfig.update({
@@ -49,9 +51,6 @@ export async function GET(req: NextRequest) {
 
       return updatedConfig;
     });
-
-    // Clean up verification token
-    pendingVerifications.delete(token);
 
     // Log instructions for JWT secret environment variable (Docker deployments)
     log("=".repeat(80));

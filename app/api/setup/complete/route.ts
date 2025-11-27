@@ -4,6 +4,7 @@ import { hashPassword } from "@/lib/auth/password";
 import nodemailer from "nodemailer";
 import crypto from "crypto";
 import { log, error as logError } from "@/lib/logger";
+import { encryptAdminData } from "@/lib/encryption";
 
 export async function POST(req: NextRequest) {
   try {
@@ -57,9 +58,32 @@ export async function POST(req: NextRequest) {
     log("[SETUP-COMPLETE] Checking if setup already completed");
 
     // Check if setup is already complete
-    const existingConfig = await prisma.systemConfig.findUnique({
-      where: { id: "system" },
-    });
+    let existingConfig = null;
+    try {
+      existingConfig = await prisma.systemConfig.findUnique({
+        where: { id: "system" },
+      });
+    } catch (e: any) {
+      // If the SystemConfig table doesn't exist (P2021), attempt to create schema in dev
+      if (e?.code === "P2021") {
+        log("[SETUP-COMPLETE] SystemConfig table missing; running `npx prisma db push` to create schema (dev-only)");
+        try {
+          // Run prisma db push synchronously to create missing tables (development convenience)
+          // eslint-disable-next-line @typescript-eslint/no-var-requires
+          const cp = require("child_process");
+          cp.execSync("npx prisma db push", { stdio: "inherit" });
+          // Retry lookup after creating schema
+          existingConfig = await prisma.systemConfig.findUnique({
+            where: { id: "system" },
+          });
+        } catch (innerErr) {
+          logError("[SETUP-COMPLETE] Failed to create schema:", innerErr);
+          throw innerErr;
+        }
+      } else {
+        throw e;
+      }
+    }
 
     if (existingConfig?.setupCompleted) {
       log("[SETUP-COMPLETE] Setup already completed");
@@ -71,12 +95,14 @@ export async function POST(req: NextRequest) {
 
     log("[SETUP-COMPLETE] Checking if admin exists");
 
-    // Check if admin already exists
-    const existingAdmin = await prisma.admin.findUnique({
+    // Check if admin already exists (need to check both plain text and encrypted emails for backward compatibility)
+    let existingAdmin = await prisma.admin.findUnique({
       where: { email: adminEmail },
     });
 
-    if (existingAdmin) {
+    let adminExists = !!existingAdmin;
+
+    if (adminExists) {
       log("[SETUP-COMPLETE] Admin already exists");
       return NextResponse.json(
         { error: "An admin account with this email already exists" },
@@ -126,12 +152,18 @@ export async function POST(req: NextRequest) {
       });
 
       // Create admin account (initially with LIMITED role, will be upgraded after verification)
+      const encryptedAdminData = await encryptAdminData({
+        email: adminEmail,
+        name: adminName,
+      });
       await tx.admin.create({
         data: {
-          email: adminEmail,
+          email: encryptedAdminData.email,
           password: hashedPassword,
-          name: adminName,
+          name: encryptedAdminData.name,
           role: "LIMITED", // Will be changed to FULL after email verification
+          verificationToken,
+          verificationExpires: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
         },
       });
 

@@ -5,6 +5,7 @@ import { signToken } from "@/lib/auth/jwt";
 import crypto from "crypto";
 import { log } from "@/lib/logger";
 import { getBaseUrl } from "@/lib/app-url";
+import { encryptAdminData } from "@/lib/encryption";
 
 export async function POST(req: Request) {
   try {
@@ -22,10 +23,14 @@ export async function POST(req: Request) {
     // Store as a pending admin with invite token and expiry
     const expiryDays = parseInt(process.env.INVITE_EXPIRY_DAYS || "7", 10);
     const expiry = new Date(Date.now() + expiryDays * 24 * 60 * 60 * 1000);
+
+    // Encrypt sensitive admin data
+    const encryptedData = await encryptAdminData({ email, name });
+
     const admin = await prisma.admin.create({
       data: {
-        email,
-        name,
+        email: encryptedData.email,
+        name: encryptedData.name,
         password: "",
         role: role || "VIEW_ONLY",
         invitedById,

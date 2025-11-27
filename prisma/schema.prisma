@@ -39,6 +39,8 @@ model Admin {
   surveysCreated Survey[] @relation("CreatedSurveys")
   resetToken  String?  @unique
   resetTokenExpires DateTime?
+  verificationToken String? @unique
+  verificationExpires DateTime?
   createdAt   DateTime @default(now())
 }
 

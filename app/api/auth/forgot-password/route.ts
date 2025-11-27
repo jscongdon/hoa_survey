@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { sendEmail, generateBaseEmail } from "@/lib/email/send";
 import crypto from "crypto";
 import { getBaseUrl } from "@/lib/app-url";
+import { encryptAdminData, decryptAdminData } from "@/lib/encryption";
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,8 +15,26 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Email is required" }, { status: 400 });
     }
 
-    // Check if admin exists
-    const admin = await prisma.admin.findUnique({ where: { email } });
+    // Check if admin exists (check both plain text and encrypted emails for backward compatibility)
+    let admin = await prisma.admin.findUnique({ where: { email } });
+
+    let adminExists = !!admin;
+
+    // If not found with plain text, check encrypted version
+    if (!adminExists) {
+      const encryptedEmailData = await encryptAdminData({ email, name: "" });
+      const allAdmins = await prisma.admin.findMany({
+        select: { email: true },
+      });
+      adminExists = allAdmins.some((a) => a.email === encryptedEmailData.email);
+
+      // If encrypted admin exists, fetch the full admin record
+      if (adminExists) {
+        admin = await prisma.admin.findFirst({
+          where: { email: encryptedEmailData.email },
+        });
+      }
+    }
 
     // Always return success to prevent email enumeration
     if (!admin) {
@@ -41,6 +60,12 @@ export async function POST(request: NextRequest) {
 
     log("[FORGOT-PASSWORD] Stored token in DB for email:", admin.email);
 
+    // Decrypt admin data for email sending
+    const decryptedData = await decryptAdminData({
+      name: admin.name || "",
+      email: admin.email,
+    });
+
     // Get the appropriate app URL for email links
     let baseUrl: string;
     try {
@@ -64,14 +89,14 @@ export async function POST(request: NextRequest) {
 
     const emailHtml = generateBaseEmail(
       "Password Reset Request",
-      `Hello ${admin.name || "Admin"},`,
+      `Hello ${decryptedData.name || "Admin"},`,
       bodyHtml,
       { text: "Reset Password", url: resetUrl },
       "This is an automated email. Please do not reply directly to this message."
     );
 
     await sendEmail({
-      to: admin.email,
+      to: decryptedData.email,
       subject: "Password Reset Request",
       html: emailHtml,
     });
