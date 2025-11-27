@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { formatDate } from "@/lib/dateFormatter";
 import { useAuth } from "@/lib/auth/AuthContext";
@@ -33,23 +33,24 @@ export default function DashboardPage() {
   const [currentAdminRole, setCurrentAdminRole] = useState<string | null>(null);
   const [adminEmail, setAdminEmail] = useState<string>("");
   const INACTIVITY_TIMEOUT = 15 * 60 * 1000; // 15 minutes
-  let inactivityTimer: NodeJS.Timeout;
+  const inactivityTimer = useRef<NodeJS.Timeout | null>(null);
 
-  const handleLogout = async () => {
+  const handleLogout = useCallback(async () => {
     await fetch("/api/auth/logout", { method: "POST" });
     await refreshAuth();
     router.push("/login");
-  };
-
-  const resetInactivityTimer = () => {
-    if (inactivityTimer) clearTimeout(inactivityTimer);
-    inactivityTimer = setTimeout(() => {
-      handleLogout();
-    }, INACTIVITY_TIMEOUT);
-  };
+  }, [refreshAuth, router]);
 
   useEffect(() => {
-    // Set up inactivity timeout
+    // Set up inactivity timeout using a ref so handlers are stable
+    const resetInactivityTimer = () => {
+      if (inactivityTimer.current) clearTimeout(inactivityTimer.current);
+      inactivityTimer.current = setTimeout(() => {
+        handleLogout();
+      }, INACTIVITY_TIMEOUT);
+    };
+
+    // Initialize timer
     resetInactivityTimer();
 
     // Reset timer on user activity
@@ -59,12 +60,12 @@ export default function DashboardPage() {
     });
 
     return () => {
-      if (inactivityTimer) clearTimeout(inactivityTimer);
+      if (inactivityTimer.current) clearTimeout(inactivityTimer.current);
       events.forEach((event) => {
         window.removeEventListener(event, resetInactivityTimer);
       });
     };
-  }, [router]);
+  }, [handleLogout, INACTIVITY_TIMEOUT]);
 
   useEffect(() => {
     const fetchAdminRole = async () => {

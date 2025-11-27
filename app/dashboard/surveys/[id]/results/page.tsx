@@ -194,8 +194,8 @@ export default function SurveyResultsPage({
       <PageLayout title="Survey Results" subtitle="Survey not found">
         <div className="text-center py-8">
           <p className="text-gray-600 dark:text-gray-400">
-            The requested survey could not be found or you don't have permission
-            to view it.
+            The requested survey could not be found or you don&apos;t have
+            permission to view it.
           </p>
         </div>
       </PageLayout>

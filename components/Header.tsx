@@ -33,7 +33,7 @@ export default function Header() {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [router]);
 
   // Listen for logo update/remove broadcasts from other tabs
   useEffect(() => {
@@ -74,7 +74,7 @@ export default function Header() {
         /* ignore */
       }
     };
-  }, []);
+  }, [router]);
 
   // Close menu when clicking outside
   useEffect(() => {

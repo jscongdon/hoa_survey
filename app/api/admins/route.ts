@@ -1,26 +1,27 @@
-import { log, error as logError } from '@/lib/logger'
-import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
-import { verifyToken } from '@/lib/auth/jwt'
-import { getManagedAdmins } from '@/lib/auth/permissions'
+import { log, error as logError } from "@/lib/logger";
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { verifyToken } from "@/lib/auth/jwt";
+import { getManagedAdmins } from "@/lib/auth/permissions";
+import { decryptAdminData } from "@/lib/encryption";
 
 export async function GET(request: NextRequest) {
   try {
-    const token = request.cookies.get('auth-token')?.value
+    const token = request.cookies.get("auth-token")?.value;
     if (!token) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const payload = await verifyToken(token)
+    const payload = await verifyToken(token);
     if (!payload?.adminId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     // Get all admins that the current admin can manage
-    const managedAdminIds = await getManagedAdmins(payload.adminId)
-    
+    const managedAdminIds = await getManagedAdmins(payload.adminId);
+
     // Include current admin so they can see themselves
-    const allManagedIds = [...managedAdminIds, payload.adminId]
+    const allManagedIds = [...managedAdminIds, payload.adminId];
 
     const admins = await prisma.admin.findMany({
       where: {
@@ -43,13 +44,52 @@ export async function GET(request: NextRequest) {
         },
       },
       orderBy: {
-        email: 'asc',
+        email: "asc",
       },
-    })
+    });
 
-    return NextResponse.json({ admins })
+    // Decrypt admin data before returning
+    const decryptedAdmins = await Promise.all(
+      admins.map(async (admin) => {
+        try {
+          const decryptedData = await decryptAdminData({
+            name: admin.name || "",
+            email: admin.email,
+          });
+
+          // Also decrypt invitedBy data if it exists
+          let decryptedInvitedBy = admin.invitedBy;
+          if (admin.invitedBy) {
+            const decryptedInvitedByData = await decryptAdminData({
+              name: admin.invitedBy.name || "",
+              email: admin.invitedBy.email,
+            });
+            decryptedInvitedBy = {
+              name: decryptedInvitedByData.name || null,
+              email: decryptedInvitedByData.email,
+            };
+          }
+
+          return {
+            ...admin,
+            name: decryptedData.name,
+            email: decryptedData.email,
+            invitedBy: decryptedInvitedBy,
+          };
+        } catch (error) {
+          // If decryption fails, return encrypted data (for backward compatibility)
+          logError("Failed to decrypt admin data:", error);
+          return admin;
+        }
+      })
+    );
+
+    return NextResponse.json({ admins: decryptedAdmins });
   } catch (error) {
-    logError('Error fetching admins:', error)
-    return NextResponse.json({ error: 'Failed to fetch admins' }, { status: 500 })
+    logError("Error fetching admins:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch admins" },
+      { status: 500 }
+    );
   }
 }

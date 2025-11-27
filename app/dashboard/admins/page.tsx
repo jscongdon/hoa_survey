@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { formatDateTime } from "@/lib/dateFormatter";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -40,9 +40,9 @@ export default function AdminManagementPage() {
       await Promise.all([fetchAdmins(), fetchCurrentAdmin()]);
       setLoading(false);
     })();
-  }, []);
+  }, [fetchAdmins, fetchCurrentAdmin]);
 
-  const fetchCurrentAdmin = async () => {
+  const fetchCurrentAdmin = useCallback(async () => {
     try {
       const res = await fetch("/api/auth/me");
       if (res.ok) {
@@ -63,9 +63,9 @@ export default function AdminManagementPage() {
     } catch (error) {
       console.error("Failed to fetch current admin:", error);
     }
-  };
+  }, []);
 
-  const fetchAdmins = async () => {
+  const fetchAdmins = useCallback(async () => {
     try {
       const res = await fetch("/api/admins");
       if (res.ok) {
@@ -88,7 +88,7 @@ export default function AdminManagementPage() {
     } catch (error) {
       console.error("Failed to fetch admins:", error);
     }
-  };
+  }, [router]);
 
   const handleInvite = async (e: React.FormEvent) => {
     e.preventDefault();
