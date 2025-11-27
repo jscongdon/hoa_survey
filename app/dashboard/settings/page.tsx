@@ -426,8 +426,8 @@ export default function SettingsPage() {
               Manage admin users, roles, and permissions
             </p>
             <p className="text-sm text-gray-500 dark:text-gray-500 mb-4">
-              You can manage admins you&apos;ve invited and their invitees (but not
-              who invited you)
+              You can manage admins you&apos;ve invited and their invitees (but
+              not who invited you)
             </p>
             <button
               onClick={() => router.push("/dashboard/admins")}
@@ -773,8 +773,8 @@ export default function SettingsPage() {
                     <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded">
                       <p className="text-sm text-blue-800 dark:text-blue-200">
                         💡 <strong>Tip:</strong> After saving changes, click
-                        &quot;Restart Application&quot; to apply the new settings
-                        immediately.
+                        &quot;Restart Application&quot; to apply the new
+                        settings immediately.
                       </p>
                     </div>
                   </>

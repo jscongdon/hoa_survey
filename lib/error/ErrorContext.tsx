@@ -83,8 +83,6 @@ export function ErrorProvider({ children }: { children: ReactNode }) {
     [addError]
   );
 
-  
-
   const value: ErrorContextType = {
     errors,
     addError,

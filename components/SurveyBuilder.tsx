@@ -493,7 +493,8 @@ export default function SurveyBuilder({
                   {q.showWhen && (
                     <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">
                       Condition: show when Question{" "}
-                      {q.showWhen.triggerOrder + 1} {q.showWhen.operator} &quot;{q.showWhen.value}&quot;
+                      {q.showWhen.triggerOrder + 1} {q.showWhen.operator} &quot;
+                      {q.showWhen.value}&quot;
                     </p>
                   )}
                   {((q.options && q.options.length > 0) || q.writeIn) && (
