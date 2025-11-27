@@ -13,9 +13,6 @@ services:
       - DATABASE_URL=file:/data/hoa-survey.db
       - NODE_ENV=production
       - LOG_LEVEL=info
-      - DEVELOPMENT_URL=http://localhost:3000
-      - PRODUCTION_URL=https://yourdomain.com
-      # Most config now via setup wizard
     command: >
       sh -c "npm install && ./startup.sh"
 
