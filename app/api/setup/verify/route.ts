@@ -68,8 +68,12 @@ export async function GET(req: NextRequest) {
     log("Generate a secure secret using: openssl rand -hex 64");
     log("=".repeat(80));
 
-    // Redirect to login with success message
-    return NextResponse.redirect(new URL("/login?verified=true", req.url));
+    // Redirect to login with success message.
+    // Prefer the configured `appUrl` from system config so redirects go
+    // to the proper public URL instead of relying on the incoming request
+    // host (which may be localhost in some environments).
+    const targetBase = config?.appUrl || new URL(req.url).origin;
+    return NextResponse.redirect(new URL("/login?verified=true", targetBase));
   } catch (error: any) {
     logError("Verification error:", error);
     return NextResponse.redirect(
