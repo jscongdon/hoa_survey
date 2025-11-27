@@ -32,8 +32,6 @@ export default function AdminManagementPage() {
   const [currentAdminId, setCurrentAdminId] = useState<string | null>(null);
   const [currentAdminRole, setCurrentAdminRole] = useState<string | null>(null);
 
-  
-
   const fetchCurrentAdmin = useCallback(async () => {
     try {
       const res = await fetch("/api/auth/me");
