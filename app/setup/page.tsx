@@ -222,7 +222,7 @@ export default function SetupWizard() {
               Welcome to HOA Survey
             </h1>
             <p className="text-gray-600 dark:text-gray-300 mb-6">
-              Let's get your survey system set up! This wizard will guide you
+              Let&apos;s get your survey system set up! This wizard will guide you
               through:
             </p>
             <ul className="list-disc list-inside space-y-2 text-gray-600 dark:text-gray-300 mb-8">
@@ -247,7 +247,7 @@ export default function SetupWizard() {
               HOA Configuration
             </h2>
             <p className="text-gray-600 dark:text-gray-300 mb-6">
-              Configure your HOA's branding information
+              Configure your HOA&apos;s branding information
             </p>
 
             <div className="space-y-4 mb-6">
@@ -427,7 +427,7 @@ export default function SetupWizard() {
               Test Email Configuration
             </h2>
             <p className="text-gray-600 dark:text-gray-300 mb-6">
-              Let's verify your email settings work correctly
+              Let&apos;s verify your email settings work correctly
             </p>
 
             <div className="space-y-4 mb-6">
@@ -577,15 +577,15 @@ export default function SetupWizard() {
               Check Your Email
             </h2>
             <p className="text-gray-600 dark:text-gray-300 mb-6">
-              We've sent a verification link to <strong>{adminEmail}</strong>
+              We&apos;ve sent a verification link to <strong>{adminEmail}</strong>
             </p>
             <p className="text-gray-600 dark:text-gray-300 mb-8">
               Click the link in your email to verify your account and gain full
               administrator access. You can close this page.
             </p>
             <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded">
-              <p className="text-sm text-blue-800 dark:text-blue-200">
-                💡 Tip: Check your spam folder if you don't see the email within
+                <p className="text-sm text-blue-800 dark:text-blue-200">
+                💡 Tip: Check your spam folder if you don&apos;t see the email within
                 a few minutes.
               </p>
             </div>

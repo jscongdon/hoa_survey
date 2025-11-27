@@ -66,7 +66,9 @@ export async function POST(req: NextRequest) {
     } catch (e: any) {
       // If the SystemConfig table doesn't exist (P2021), attempt to create schema in dev
       if (e?.code === "P2021") {
-        log("[SETUP-COMPLETE] SystemConfig table missing; running `npx prisma db push` to create schema (dev-only)");
+        log(
+          "[SETUP-COMPLETE] SystemConfig table missing; running `npx prisma db push` to create schema (dev-only)"
+        );
         try {
           // Run prisma db push synchronously to create missing tables (development convenience)
           // eslint-disable-next-line @typescript-eslint/no-var-requires

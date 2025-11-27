@@ -272,7 +272,7 @@ export default function SurveyBuilder({
                       className="w-4 h-4"
                     />
                     <span className="text-sm text-gray-700 dark:text-gray-300">
-                      Allow single write-in option ("Other")
+                      Allow single write-in option (&quot;Other&quot;)
                     </span>
                   </label>
                 )}
@@ -493,8 +493,7 @@ export default function SurveyBuilder({
                   {q.showWhen && (
                     <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">
                       Condition: show when Question{" "}
-                      {q.showWhen.triggerOrder + 1} {q.showWhen.operator} "
-                      {q.showWhen.value}"
+                      {q.showWhen.triggerOrder + 1} {q.showWhen.operator} &quot;{q.showWhen.value}&quot;
                     </p>
                   )}
                   {((q.options && q.options.length > 0) || q.writeIn) && (
@@ -602,7 +601,7 @@ export default function SurveyBuilder({
               disabled={editingIndex !== null}
             />
             <span className="text-sm text-gray-700 dark:text-gray-300">
-              Allow single write-in option ("Other")
+              Allow single write-in option (&quot;Other&quot;)
             </span>
           </label>
         )}

@@ -24,7 +24,10 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    if (!admin.verificationExpires || Date.now() > admin.verificationExpires.getTime()) {
+    if (
+      !admin.verificationExpires ||
+      Date.now() > admin.verificationExpires.getTime()
+    ) {
       return NextResponse.redirect(
         new URL("/setup?error=expired-token", req.url)
       );
@@ -34,7 +37,7 @@ export async function GET(req: NextRequest) {
     const config = await prisma.$transaction(async (tx) => {
       await tx.admin.update({
         where: { id: admin.id },
-        data: { 
+        data: {
           role: "FULL",
           verificationToken: null,
           verificationExpires: null,

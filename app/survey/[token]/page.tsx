@@ -1104,7 +1104,7 @@ export default function SurveyPage({
                   Ready to Finalize?
                 </h3>
                 <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">
-                  Once you're satisfied with your responses, you can digitally
+                  Once you&apos;re satisfied with your responses, you can digitally
                   sign them to validate authenticity. After signing, your
                   response will be finalized and can no longer be edited.
                 </p>

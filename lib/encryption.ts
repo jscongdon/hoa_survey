@@ -155,8 +155,8 @@ async function encryptAdminData(admin: {
   email: string;
 }> {
   return {
-    name: admin.name ? await encrypt(admin.name, 'admin-name-iv') : admin.name,
-    email: await encrypt(admin.email, 'admin-email-iv'),
+    name: admin.name ? await encrypt(admin.name, "admin-name-iv") : admin.name,
+    email: await encrypt(admin.email, "admin-email-iv"),
   };
 }
 

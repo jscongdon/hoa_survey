@@ -78,7 +78,7 @@ export default function MemberListDetailPage({
     };
 
     fetchList();
-  }, [id]);
+  }, [id, router]);
 
   const startEdit = (member: Member) => {
     setEditingId(member.id);
