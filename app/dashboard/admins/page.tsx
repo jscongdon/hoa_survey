@@ -32,15 +32,7 @@ export default function AdminManagementPage() {
   const [currentAdminId, setCurrentAdminId] = useState<string | null>(null);
   const [currentAdminRole, setCurrentAdminRole] = useState<string | null>(null);
 
-  useEffect(() => {
-    // Load both current admin and admins list, then clear loading to avoid
-    // a race where the UI renders before we know the current admin's role.
-    (async () => {
-      setLoading(true);
-      await Promise.all([fetchAdmins(), fetchCurrentAdmin()]);
-      setLoading(false);
-    })();
-  }, [fetchAdmins, fetchCurrentAdmin]);
+  
 
   const fetchCurrentAdmin = useCallback(async () => {
     try {
@@ -89,6 +81,16 @@ export default function AdminManagementPage() {
       console.error("Failed to fetch admins:", error);
     }
   }, [router]);
+
+  useEffect(() => {
+    // Load both current admin and admins list, then clear loading to avoid
+    // a race where the UI renders before we know the current admin's role.
+    (async () => {
+      setLoading(true);
+      await Promise.all([fetchAdmins(), fetchCurrentAdmin()]);
+      setLoading(false);
+    })();
+  }, [fetchAdmins, fetchCurrentAdmin]);
 
   const handleInvite = async (e: React.FormEvent) => {
     e.preventDefault();
