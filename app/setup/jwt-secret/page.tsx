@@ -1,36 +1,30 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 
 export default function JWTSecretPage() {
-  const [jwtSecret, setJwtSecret] = useState<string>('');
+  const [status, setStatus] = useState<{
+    jwtSecretSet?: boolean;
+    jwtSecretLength?: number;
+    instructions?: string;
+    error?: string;
+  }>({});
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string>('');
-  const [copied, setCopied] = useState(false);
+  const [error, setError] = useState<string>("");
 
   useEffect(() => {
-    fetch('/api/setup/jwt-secret')
-      .then(res => res.json())
-      .then(data => {
-        if (data.jwtSecret) {
-          setJwtSecret(data.jwtSecret);
-        } else {
-          setError(data.error || 'Failed to load JWT secret');
-        }
+    fetch("/api/setup/jwt-secret")
+      .then((res) => res.json())
+      .then((data) => {
+        setStatus(data);
       })
-      .catch(err => {
-        setError('Failed to load JWT secret');
+      .catch((err) => {
+        setError("Failed to check JWT secret configuration");
       })
       .finally(() => {
         setLoading(false);
       });
   }, []);
-
-  const handleCopy = () => {
-    navigator.clipboard.writeText(jwtSecret);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
@@ -50,67 +44,52 @@ export default function JWTSecretPage() {
         )}
 
         {!loading && !error && (
-          <>
-            <div className="mb-6">
-              <p className="text-gray-700 dark:text-gray-300 mb-4">
-                For Docker deployments, you need to add the JWT_SECRET as an environment variable.
-              </p>
-              <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded p-4 mb-4">
-                <p className="text-yellow-800 dark:text-yellow-200 font-semibold mb-2">
-                  ⚠️ Important: This secret is required for authentication to work
+          <div className="space-y-4">
+            {status.jwtSecretSet ? (
+              <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded">
+                <h2 className="text-lg font-semibold text-green-800 dark:text-green-200 mb-2">
+                  ✅ JWT Secret Configured
+                </h2>
+                <p className="text-green-700 dark:text-green-300">
+                  JWT_SECRET environment variable is set (length:{" "}
+                  {status.jwtSecretLength} characters).
                 </p>
-                <p className="text-yellow-700 dark:text-yellow-300 text-sm">
-                  Without this environment variable set in your container, you will not be able to log in.
+                <p className="text-green-700 dark:text-green-300 mt-2">
+                  {status.instructions}
                 </p>
               </div>
-            </div>
-
-            <div className="mb-6">
-              <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-white">
-                JWT Secret:
-              </label>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={jwtSecret}
-                  readOnly
-                  className="flex-1 font-mono text-sm border border-gray-300 dark:border-gray-600 p-3 rounded bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white"
-                />
-                <button
-                  onClick={handleCopy}
-                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                >
-                  {copied ? '✓ Copied' : 'Copy'}
-                </button>
-              </div>
-            </div>
-
-            <div className="bg-gray-50 dark:bg-gray-900 rounded p-4 mb-6">
-              <h2 className="font-semibold text-gray-900 dark:text-white mb-2">
-                Portainer Instructions:
-              </h2>
-              <ol className="list-decimal list-inside space-y-2 text-gray-700 dark:text-gray-300 text-sm">
-                <li>Go to your Portainer dashboard</li>
-                <li>Select your stack (hoa_survey)</li>
-                <li>Click "Editor"</li>
-                <li>Add the following line under the <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">environment:</code> section:</li>
-                <li className="ml-6">
-                  <code className="bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded block mt-1">
-                    - JWT_SECRET={jwtSecret.substring(0, 20)}...
+            ) : (
+              <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded">
+                <h2 className="text-lg font-semibold text-yellow-800 dark:text-yellow-200 mb-2">
+                  ⚠️ JWT Secret Not Configured
+                </h2>
+                <p className="text-yellow-700 dark:text-yellow-300">
+                  {status.error ||
+                    "JWT_SECRET environment variable is not set."}
+                </p>
+                <div className="mt-4 p-3 bg-gray-100 dark:bg-gray-700 rounded font-mono text-sm">
+                  <p className="text-gray-800 dark:text-gray-200">
+                    Generate a secure secret:
+                  </p>
+                  <code className="text-blue-600 dark:text-blue-400">
+                    openssl rand -hex 64
                   </code>
-                </li>
-                <li>Click "Update the stack"</li>
-                <li>The container will restart with the new environment variable</li>
-              </ol>
-            </div>
-
-            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded p-4">
-              <p className="text-blue-800 dark:text-blue-200 text-sm">
-                💡 Tip: Keep this secret secure and never commit it to your repository.
-              </p>
-            </div>
-          </>
+                </div>
+              </div>
+            )}
+          </div>
         )}
+
+        <div className="mt-8 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded">
+          <h3 className="text-lg font-semibold text-blue-800 dark:text-blue-200 mb-2">
+            Environment Variable Setup
+          </h3>
+          <p className="text-blue-700 dark:text-blue-300 text-sm">
+            The JWT_SECRET should be set as an environment variable in your
+            deployment platform (Docker, Portainer, etc.). It is no longer
+            stored in the database for security reasons.
+          </p>
+        </div>
       </div>
     </div>
   );

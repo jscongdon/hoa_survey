@@ -8,6 +8,8 @@ node_modules/
 dist/
 build/
 coverage/
+.nyc_output/
+storybook-static/
 
 # Environment variables
 .env
@@ -15,6 +17,8 @@ coverage/
 .env.*.local
 .env.production
 .env.development
+.env.test
+.env.staging
 # Note: stack.env is intentionally NOT ignored - it's needed for Portainer deployment
 
 # Database files
@@ -22,7 +26,7 @@ coverage/
 *.db-journal
 *.sqlite
 *.sqlite3
-hoasurvey-data/
+hoa-survey-data/
 */data/
 !components/data/
 prisma/*.db
@@ -52,11 +56,21 @@ Thumbs.db
 *.sln
 *.sw?
 
+# Cache directories
+.cache/
+.eslintcache
+.stylelintcache
+.turbo/
+.vercel/
+.swc/
+
 # Testing
 .prettierignore
 
 # Project management files
 TaskReadMe.md
+docker-compose.sqlite.yml
 
 # TypeScript incremental build info
 tsconfig.tsbuildinfo
+*.tsbuildinfo

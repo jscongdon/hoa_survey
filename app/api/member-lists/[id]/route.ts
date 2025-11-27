@@ -53,37 +53,21 @@ export async function GET(
           email: decryptedData.email,
           address: decryptedData.address,
           lot: decryptedData.lot,
-          createdAt:
-            typeof member.createdAt === "string" &&
-            member.createdAt.startsWith("DT:")
-              ? new Date(member.createdAt.substring(3))
-              : member.createdAt,
         };
       } catch (error) {
         // If decryption fails, return encrypted data (for backward compatibility)
         logError("Failed to decrypt member data:", error);
         return {
           ...member,
-          createdAt:
-            typeof member.createdAt === "string" &&
-            member.createdAt.startsWith("DT:")
-              ? new Date(member.createdAt.substring(3))
-              : member.createdAt,
         };
       }
     })
   );
 
-  const decryptedList = {
+  return NextResponse.json({
     ...list,
-    createdAt:
-      typeof list.createdAt === "string" && list.createdAt.startsWith("DT:")
-        ? new Date(list.createdAt.substring(3))
-        : list.createdAt,
     members: decryptedMembers,
-  };
-
-  return NextResponse.json(decryptedList);
+  });
 }
 
 export async function PUT(

@@ -40,7 +40,12 @@ export interface UseSurveysReturn {
   refetchSurveys: () => Promise<void>;
 }
 
-export function useSurveys(): UseSurveysReturn {
+export interface UseSurveysOptions {
+  enabled?: boolean;
+}
+
+export function useSurveys(options: UseSurveysOptions = {}): UseSurveysReturn {
+  const { enabled = true } = options;
   const { addError } = useError();
   const [surveys, setSurveys] = useState<Survey[]>([]);
   const [loading, setLoading] = useState(true);
@@ -67,6 +72,16 @@ export function useSurveys(): UseSurveysReturn {
   const fetchSurveys = async () => {
     try {
       const res = await fetch("/api/surveys");
+      
+      // Check if response has content before trying to parse JSON
+      const contentType = res.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        console.error("Surveys API returned non-JSON response:", contentType, res.status);
+        setSurveys([]);
+        setLoading(false);
+        return;
+      }
+      
       const data = await res.json();
       if (!res.ok) {
         console.error("Failed to fetch surveys:", data);
@@ -389,8 +404,12 @@ export function useSurveys(): UseSurveysReturn {
   };
 
   useEffect(() => {
-    fetchSurveys();
-  }, []);
+    if (enabled) {
+      fetchSurveys();
+    } else {
+      setLoading(false);
+    }
+  }, [enabled]);
 
   return {
     surveys,

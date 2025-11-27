@@ -8,9 +8,9 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - hoasurvey_data:/data
+      - hoa_survey_data:/data
     environment:
-      - DATABASE_URL=file:/data/hoasurvey.db
+      - DATABASE_URL=file:/data/hoa-survey.db
       - NODE_ENV=production
       # Update PRODUCTION_URL with your actual domain
       - PRODUCTION_URL=${PRODUCTION_URL:-https://survey.yourdomain.com}
@@ -30,5 +30,5 @@ services:
       start_period: 40s
 
 volumes:
-  hoasurvey_data:
+  hoa_survey_data:
     driver: local

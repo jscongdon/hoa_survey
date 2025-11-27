@@ -82,7 +82,7 @@ export async function GET(
       ...response.member,
       name: decryptedData.name,
       email: decryptedData.email,
-      address: decryptedData.address,
+      address: decryptedData.address || null,
       lot: decryptedData.lot,
     };
   } catch (error) {

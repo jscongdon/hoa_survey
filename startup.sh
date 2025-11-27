@@ -25,33 +25,5 @@ else
   fi
 fi
 
-# Run member data encryption migration
-echo "[startup] Running member data encryption migration"
-if npx ts-node --compiler-options '{"module":"CommonJS","target":"ES2020"}' scripts/encrypt-member-data.ts; then
-  echo "[startup] Member data encryption completed"
-else
-  echo "[startup] Member data encryption failed or no data to encrypt"
-fi
-
-# Try to load JWT secret from database
-JWT_SECRET=$(node -e "
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient({ datasources: { db: { url: process.env.DATABASE_URL } } });
-
-prisma.systemConfig.findUnique({ where: { id: 'system' } })
-  .then(config => {
-    if (config && config.jwtSecret) {
-      console.log(config.jwtSecret);
-    } else {
-      // Use fallback if no config yet
-      console.log('dev-secret-will-be-replaced-by-setup');
-    }
-  })
-  .catch(() => {
-    console.log('dev-secret-will-be-replaced-by-setup');
-  })
-  .finally(() => prisma.\$disconnect());
-" 2>/dev/null)
-
 # Start the application with JWT_SECRET environment variable
-JWT_SECRET="$JWT_SECRET" npm run dev
+npm run dev

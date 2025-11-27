@@ -3,19 +3,20 @@ version: "3.8"
 services:
   app:
     image: ghcr.io/jscongdon/hoa_survey:develop
-    container_name: hoa_survey_dev
+    container_name: hoa-survey-dev
+    working_dir: /app
+    command: bash -lc "if [ ! -d node_modules ]; then npm ci --legacy-peer-deps; fi && ./startup.sh"
     restart: unless-stopped
+    tty: true
     ports:
       - "3001:3000"
     volumes:
-      - hoasurvey_dev_data:/data
-    environment:
-      - DATABASE_URL=file:/data/hoasurvey-dev.db
-      - NODE_ENV=production
-      # Update PRODUCTION_URL with your actual dev domain
-      - PRODUCTION_URL=${PRODUCTION_URL:-https://dev-hoasurvey.yourdomain.com}
-      # Set JWT_SECRET after setup wizard
-      - JWT_SECRET=${JWT_SECRET:-changeme}
+      - ./:/app:cached
+      - node-modules:/app/node_modules
+      - hoa-survey-data:/data
+      - ./public/uploads:/app/public/uploads
+    env_file:
+      - .env
     healthcheck:
       test:
         [
@@ -32,5 +33,5 @@ services:
       start_period: 40s
 
 volumes:
-  hoasurvey_dev_data:
-    driver: local
+  node-modules: {}
+  hoa-survey-data: {}

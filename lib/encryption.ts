@@ -131,4 +131,4 @@ async function decryptMemberData(member: {
   };
 }
 
-module.exports = { encrypt, decrypt, encryptMemberData, decryptMemberData };
+export { encrypt, decrypt, encryptMemberData, decryptMemberData };

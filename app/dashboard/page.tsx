@@ -10,7 +10,7 @@ import { DataGrid, DataTable, Column } from "@/components/data";
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { refreshAuth } = useAuth();
+  const { refreshAuth, isAuthenticated } = useAuth();
   const {
     surveys,
     loading,
@@ -29,7 +29,7 @@ export default function DashboardPage() {
     handleExport,
     handleDelete,
     setSelectedNonRespondent,
-  } = useSurveys();
+  } = useSurveys({ enabled: isAuthenticated });
   const [currentAdminRole, setCurrentAdminRole] = useState<string | null>(null);
   const [adminEmail, setAdminEmail] = useState<string>("");
   const INACTIVITY_TIMEOUT = 15 * 60 * 1000; // 15 minutes
@@ -74,16 +74,20 @@ export default function DashboardPage() {
           const data = await res.json();
           setCurrentAdminRole(data.role);
           setAdminEmail(data.email || "");
+        } else {
+          // If not authenticated, redirect to login
+          router.push("/login");
         }
       } catch (error) {
         console.error("Failed to fetch admin role:", error);
+        router.push("/login");
       }
     };
 
     fetchAdminRole();
-  }, []);
+  }, [router]);
 
-  if (loading) {
+  if (loading || !isAuthenticated) {
     return (
       <DashboardLayout title="Dashboard" subtitle="Loading dashboard..." />
     );

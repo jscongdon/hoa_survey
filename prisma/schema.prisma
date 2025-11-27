@@ -20,8 +20,7 @@ model SystemConfig {
   smtpPass        String?
   smtpFrom        String?
   appUrl          String?
-  jwtSecret       String?
-  createdAt       String
+  createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }
 
@@ -40,7 +39,7 @@ model Admin {
   surveysCreated Survey[] @relation("CreatedSurveys")
   resetToken  String?  @unique
   resetTokenExpires DateTime?
-  createdAt   String
+  createdAt   DateTime @default(now())
 }
 
 model MemberList {
@@ -48,7 +47,7 @@ model MemberList {
   name      String
   members   Member[]  @relation("MemberListsOnMembers")
   surveys   Survey[]
-  createdAt String
+  createdAt DateTime @default(now())
 }
 
 model Member {
@@ -59,7 +58,7 @@ model Member {
   address   String?
   lists     MemberList[] @relation("MemberListsOnMembers")
   responses Response[]
-  createdAt String
+  createdAt DateTime @default(now())
 }
 
 model Survey {
@@ -82,7 +81,7 @@ model Survey {
   requireSignature Boolean    @default(true) // Whether this survey requires digital signature for responses
   notifyOnMinResponses Boolean @default(false) // Email creator when minResponses reached
   minimalNotifiedAt DateTime?
-  createdAt      String
+  createdAt      DateTime @default(now())
 }
 
 model Question {
@@ -117,7 +116,7 @@ model Response {
   signed      Boolean  @default(false)
   signedAt    DateTime?
   signatureToken String? @unique
-  createdAt  String
+  createdAt  DateTime @default(now())
   @@unique([surveyId, memberId])
 }
 
@@ -129,7 +128,7 @@ model Answer {
   question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
   // Store the answer value as string (can be JSON for array answers)
   value      String
-  createdAt  String
+  createdAt  DateTime @default(now())
   
   @@unique([responseId, questionId])
 }

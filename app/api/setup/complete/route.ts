@@ -86,10 +86,7 @@ export async function POST(req: NextRequest) {
 
     log("[SETUP-COMPLETE] Generating secrets");
 
-    // Generate JWT secret
-    const jwtSecret = crypto.randomBytes(64).toString("hex");
-
-    // Generate verification token
+    // Generate verification token (JWT secret should be set via environment variable)
     const verificationToken = crypto.randomBytes(32).toString("hex");
 
     log("[SETUP-COMPLETE] Hashing password");
@@ -115,7 +112,6 @@ export async function POST(req: NextRequest) {
           smtpPass,
           smtpFrom,
           appUrl, // Use the provided appUrl
-          jwtSecret,
         },
         update: {
           hoaName,
@@ -126,7 +122,6 @@ export async function POST(req: NextRequest) {
           smtpPass,
           smtpFrom,
           appUrl, // Update appUrl as well
-          jwtSecret,
         },
       });
 

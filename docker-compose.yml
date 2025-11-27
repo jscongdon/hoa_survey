@@ -5,19 +5,14 @@ services:
     working_dir: /app
     volumes:
       - .:/app
-      - hoasurvey-data:/data
+      - hoa-survey-data:/data
       - /var/run/docker.sock:/var/run/docker.sock
     ports:
       - "3000:3000"
-    environment:
-      - DATABASE_URL=file:/data/hoasurvey.db
-      - NODE_ENV=development
-      - LOG_LEVEL=debug
-      - DEVELOPMENT_URL=http://localhost:3000
-      - PRODUCTION_URL=https://yourdomain.com
-      # Most config now via setup wizard
+    env_file:
+      - .env
     command: >
       sh -c "npm install && ./startup.sh"
 
 volumes:
-  hoasurvey-data:
+  hoa-survey-data:

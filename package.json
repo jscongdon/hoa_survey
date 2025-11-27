@@ -14,9 +14,7 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:seed": "node prisma/seed.js",
-    "prisma:studio": "prisma studio",
-    "cleanup:logos": "node scripts/cleanup-orphaned-logos.js",
-    "encrypt-members": "npx ts-node --compiler-options '{\"module\":\"CommonJS\",\"target\":\"ES2020\"}' scripts/encrypt-member-data.ts"
+    "prisma:studio": "prisma studio"
   },
   "dependencies": {
     "@prisma/client": "^6.19.0",

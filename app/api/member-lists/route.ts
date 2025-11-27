@@ -25,16 +25,7 @@ export async function GET(request: NextRequest) {
     orderBy: { createdAt: "desc" },
   });
 
-  // Transform prefixed strings back to Date objects
-  const transformedLists = lists.map((list) => ({
-    ...list,
-    createdAt:
-      typeof list.createdAt === "string" && list.createdAt.startsWith("DT:")
-        ? new Date(list.createdAt.substring(3))
-        : list.createdAt,
-  }));
-
-  return NextResponse.json(transformedLists);
+  return NextResponse.json(lists);
 }
 
 export async function POST(request: NextRequest) {
@@ -95,16 +86,13 @@ export async function POST(request: NextRequest) {
     }
 
     const now = new Date();
-    // Transform Date to prefixed string to prevent SQLite integer conversion
-    const prefixedNow = `DT:${now.toISOString()}`;
     const memberList = await prisma.memberList.create({
       data: {
         name,
-        createdAt: prefixedNow,
         members: {
-          create: members.map((m) => {
+          create: await Promise.all(members.map(async (m) => {
             // Encrypt sensitive member data
-            const encryptedData = encryptMemberData({
+            const encryptedData = await encryptMemberData({
               name: m.name,
               email: m.email,
               address: m.address || "",
@@ -116,23 +104,15 @@ export async function POST(request: NextRequest) {
               name: encryptedData.name,
               email: encryptedData.email,
               address: encryptedData.address,
-              createdAt: prefixedNow,
             };
-          }),
+          })),
         },
       },
-      include: { _count: { select: { members: true, surveys: true } } },
+      include: { 
+        members: true,
+        _count: { select: { surveys: true } } 
+      },
     });
-
-    // Transform the result back to Date objects for the API response
-    const transformedResult = {
-      ...memberList,
-      createdAt: now,
-      members: memberList.members?.map((member) => ({
-        ...member,
-        createdAt: now,
-      })),
-    };
 
     return NextResponse.json(memberList, { status: 201 });
   } catch (error) {
