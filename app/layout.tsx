@@ -1,13 +1,13 @@
-import type { Metadata } from 'next';
-import './globals.css';
+import type { Metadata } from "next";
+import "./globals.css";
 
-import Footer from '@/components/Footer';
-import Header from '@/components/Header';
-import ClientProviders from './providers/ClientProviders';
+import Footer from "@/components/Footer";
+import Header from "@/components/Header";
+import ClientProviders from "./providers/ClientProviders";
 
 export const metadata: Metadata = {
-  title: 'HOA Survey',
-  description: 'Secure survey management for HOA communities',
+  title: "HOA Survey",
+  description: "Secure survey management for HOA communities",
 };
 
 export default function RootLayout({

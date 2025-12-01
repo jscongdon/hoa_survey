@@ -28,7 +28,7 @@ export default function SettingsPage() {
   const [restartStatus, setRestartStatus] = useState<
     "idle" | "restarting" | "checking" | "complete"
   >("idle");
-  
+
   const [logLevel, setLogLevel] = useState<string | null>(null);
   const [logLevelLoading, setLogLevelLoading] = useState(false);
   const [logLevelMessage, setLogLevelMessage] = useState("");
@@ -180,8 +180,6 @@ export default function SettingsPage() {
     };
     fetchAdminRole();
 
-    
-
     // Fetch current log level
     fetch("/api/settings/log-level")
       .then((res) => res.json())
@@ -192,8 +190,6 @@ export default function SettingsPage() {
       })
       .catch((err) => console.error("Error fetching log level:", err));
   }, [router]);
-
-  
 
   const fetchEnvVariables = async () => {
     try {
@@ -478,60 +474,63 @@ export default function SettingsPage() {
             )}
           </div>
 
-          
-
-            {/* Log Level Section */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mt-6">
-              <h2 className="text-xl font-semibold mb-4">Logging Level</h2>
-              <p className="text-gray-600 dark:text-gray-400 mb-4">
-                Choose the minimum log level to emit from the server. This overrides the environment LOG_LEVEL when set.
-              </p>
-              <div className="flex items-center gap-4">
-                <select
-                  value={logLevel || "info"}
-                  onChange={(e) => setLogLevel(e.target.value)}
-                  className="px-3 py-2 border rounded dark:bg-gray-700 dark:border-gray-600"
-                >
-                  <option value="debug">Debug</option>
-                  <option value="info">Info</option>
-                  <option value="warn">Warn</option>
-                  <option value="error">Error</option>
-                </select>
-                <button
-                  onClick={async () => {
-                    setLogLevelLoading(true);
-                    setLogLevelMessage("");
-                    try {
-                      const res = await fetch("/api/settings/log-level", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ logLevel }),
-                      });
-                      const data = await res.json();
-                      if (res.ok) {
-                        setLogLevelMessage("Log level updated");
-                      } else {
-                        setLogLevelMessage(data.error || "Failed to update log level");
-                      }
-                    } catch (err) {
-                      setLogLevelMessage("Error updating log level");
-                    } finally {
-                      setLogLevelLoading(false);
-                      setTimeout(() => setLogLevelMessage(""), 3000);
+          {/* Log Level Section */}
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mt-6">
+            <h2 className="text-xl font-semibold mb-4">Logging Level</h2>
+            <p className="text-gray-600 dark:text-gray-400 mb-4">
+              Choose the minimum log level to emit from the server. This
+              overrides the environment LOG_LEVEL when set.
+            </p>
+            <div className="flex items-center gap-4">
+              <select
+                value={logLevel || "info"}
+                onChange={(e) => setLogLevel(e.target.value)}
+                className="px-3 py-2 border rounded dark:bg-gray-700 dark:border-gray-600"
+              >
+                <option value="debug">Debug</option>
+                <option value="info">Info</option>
+                <option value="warn">Warn</option>
+                <option value="error">Error</option>
+              </select>
+              <button
+                onClick={async () => {
+                  setLogLevelLoading(true);
+                  setLogLevelMessage("");
+                  try {
+                    const res = await fetch("/api/settings/log-level", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ logLevel }),
+                    });
+                    const data = await res.json();
+                    if (res.ok) {
+                      setLogLevelMessage("Log level updated");
+                    } else {
+                      setLogLevelMessage(
+                        data.error || "Failed to update log level"
+                      );
                     }
-                  }}
-                  disabled={logLevelLoading}
-                  className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
-                >
-                  {logLevelLoading ? "Saving..." : "Save"}
-                </button>
-              </div>
-              {logLevelMessage && (
-                <p className={`mt-2 ${logLevelMessage.includes("Error") ? "text-red-500" : "text-green-500"}`}>
-                  {logLevelMessage}
-                </p>
-              )}
+                  } catch (err) {
+                    setLogLevelMessage("Error updating log level");
+                  } finally {
+                    setLogLevelLoading(false);
+                    setTimeout(() => setLogLevelMessage(""), 3000);
+                  }
+                }}
+                disabled={logLevelLoading}
+                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
+              >
+                {logLevelLoading ? "Saving..." : "Save"}
+              </button>
             </div>
+            {logLevelMessage && (
+              <p
+                className={`mt-2 ${logLevelMessage.includes("Error") ? "text-red-500" : "text-green-500"}`}
+              >
+                {logLevelMessage}
+              </p>
+            )}
+          </div>
 
           {/* Environment Variables Section */}
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">

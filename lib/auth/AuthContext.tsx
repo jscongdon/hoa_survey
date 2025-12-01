@@ -1,6 +1,12 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
 
 interface AuthContextType {
   role: string | null;
@@ -45,7 +51,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Listen for auth state changes from other tabs/windows
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'auth-refresh') {
+      if (e.key === "auth-refresh") {
         refreshAuth();
       }
     };
@@ -54,12 +60,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       refreshAuth();
     };
 
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('focus', handleFocus);
+    window.addEventListener("storage", handleStorageChange);
+    window.addEventListener("focus", handleFocus);
 
     return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("focus", handleFocus);
     };
   }, []);
 
@@ -70,11 +76,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isAuthenticated: role !== null,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {

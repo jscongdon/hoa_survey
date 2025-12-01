@@ -6,11 +6,6 @@ import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
 
 export default function Header() {
-  // Defensive: avoid calling client hooks during server prerender.
-  // Some build environments may evaluate client modules in workers;
-  // guard early to prevent hook runtime errors on the server.
-  if (typeof window === "undefined") return null;
-
   const router = useRouter();
   const pathname = usePathname();
   const { role, refreshAuth } = useAuth();
@@ -111,12 +106,18 @@ export default function Header() {
   }
 
   // Hide the entire header on the login page
-  if (pathname && (pathname === "/login" || pathname.startsWith("/login/"))) {
-    return null;
-  }
+  const hideOnLogin = !!(
+    pathname &&
+    (pathname === "/login" || pathname.startsWith("/login/"))
+  );
 
   return (
-    <header className="w-full py-3 sm:py-4 flex items-center justify-between border-b border-gray-200 dark:border-gray-700 mb-6 sm:mb-8 px-4 sm:px-6 lg:px-8">
+    <header
+      aria-hidden={hideOnLogin}
+      className={`w-full py-3 sm:py-4 flex items-center justify-between border-b border-gray-200 dark:border-gray-700 mb-6 sm:mb-8 px-4 sm:px-6 lg:px-8 ${
+        hideOnLogin ? "hidden" : ""
+      }`}
+    >
       <div className="flex items-center min-w-0 flex-1">
         <Image
           src={hoaLogoUrl || "/hoasurvey_logo.png"}
