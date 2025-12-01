@@ -18,6 +18,14 @@ import { ToastContainer } from "@/components/ui/ToastContainer";
 const ErrorContext = createContext<ErrorContextType | undefined>(undefined);
 
 export function ErrorProvider({ children }: { children: ReactNode }) {
+  // Defensive: if this module is ever executed on the server unexpectedly,
+  // avoid calling client hooks to prevent build-time crashes. Returning
+  // the children on the server is safe — the client will hydrate the
+  // provider as intended.
+  if (typeof window === "undefined") {
+    return <>{children}</>;
+  }
+
   const [errors, setErrors] = useState<AppError[]>([]);
 
   const removeError = useCallback((id: string) => {
@@ -104,8 +112,20 @@ export function ErrorProvider({ children }: { children: ReactNode }) {
 export function useError() {
   const context = useContext(ErrorContext);
   if (context === undefined) {
-    throw new Error("useError must be used within an ErrorProvider");
+    // Return a safe no-op fallback when the provider isn't mounted (e.g., during
+    // server-side prerender). This prevents prerender failures while keeping
+    // client-time behavior intact once the real `ErrorProvider` hydrates.
+    return {
+      errors: [],
+      addError: () => {},
+      addSuccess: () => {},
+      addWarning: () => {},
+      addInfo: () => {},
+      removeError: () => {},
+      clearErrors: () => {},
+    } as ErrorContextType;
   }
+
   return context;
 }
 

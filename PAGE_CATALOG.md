@@ -194,7 +194,7 @@ This document catalogs all pages/routes in the HOA Survey application, organized
 
 - `GET /api/settings/env` - Get environment settings
 - `POST /api/settings/restart` - Restart application
-- `GET /api/settings/development-mode` - Get dev mode status
+ 
 
 ### Setup APIs (`/api/setup/`)
 

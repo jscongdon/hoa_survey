@@ -6,6 +6,11 @@ import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/lib/auth/AuthContext";
 
 export default function Header() {
+  // Defensive: avoid calling client hooks during server prerender.
+  // Some build environments may evaluate client modules in workers;
+  // guard early to prevent hook runtime errors on the server.
+  if (typeof window === "undefined") return null;
+
   const router = useRouter();
   const pathname = usePathname();
   const { role, refreshAuth } = useAuth();
