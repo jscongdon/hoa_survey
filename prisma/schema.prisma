@@ -83,6 +83,7 @@ model Survey {
   requireSignature Boolean    @default(true) // Whether this survey requires digital signature for responses
   notifyOnMinResponses Boolean @default(false) // Email creator when minResponses reached
   minimalNotifiedAt DateTime?
+  groupNotificationsEnabled Boolean @default(true) // Whether to send group notifications for this survey
   createdAt      DateTime @default(now())
 }
 
