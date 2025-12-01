@@ -150,6 +150,10 @@ export default function EditSurveyPage({
             typeof (data as any).notifyOnMinResponses === "boolean"
               ? (data as any).notifyOnMinResponses
               : false,
+          groupNotificationsEnabled:
+            typeof (data as any).groupNotificationsEnabled === "boolean"
+              ? (data as any).groupNotificationsEnabled
+              : true,
           minResponses: data.minResponses ? String(data.minResponses) : "",
           minResponsesAll: data.minResponsesAll || false,
           questions: normalized,
@@ -276,6 +280,10 @@ export default function EditSurveyPage({
               opensAt: survey.opensAt || null,
               closesAt: survey.closesAt || null,
               memberListId: survey.memberListId || "",
+              groupNotificationsEnabled:
+                typeof survey.groupNotificationsEnabled === "boolean"
+                  ? survey.groupNotificationsEnabled
+                  : true,
               minResponses: survey.minResponses ?? null,
               minResponsesAll: survey.minResponsesAll || false,
               requireSignature:

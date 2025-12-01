@@ -78,6 +78,10 @@ export async function GET(
     minimalNotifiedAt: (survey as any).minimalNotifiedAt || null,
     minResponses: survey.minResponses,
     minResponsesAll: survey.minResponsesAll,
+    groupNotificationsEnabled:
+      typeof (survey as any).groupNotificationsEnabled === "boolean"
+        ? (survey as any).groupNotificationsEnabled
+        : true,
     totalResponses,
     submittedResponses,
     questions: parsedQuestions,
@@ -113,6 +117,7 @@ export async function PUT(
       minResponses,
       minResponsesAll,
       requireSignature,
+      groupNotificationsEnabled,
     } = body;
     const { id } = await params;
 
@@ -175,6 +180,10 @@ export async function PUT(
         notifyOnMinResponses:
           typeof (body as any).notifyOnMinResponses === "boolean"
             ? (body as any).notifyOnMinResponses
+            : undefined,
+        groupNotificationsEnabled:
+          typeof groupNotificationsEnabled === "boolean"
+            ? groupNotificationsEnabled
             : undefined,
       };
 
