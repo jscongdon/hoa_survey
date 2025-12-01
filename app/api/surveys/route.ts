@@ -90,6 +90,7 @@ export async function POST(request: NextRequest) {
       minResponsesAll,
       requireSignature,
       notifyOnMinResponses,
+      groupNotificationsEnabled,
       questions,
     } = body;
 
@@ -137,6 +138,10 @@ export async function POST(request: NextRequest) {
           typeof notifyOnMinResponses === "boolean"
             ? notifyOnMinResponses
             : false,
+        groupNotificationsEnabled:
+          typeof groupNotificationsEnabled === "boolean"
+            ? groupNotificationsEnabled
+            : true,
         createdById: adminId || undefined,
         createdAt: new Date(),
       };

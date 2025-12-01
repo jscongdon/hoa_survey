@@ -213,7 +213,7 @@ export default function DashboardPage() {
             <div className="flex flex-col gap-2 sm:gap-3 w-full">
               {currentAdminRole === "FULL" && (
                 <>
-                  {!survey.initialSentAt && (
+                  {!survey.initialSentAt && (survey as any).groupNotificationsEnabled && (
                     <button
                       onClick={() => handleSendInitial(survey.id)}
                       disabled={!!initialSendStatus[survey.id]}
@@ -228,7 +228,7 @@ export default function DashboardPage() {
                   {survey.responseRate < 100 &&
                   survey.submittedCount < survey.totalRecipients ? (
                     <>
-                      {survey.initialSentAt ? (
+                      {survey.initialSentAt && (survey as any).groupNotificationsEnabled ? (
                         <button
                           onClick={() => handleSendReminder(survey.id)}
                           disabled={!!reminderStatus[survey.id]}

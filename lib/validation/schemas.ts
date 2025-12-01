@@ -53,6 +53,7 @@ export const createSurveySchema = z.object({
   memberListId: z.string().uuid(),
   showLive: z.boolean().default(false),
   showAfterClose: z.boolean().default(true),
+  groupNotificationsEnabled: z.boolean().optional().default(true),
 });
 
 // Question validation (used in SurveyBuilder)

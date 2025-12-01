@@ -10,6 +10,7 @@ export type SurveyFormValues = {
   closesAt?: string | null;
   memberListId?: string;
   showLive?: boolean;
+  groupNotificationsEnabled?: boolean;
   minResponses?: number | null;
   minResponsesAll?: boolean;
   requireSignature?: boolean;
@@ -69,6 +70,11 @@ export default function SurveyForm({
   const [notifyOnMinResponses, setNotifyOnMinResponses] = useState(
     !!initialValues.notifyOnMinResponses
   );
+  const [groupNotificationsEnabled, setGroupNotificationsEnabled] = useState(
+    initialValues.groupNotificationsEnabled !== undefined
+      ? !!initialValues.groupNotificationsEnabled
+      : true
+  );
   const [questions, setQuestions] = useState<any[]>(
     initialValues.questions || []
   );
@@ -106,6 +112,8 @@ export default function SurveyForm({
         closesAt: initialValues.closesAt || null,
         memberListId: initialValues.memberListId || "",
         showLive: !!initialValues.showLive,
+        groupNotificationsEnabled:
+          initialValues.groupNotificationsEnabled ?? true,
         minResponses: initialValues.minResponses ?? null,
         minResponsesAll: !!initialValues.minResponsesAll,
         requireSignature: initialValues.requireSignature ?? true,
@@ -128,6 +136,7 @@ export default function SurveyForm({
         minResponsesAll,
         requireSignature,
         notifyOnMinResponses,
+        groupNotificationsEnabled,
         questions,
       }),
     [
@@ -170,6 +179,7 @@ export default function SurveyForm({
         closesAt: closesAt ? new Date(closesAt).toISOString() : null,
         memberListId,
         showLive,
+        groupNotificationsEnabled,
         minResponses: minResponses ? parseInt(minResponses) : null,
         minResponsesAll,
         requireSignature,
@@ -344,6 +354,21 @@ export default function SurveyForm({
               className="ml-2 text-sm text-gray-700 dark:text-gray-300"
             >
               Notify when minimum responses reached
+            </label>
+          </div>
+          <div className="flex items-center">
+            <input
+              type="checkbox"
+              id="groupNotificationsEnabled"
+              checked={groupNotificationsEnabled}
+              onChange={(e) => setGroupNotificationsEnabled(e.target.checked)}
+              className="w-4 h-4 text-blue-500"
+            />
+            <label
+              htmlFor="groupNotificationsEnabled"
+              className="ml-2 text-sm text-gray-700 dark:text-gray-300"
+            >
+              Enable Group Notifications
             </label>
           </div>
         </div>
