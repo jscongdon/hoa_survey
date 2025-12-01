@@ -20,7 +20,6 @@ model SystemConfig {
   smtpPass        String?
   smtpFrom        String?
   appUrl          String?
-  logLevel        String?   // Optional log level controlled via Settings (debug|info|warn|error)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }

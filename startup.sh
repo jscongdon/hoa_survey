@@ -10,24 +10,7 @@ if [ -z "$JWT_SECRET" ] || [ "$JWT_SECRET" = "changeme" ] || [ "$JWT_SECRET" = "
 fi
 
 # Wait for database and run migrations
-npm_root="./node_modules"
-# Ensure dependencies are installed in the container (safe to run even if compose already installed them)
-# If the expected binaries are missing from node_modules/.bin (empty named volume case),
-# run `npm ci` to install dependencies. This avoids an empty `node_modules` directory
-# created by Docker volumes that looks present but doesn't contain installed packages.
-if [ ! -x "$npm_root/.bin/prisma" ] || [ ! -x "$npm_root/.bin/next" ]; then
-  echo "[startup] Required node binaries missing — running npm ci --legacy-peer-deps"
-  npm ci --legacy-peer-deps
-fi
-
-# Prefer the locally installed prisma binary to avoid npx fetching a different major version
-if [ -x "$npm_root/.bin/prisma" ]; then
-  echo "[startup] Using local prisma to generate client"
-  "$npm_root/.bin/prisma" generate || true
-else
-  echo "[startup] Local prisma not found — falling back to npx prisma generate"
-  npx prisma generate || true
-fi
+npx prisma generate
 
 echo "[startup] Running migrations (prisma migrate deploy)"
 if npx prisma migrate deploy; then

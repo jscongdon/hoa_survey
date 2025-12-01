@@ -18,11 +18,6 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  // Defensive guard: if executed on server unexpectedly, avoid using hooks.
-  if (typeof window === "undefined") {
-    return <>{children}</>;
-  }
-
   const [role, setRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -82,15 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    // Return a safe fallback during server prerender so pages that import
-    // `useAuth` don't crash. The real provider will hydrate on the client.
-    return {
-      role: null,
-      loading: false,
-      refreshAuth: async () => {},
-      isAuthenticated: false,
-    } as AuthContextType;
+    throw new Error('useAuth must be used within an AuthProvider');
   }
-
   return context;
 }
