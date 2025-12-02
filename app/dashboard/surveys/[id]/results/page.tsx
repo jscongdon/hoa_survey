@@ -218,7 +218,9 @@ export default function SurveyResultsPage({
           <div className="bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-700 rounded-lg p-4 mb-6">
             <div
               className="text-gray-700 dark:text-gray-300"
-              dangerouslySetInnerHTML={{ __html: data.survey.description || "" }}
+              dangerouslySetInnerHTML={{
+                __html: data.survey.description || "",
+              }}
             />
           </div>
         )}
