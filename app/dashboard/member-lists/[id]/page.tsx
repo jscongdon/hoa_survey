@@ -36,6 +36,8 @@ export default function MemberListDetailPage({
   const controllerRef = React.useRef<AbortController | null>(null);
   const [streaming, setStreaming] = useState(false);
   const [cacheLoaded, setCacheLoaded] = useState(false);
+  // Cache TTL for member list items (1 hour)
+  // Cache TTL for member list items (1 hour)
   const CACHE_TTL_MS = 1000 * 60 * 60; // 1 hour
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingMember, setEditingMember] = useState<Member>({
@@ -144,7 +146,7 @@ export default function MemberListDetailPage({
     } finally {
       setCacheLoaded(true);
     }
-  }, [id]);
+  }, [id, CACHE_TTL_MS]);
 
   // stream members
   useEffect(() => {
