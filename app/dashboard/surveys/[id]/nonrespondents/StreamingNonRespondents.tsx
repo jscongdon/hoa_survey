@@ -35,7 +35,7 @@ export default function StreamingNonRespondents() {
   const readerRef = useRef<any>(null);
   const autoResumeTriggeredRef = useRef(false);
 
-  const saveCacheNow = (overrideItems?: NonRespondent[]) => {
+  const saveCacheNow = React.useCallback((overrideItems?: NonRespondent[]) => {
     if (!surveyId) return;
     try {
       const key = `nonrespondents:${surveyId}`;
@@ -80,7 +80,7 @@ export default function StreamingNonRespondents() {
     } catch (e) {
       console.error("Failed to save cached nonrespondents (immediate)", e);
     }
-  };
+  }, [surveyId, totalCount]);
   const [remindStatus, setRemindStatus] = useState<Record<string, string>>({});
   const [retryKey, setRetryKey] = useState(0);
   const completedRef = useRef(false);
@@ -483,12 +483,12 @@ export default function StreamingNonRespondents() {
     };
 
     run();
+    const thisRun = runIdRef.current;
     return () => {
       // abort any in-flight fetch/reader for this run
       if (controllerRef.current) {
         try {
-          // invalidate other runs
-          runIdRef.current++;
+          // Do not mutate runIdRef here (it may be updated by other runs)
         } catch {}
         try {
           controllerRef.current.abort();
@@ -502,7 +502,7 @@ export default function StreamingNonRespondents() {
         readerRef.current = null;
       }
     };
-  }, [surveyId, refreshAuth, router, retryKey]);
+  }, [surveyId, refreshAuth, router, retryKey, saveCacheNow, cacheLoaded, items.length, loading, totalCount]);
 
   // If the user switches tabs or the window regains focus, attempt to resume streaming
   useEffect(() => {
@@ -572,7 +572,7 @@ export default function StreamingNonRespondents() {
     console.debug("Nonrespondents: auto-triggering resume on page open");
     setRetryKey((k) => k + 1);
     autoResumeTriggeredRef.current = true;
-  }, [cacheLoaded, surveyId, totalCount, streaming]);
+  }, [cacheLoaded, surveyId, totalCount, streaming, saveCacheNow, CACHE_TTL_MS]);
 
   // Load cached nonrespondents for this survey (if any and not expired)
   useEffect(() => {
@@ -635,7 +635,7 @@ export default function StreamingNonRespondents() {
     } finally {
       setCacheLoaded(true);
     }
-  }, [surveyId]);
+  }, [surveyId, CACHE_TTL_MS]);
 
   // Persist cache when items change (debounced)
   useEffect(() => {
