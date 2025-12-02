@@ -9,7 +9,12 @@ type Props = {
   className?: string;
 };
 
-export default function Wysiwyg({ value, onChange, placeholder, className }: Props) {
+export default function Wysiwyg({
+  value,
+  onChange,
+  placeholder,
+  className,
+}: Props) {
   const ref = useRef<HTMLDivElement | null>(null);
   // Save selection range when interacting with the editor so actions like
   // creating a link still apply after clicking toolbar buttons
@@ -57,26 +62,37 @@ export default function Wysiwyg({ value, onChange, placeholder, className }: Pro
       const node = sel.anchorNode;
       if (!node) return null;
       // Walk up ancestors to find a containing anchor (covers collapsed selections)
-      let el: HTMLElement | null = node.nodeType === Node.ELEMENT_NODE ? (node as HTMLElement) : node.parentElement;
+      let el: HTMLElement | null =
+        node.nodeType === Node.ELEMENT_NODE
+          ? (node as HTMLElement)
+          : node.parentElement;
       while (el && el !== ref.current) {
-        if (el.tagName === 'A') return el as HTMLAnchorElement;
+        if (el.tagName === "A") return el as HTMLAnchorElement;
         el = el.parentElement;
       }
       // If selection spans multiple nodes, try to locate the first anchor within the range
       if (sel.rangeCount > 0) {
         const range = sel.getRangeAt(0);
-        const walker = document.createTreeWalker(range.commonAncestorContainer, NodeFilter.SHOW_ELEMENT, {
-          acceptNode(node: Node) {
-            if (node instanceof HTMLAnchorElement) return NodeFilter.FILTER_ACCEPT;
-            return NodeFilter.FILTER_SKIP;
-          },
-        } as any);
+        const walker = document.createTreeWalker(
+          range.commonAncestorContainer,
+          NodeFilter.SHOW_ELEMENT,
+          {
+            acceptNode(node: Node) {
+              if (node instanceof HTMLAnchorElement)
+                return NodeFilter.FILTER_ACCEPT;
+              return NodeFilter.FILTER_SKIP;
+            },
+          } as any
+        );
         let n = walker.nextNode() as HTMLAnchorElement | null;
         while (n) {
           // Ensure anchor intersects with the selection range
           const r = document.createRange();
           r.selectNodeContents(n);
-          if (range.compareBoundaryPoints(Range.END_TO_START, r) < 0 && range.compareBoundaryPoints(Range.START_TO_END, r) > 0) {
+          if (
+            range.compareBoundaryPoints(Range.END_TO_START, r) < 0 &&
+            range.compareBoundaryPoints(Range.START_TO_END, r) > 0
+          ) {
             return n;
           }
           n = walker.nextNode() as HTMLAnchorElement | null;
@@ -121,8 +137,8 @@ export default function Wysiwyg({ value, onChange, placeholder, className }: Pro
       if (!sel || sel.rangeCount === 0) return;
       const a = findAnchorInSelection();
       if (!a) return;
-      a.setAttribute('target', '_blank');
-      a.setAttribute('rel', 'noopener noreferrer');
+      a.setAttribute("target", "_blank");
+      a.setAttribute("rel", "noopener noreferrer");
     } catch (e) {
       // ignore
     }
@@ -135,13 +151,17 @@ export default function Wysiwyg({ value, onChange, placeholder, className }: Pro
     if (!sel || sel.rangeCount === 0) return;
     const range = sel.getRangeAt(0);
     if (range.collapsed) return;
-    const span = document.createElement('span');
+    const span = document.createElement("span");
     span.style.fontSize = `${sizePx}px`;
     try {
       range.surroundContents(span);
     } catch (e) {
       // SurroundContents can throw if selection contains partially selected nodes; fall back to execCommand
-      document.execCommand('insertHTML', false, `<span style="font-size:${sizePx}px">${range.toString()}</span>`);
+      document.execCommand(
+        "insertHTML",
+        false,
+        `<span style="font-size:${sizePx}px">${range.toString()}</span>`
+      );
     }
     if (ref.current) onChange(ref.current.innerHTML);
   };
@@ -154,17 +174,17 @@ export default function Wysiwyg({ value, onChange, placeholder, className }: Pro
     const range = sel.getRangeAt(0);
     if (range.collapsed) return;
     // Create anchor and set attributes
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = href;
-    a.setAttribute('target', '_blank');
-    a.setAttribute('rel', 'noopener noreferrer');
+    a.setAttribute("target", "_blank");
+    a.setAttribute("rel", "noopener noreferrer");
     try {
       a.appendChild(range.extractContents());
       range.insertNode(a);
     } catch (e) {
       // If that fails, fallback to execCommand
       try {
-        document.execCommand('createLink', false, href);
+        document.execCommand("createLink", false, href);
       } catch (ex) {
         // ignore
       }
@@ -185,17 +205,17 @@ export default function Wysiwyg({ value, onChange, placeholder, className }: Pro
   // Keyboard shortcuts for formatting
   const onEditorKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     const meta = e.ctrlKey || e.metaKey;
-    if (meta && e.key.toLowerCase() === 'b') {
+    if (meta && e.key.toLowerCase() === "b") {
       e.preventDefault();
-      exec('bold');
+      exec("bold");
     }
-    if (meta && e.key.toLowerCase() === 'i') {
+    if (meta && e.key.toLowerCase() === "i") {
       e.preventDefault();
-      exec('italic');
+      exec("italic");
     }
-    if (meta && e.key.toLowerCase() === 'u') {
+    if (meta && e.key.toLowerCase() === "u") {
       e.preventDefault();
-      exec('underline');
+      exec("underline");
     }
   };
 
@@ -215,40 +235,79 @@ export default function Wysiwyg({ value, onChange, placeholder, className }: Pro
 
   return (
     <div className={`${className ?? ""} wysiwyg-wrapper`}>
-      <div role="toolbar" aria-label="Formatting toolbar" className="wysiwyg-toolbar mb-2 flex gap-1">
-        <button type="button" onMouseDown={() => saveSelection()} onClick={() => exec("bold")} className="wysiwyg-btn">B</button>
-        <button type="button" onMouseDown={() => saveSelection()} onClick={() => exec("italic")} className="wysiwyg-btn">I</button>
-        <button type="button" onMouseDown={() => saveSelection()} onClick={() => exec("underline")} className="wysiwyg-btn">U</button>
-        <button type="button" onMouseDown={() => saveSelection()} onClick={() => exec("insertUnorderedList")} className="wysiwyg-btn">• List</button>
-        <button type="button" onMouseDown={() => saveSelection()} onClick={() => exec("insertOrderedList")} className="wysiwyg-btn">1. List</button>
+      <div
+        role="toolbar"
+        aria-label="Formatting toolbar"
+        className="wysiwyg-toolbar mb-2 flex gap-1"
+      >
+        <button
+          type="button"
+          onMouseDown={() => saveSelection()}
+          onClick={() => exec("bold")}
+          className="wysiwyg-btn"
+        >
+          B
+        </button>
+        <button
+          type="button"
+          onMouseDown={() => saveSelection()}
+          onClick={() => exec("italic")}
+          className="wysiwyg-btn"
+        >
+          I
+        </button>
+        <button
+          type="button"
+          onMouseDown={() => saveSelection()}
+          onClick={() => exec("underline")}
+          className="wysiwyg-btn"
+        >
+          U
+        </button>
+        <button
+          type="button"
+          onMouseDown={() => saveSelection()}
+          onClick={() => exec("insertUnorderedList")}
+          className="wysiwyg-btn"
+        >
+          • List
+        </button>
+        <button
+          type="button"
+          onMouseDown={() => saveSelection()}
+          onClick={() => exec("insertOrderedList")}
+          className="wysiwyg-btn"
+        >
+          1. List
+        </button>
         <button
           type="button"
           onMouseDown={() => saveSelection()}
           onClick={() => {
             // If selection inside an anchor, prefill prompt with existing href and allow editing
             const anchor = findAnchorInSelection();
-            const initial = anchor?.getAttribute('href') || 'https://';
-            const url = window.prompt('Link URL (https://...)', initial);
+            const initial = anchor?.getAttribute("href") || "https://";
+            const url = window.prompt("Link URL (https://...)", initial);
             if (url === null) return; // cancelled
             const trimmed = url.trim();
             if (!trimmed) {
               // Remove link if blank
               if (anchor) {
                 // Unwrap anchor by replacing it with its text content
-                const text = anchor.textContent || '';
+                const text = anchor.textContent || "";
                 const span = document.createTextNode(text);
                 anchor.parentElement?.replaceChild(span, anchor);
                 if (ref.current) onChange(ref.current.innerHTML);
               } else {
-                exec('unlink');
+                exec("unlink");
               }
               return;
             }
             if (anchor) {
               // Edit existing anchor by updating href
-              anchor.setAttribute('href', normalizeUrl(trimmed));
-              anchor.setAttribute('target', '_blank');
-              anchor.setAttribute('rel', 'noopener noreferrer');
+              anchor.setAttribute("href", normalizeUrl(trimmed));
+              anchor.setAttribute("target", "_blank");
+              anchor.setAttribute("rel", "noopener noreferrer");
               if (ref.current) onChange(ref.current.innerHTML);
             } else {
               createOrUpdateLink(normalizeUrl(trimmed));
@@ -259,12 +318,54 @@ export default function Wysiwyg({ value, onChange, placeholder, className }: Pro
         >
           Link
         </button>
-        <button type="button" onMouseDown={() => saveSelection()} onClick={() => exec("formatBlock", "<h3>") } className="wysiwyg-btn" aria-label="Heading 3">H3</button>
-        <button type="button" onMouseDown={() => saveSelection()} onClick={() => exec("removeFormat")} className="wysiwyg-btn">Clear</button>
+        <button
+          type="button"
+          onMouseDown={() => saveSelection()}
+          onClick={() => exec("formatBlock", "<h3>")}
+          className="wysiwyg-btn"
+          aria-label="Heading 3"
+        >
+          H3
+        </button>
+        <button
+          type="button"
+          onMouseDown={() => saveSelection()}
+          onClick={() => exec("removeFormat")}
+          className="wysiwyg-btn"
+        >
+          Clear
+        </button>
         <div className="ml-2 flex items-center gap-1">
-          <button title="Small text" type="button" className="wysiwyg-btn" onMouseDown={() => saveSelection()} onClick={() => applyFontSize(12)} aria-label="Small text">A-</button>
-          <button title="Normal text" type="button" className="wysiwyg-btn" onMouseDown={() => saveSelection()} onClick={() => applyFontSize(16)} aria-label="Normal text">A</button>
-          <button title="Large text" type="button" className="wysiwyg-btn" onMouseDown={() => saveSelection()} onClick={() => applyFontSize(22)} aria-label="Large text">A+</button>
+          <button
+            title="Small text"
+            type="button"
+            className="wysiwyg-btn"
+            onMouseDown={() => saveSelection()}
+            onClick={() => applyFontSize(12)}
+            aria-label="Small text"
+          >
+            A-
+          </button>
+          <button
+            title="Normal text"
+            type="button"
+            className="wysiwyg-btn"
+            onMouseDown={() => saveSelection()}
+            onClick={() => applyFontSize(16)}
+            aria-label="Normal text"
+          >
+            A
+          </button>
+          <button
+            title="Large text"
+            type="button"
+            className="wysiwyg-btn"
+            onMouseDown={() => saveSelection()}
+            onClick={() => applyFontSize(22)}
+            aria-label="Large text"
+          >
+            A+
+          </button>
         </div>
       </div>
       <div
@@ -275,7 +376,7 @@ export default function Wysiwyg({ value, onChange, placeholder, className }: Pro
         role="textbox"
         aria-multiline
         suppressContentEditableWarning
-        className={`wysiwyg-editor min-h-[100px] px-3 py-2 border rounded ${isEmpty ? 'empty' : ''}`}
+        className={`wysiwyg-editor min-h-[100px] px-3 py-2 border rounded ${isEmpty ? "empty" : ""}`}
         data-placeholder={placeholder}
       />
     </div>

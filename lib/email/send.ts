@@ -117,7 +117,9 @@ export function generateSurveyEmail(
   const greeting = `<p style="margin-bottom:8px;">Hello ${displayName},</p>`;
 
   const bodyParts: string[] = [];
-  const sanitized = surveyDescription ? sanitizeSurveyHtml(String(surveyDescription)) : "";
+  const sanitized = surveyDescription
+    ? sanitizeSurveyHtml(String(surveyDescription))
+    : "";
   if (sanitized) bodyParts.push(`<p>${sanitized}</p>`);
   bodyParts.push(
     `<p>Our records show that the resident of <strong>Lot ${lot}</strong> has not yet completed the survey "${surveyTitle}". Please take a few minutes to complete it by clicking the button below.</p>`
