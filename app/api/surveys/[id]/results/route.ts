@@ -232,7 +232,9 @@ export async function GET(
       survey: {
         id: survey.id,
         title: survey.title,
-        description: survey.description ? sanitizeSurveyHtml(String(survey.description)) : survey.description,
+        description: survey.description
+          ? sanitizeSurveyHtml(String(survey.description))
+          : survey.description,
         opensAt: survey.opensAt,
         closesAt: survey.closesAt,
         totalResponses: survey.responses.length,

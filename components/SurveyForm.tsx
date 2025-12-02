@@ -3,6 +3,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import SurveyBuilder from "@/components/SurveyBuilder";
 import Wysiwyg from "@/components/Wysiwyg";
+import SurveyPreview from "@/components/SurveyPreview";
 
 export type SurveyFormValues = {
   title: string;
@@ -83,6 +84,7 @@ export default function SurveyForm({
     Array<{ id: string; name: string; _count?: { members: number } }>
   >([]);
   const [loading, setLoading] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -465,7 +467,38 @@ export default function SurveyForm({
               ? "Create Survey"
               : "Update Survey"}
         </button>
+        <button
+          type="button"
+          onClick={() => setShowPreview(true)}
+          className="px-6 py-2 bg-gray-200 text-gray-900 rounded-lg hover:bg-gray-300 dark:bg-gray-700 dark:text-white"
+        >
+          Preview
+        </button>
       </div>
+      {showPreview && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setShowPreview(false)} />
+          <div className="relative max-w-3xl w-full bg-white dark:bg-gray-900 rounded-lg overflow-auto shadow-lg">
+            <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white">Preview Survey</h3>
+              <button
+                onClick={() => setShowPreview(false)}
+                className="px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-md"
+              >
+                Close
+              </button>
+            </div>
+            <div className="p-4">
+              <SurveyPreview
+                title={title}
+                description={description}
+                questions={questions}
+                memberNote={memberListNote}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </form>
   );
 }

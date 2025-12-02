@@ -71,7 +71,9 @@ export async function GET(
     : null;
   // sanitize survey description before returning to client
   if (parsedSurvey && parsedSurvey.description) {
-    parsedSurvey.description = sanitizeSurveyHtml(String(parsedSurvey.description));
+    parsedSurvey.description = sanitizeSurveyHtml(
+      String(parsedSurvey.description)
+    );
   }
 
   // Decrypt member data for display
