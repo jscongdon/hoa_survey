@@ -14,7 +14,7 @@ export interface ActionButton {
 export interface ListLayoutProps {
   children: React.ReactNode;
   title?: string;
-  subtitle?: string;
+  subtitle?: React.ReactNode;
   actions?: ActionButton[];
   isLoading?: boolean;
   isEmpty?: boolean;

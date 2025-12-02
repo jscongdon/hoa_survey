@@ -1,22 +1,23 @@
-import { log, error as logError } from '@/lib/logger'
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { verifyToken } from '@/lib/auth/jwt';
-import { sendEmail, generateSurveyEmail } from '@/lib/email/send';
+import { log, error as logError } from "@/lib/logger";
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { verifyToken } from "@/lib/auth/jwt";
+import { sendEmail, generateSurveyEmail } from "@/lib/email/send";
+import { decryptMemberData } from "@/lib/encryption";
 
 export async function POST(
   req: NextRequest,
   context: { params: Promise<{ id: string; responseId: string }> }
 ) {
-  let adminId = req.headers.get('x-admin-id');
+  let adminId = req.headers.get("x-admin-id");
   if (!adminId) {
-    const token = req.cookies.get('auth-token')?.value;
+    const token = req.cookies.get("auth-token")?.value;
     if (!token) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
     const payload = await verifyToken(token as string);
     if (!payload?.adminId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
     adminId = payload.adminId;
   }
@@ -30,12 +31,12 @@ export async function POST(
     });
 
     if (!survey) {
-      return NextResponse.json({ error: 'Survey not found' }, { status: 404 });
+      return NextResponse.json({ error: "Survey not found" }, { status: 404 });
     }
 
     // Check if survey is still open
     if (new Date() > survey.closesAt) {
-      return NextResponse.json({ error: 'Survey is closed' }, { status: 400 });
+      return NextResponse.json({ error: "Survey is closed" }, { status: 400 });
     }
 
     // Get the specific response
@@ -45,43 +46,77 @@ export async function POST(
     });
 
     if (!response) {
-      return NextResponse.json({ error: 'Response not found' }, { status: 404 });
+      return NextResponse.json(
+        { error: "Response not found" },
+        { status: 404 }
+      );
     }
 
     if (response.surveyId !== id) {
-      return NextResponse.json({ error: 'Response does not belong to this survey' }, { status: 400 });
+      return NextResponse.json(
+        { error: "Response does not belong to this survey" },
+        { status: 400 }
+      );
     }
 
     if (response.submittedAt) {
-      return NextResponse.json({ error: 'Member has already responded' }, { status: 400 });
+      return NextResponse.json(
+        { error: "Member has already responded" },
+        { status: 400 }
+      );
     }
 
     // Determine base URL for links
-    const isDevelopment = process.env.NODE_ENV === 'development';
-    const baseUrl = isDevelopment 
-      ? (process.env.DEVELOPMENT_URL || `${req.headers.get('x-forwarded-proto') || 'http'}://${req.headers.get('host')}`)
-      : (process.env.PRODUCTION_URL || `${req.headers.get('x-forwarded-proto') || 'http'}://${req.headers.get('host')}`);
+    const isDevelopment = process.env.NODE_ENV === "development";
+    const baseUrl = isDevelopment
+      ? process.env.DEVELOPMENT_URL ||
+        `${req.headers.get("x-forwarded-proto") || "http"}://${req.headers.get("host")}`
+      : process.env.PRODUCTION_URL ||
+        `${req.headers.get("x-forwarded-proto") || "http"}://${req.headers.get("host")}`;
 
     try {
-      log('[SPECIFIC_REMIND] Sending to:', response.member.email, 'Token:', response.token);
-      
+      // decrypt member fields (email/name/lot may be encrypted)
+      const decrypted = await decryptMemberData({
+        name: response.member.name || "",
+        email: response.member.email || "",
+        address: response.member.address || "",
+        lot: response.member.lot || "",
+      });
+
+      if (!decrypted.email) {
+        logError(
+          "[SPECIFIC_REMIND] Missing email for member, cannot send reminder",
+          response.member.id || response.member
+        );
+        return NextResponse.json(
+          { error: "Member email unavailable" },
+          { status: 400 }
+        );
+      }
+      log(
+        "[SPECIFIC_REMIND] Sending to:",
+        decrypted.email,
+        "Token:",
+        response.token
+      );
+
       const link = `${baseUrl}/survey/${response.token}`;
       const html = generateSurveyEmail(
         survey.title,
-        survey.description || '',
+        survey.description || "",
         link,
-        response.member.lot,
-        response.member.name
+        decrypted.lot,
+        decrypted.name
       );
 
       await sendEmail({
-        to: response.member.email,
+        to: decrypted.email,
         subject: `Reminder: ${survey.title}`,
         html,
         text: `Please complete the survey: ${link}`,
       });
 
-      log('[SPECIFIC_REMIND] Sent successfully to:', response.member.email);
+      log("[SPECIFIC_REMIND] Sent successfully to:", response.member.email);
 
       // Record reminder
       await prisma.reminder.create({
@@ -101,16 +136,20 @@ export async function POST(
         message: `Reminder sent to ${response.member.name}`,
       });
     } catch (err) {
-      logError('[SPECIFIC_REMIND] Failed to send reminder to', response.member.email, err);
+      logError(
+        "[SPECIFIC_REMIND] Failed to send reminder to",
+        response.member.email,
+        err
+      );
       return NextResponse.json(
-        { error: 'Failed to send reminder' },
+        { error: "Failed to send reminder" },
         { status: 500 }
       );
     }
   } catch (error) {
-    logError('[SPECIFIC_REMIND] Error:', error);
+    logError("[SPECIFIC_REMIND] Error:", error);
     return NextResponse.json(
-      { error: 'Failed to send reminder' },
+      { error: "Failed to send reminder" },
       { status: 500 }
     );
   }
