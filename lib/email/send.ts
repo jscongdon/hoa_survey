@@ -1,6 +1,6 @@
 import nodemailer from "nodemailer";
 import prisma from "@/lib/prisma";
-import DOMPurify from "isomorphic-dompurify";
+import { sanitizeSurveyHtml } from "@/lib/sanitizeHtml";
 
 let cachedConfig: any = null;
 let cacheTime = 0;
@@ -117,28 +117,7 @@ export function generateSurveyEmail(
   const greeting = `<p style="margin-bottom:8px;">Hello ${displayName},</p>`;
 
   const bodyParts: string[] = [];
-  const sanitized = surveyDescription
-    ? DOMPurify.sanitize(String(surveyDescription), {
-        ALLOWED_TAGS: [
-          "p",
-          "br",
-          "b",
-          "i",
-          "em",
-          "strong",
-          "u",
-          "ul",
-          "ol",
-          "li",
-          "h1",
-          "h2",
-          "h3",
-          "blockquote",
-          "a",
-        ],
-        ALLOWED_ATTR: ["href", "target", "rel"],
-      })
-    : "";
+  const sanitized = surveyDescription ? sanitizeSurveyHtml(String(surveyDescription)) : "";
   if (sanitized) bodyParts.push(`<p>${sanitized}</p>`);
   bodyParts.push(
     `<p>Our records show that the resident of <strong>Lot ${lot}</strong> has not yet completed the survey "${surveyTitle}". Please take a few minutes to complete it by clicking the button below.</p>`

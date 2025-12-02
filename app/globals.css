@@ -63,7 +63,8 @@
 }
 
 /* placeholder for contenteditable */
-.wysiwyg-editor:empty::before {
+.wysiwyg-editor:empty::before,
+.wysiwyg-editor.empty::before {
   content: attr(data-placeholder);
   pointer-events: none;
   display: block;
