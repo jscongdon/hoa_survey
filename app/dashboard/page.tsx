@@ -16,19 +16,12 @@ export default function DashboardPage() {
     loading,
     reminderStatus,
     initialSendStatus,
-    showNonRespondents,
-    nonRespondents,
-    loadingNonRespondents,
-    selectedNonRespondent,
     deletingId,
     handleSendReminder,
     handleSendInitial,
-    toggleNonRespondents,
-    sendSpecificReminder,
     handleCloseSurvey,
     handleExport,
     handleDelete,
-    setSelectedNonRespondent,
   } = useSurveys({ enabled: isAuthenticated });
   const [currentAdminRole, setCurrentAdminRole] = useState<string | null>(null);
   const [adminEmail, setAdminEmail] = useState<string>("");
@@ -160,48 +153,7 @@ export default function DashboardPage() {
                   style={{ width: `${survey.responseRate}%` }}
                 ></div>
               </div>
-              {showNonRespondents[survey.id] && nonRespondents[survey.id] && (
-                <div className="mt-2 border border-gray-300 dark:border-gray-700 rounded-lg p-3 bg-gray-50 dark:bg-gray-800">
-                  {nonRespondents[survey.id].length === 0 ? (
-                    <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
-                      All members have responded!
-                    </p>
-                  ) : (
-                    <div className="space-y-2">
-                      <select
-                        value={selectedNonRespondent[survey.id] || ""}
-                        onChange={(e) =>
-                          setSelectedNonRespondent({
-                            ...selectedNonRespondent,
-                            [survey.id]: e.target.value,
-                          })
-                        }
-                        className="w-full px-3 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-sm text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                      >
-                        <option value="">Select a member...</option>
-                        {nonRespondents[survey.id].map((member: any) => (
-                          <option
-                            key={member.responseId}
-                            value={member.responseId}
-                          >
-                            Lot {member.lotNumber} - {member.name}
-                          </option>
-                        ))}
-                      </select>
-                      <button
-                        onClick={() => sendSpecificReminder(survey.id)}
-                        disabled={
-                          !!reminderStatus[survey.id] ||
-                          !selectedNonRespondent[survey.id]
-                        }
-                        className="w-full px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-sm"
-                      >
-                        Send Reminder
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
+              {/* Per-survey individual remind UI removed (bulk reminders remain) */}
               {reminderStatus[survey.id] && (
                 <p className="mt-2 text-sm text-center text-blue-600 dark:text-blue-400">
                   {reminderStatus[survey.id]}
@@ -240,15 +192,7 @@ export default function DashboardPage() {
                         </button>
                       ) : null}
 
-                      <button
-                        onClick={() => toggleNonRespondents(survey.id)}
-                        disabled={loadingNonRespondents[survey.id]}
-                        className="px-3 py-1.5 text-sm bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
-                      >
-                        {loadingNonRespondents[survey.id]
-                          ? "Loading..."
-                          : "Remind Individual"}
-                      </button>
+                      {/* Individual remind removed from dashboard cards */}
 
                       <button
                         onClick={() =>
