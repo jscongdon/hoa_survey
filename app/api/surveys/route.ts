@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import type { Prisma } from "@prisma/client";
 import { verifyToken } from "@/lib/auth/jwt";
 import { log, error as logError } from "@/lib/logger";
+import DOMPurify from "isomorphic-dompurify";
 
 export async function GET(request: NextRequest) {
   let adminId = request.headers.get("x-admin-id");
@@ -41,6 +42,8 @@ export async function GET(request: NextRequest) {
     responses: survey.responses?.map((response) => ({
       ...response,
     })),
+    // Sanitize description for safety in GET responses
+    description: survey.description ? DOMPurify.sanitize(String(survey.description)) : survey.description,
   }));
 
   const surveysWithStats = transformedSurveys.map((survey: any) => ({
@@ -93,6 +96,28 @@ export async function POST(request: NextRequest) {
       groupNotificationsEnabled,
       questions,
     } = body;
+    const sanitizedDescription = description
+      ? DOMPurify.sanitize(String(description), {
+          ALLOWED_TAGS: [
+            "p",
+            "br",
+            "b",
+            "i",
+            "em",
+            "strong",
+            "u",
+            "ul",
+            "ol",
+            "li",
+            "h1",
+            "h2",
+            "h3",
+            "blockquote",
+            "a",
+          ],
+          ALLOWED_ATTR: ["href", "target", "rel"],
+        })
+      : undefined;
 
     log("[CREATE_SURVEY] Parsed fields:", {
       title,
@@ -124,7 +149,7 @@ export async function POST(request: NextRequest) {
 
       const createPayload: any = {
         title,
-        description,
+        description: sanitizedDescription,
         opensAt: new Date(opensAt),
         closesAt: new Date(closesAt),
         memberListId,

@@ -2,6 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import SurveyBuilder from "@/components/SurveyBuilder";
+import Wysiwyg from "@/components/Wysiwyg";
 
 export type SurveyFormValues = {
   title: string;
@@ -248,11 +249,11 @@ export default function SurveyForm({
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Description
         </label>
-        <textarea
+        <Wysiwyg
           value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          rows={4}
-          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+          onChange={(v: string) => setDescription(v)}
+          placeholder="Survey description (supports rich text)"
+          className="w-full"
         />
       </div>
 

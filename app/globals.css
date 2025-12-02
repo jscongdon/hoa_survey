@@ -38,6 +38,50 @@
   }
 }
 
+/* WYSIWYG styles */
+.wysiwyg-wrapper {
+  /* wrapper spacing handled by parent or props */
+}
+.wysiwyg-toolbar {
+  display: flex;
+  gap: 0.25rem;
+}
+.wysiwyg-btn {
+  @apply px-2 py-1 rounded text-sm border border-transparent bg-gray-100 text-gray-800 hover:bg-gray-200 transition-colors;
+}
+.dark .wysiwyg-btn {
+  @apply bg-gray-800 text-gray-200 hover:bg-gray-700 border-gray-700;
+}
+.wysiwyg-editor {
+  @apply min-h-[100px] px-3 py-2 border border-gray-300 rounded bg-white text-gray-900;
+}
+.wysiwyg-editor:focus {
+  @apply ring-2 ring-blue-500 ring-opacity-50 outline-none;
+}
+.dark .wysiwyg-editor {
+  @apply bg-gray-800 text-gray-100 border-gray-700;
+}
+
+/* placeholder for contenteditable */
+.wysiwyg-editor:empty::before {
+  content: attr(data-placeholder);
+  pointer-events: none;
+  display: block;
+  color: #6b7280; /* gray-500 */
+}
+.dark .wysiwyg-editor:empty::before {
+  color: #9ca3af; /* gray-400 */
+}
+
+/* Links inside the editor should be visible and styled */
+.wysiwyg-editor a {
+  @apply text-blue-600 underline;
+}
+.dark .wysiwyg-editor a {
+  @apply text-blue-400;
+}
+
+
 @layer utilities {
   /* Smooth transitions */
   .transition-smooth {
