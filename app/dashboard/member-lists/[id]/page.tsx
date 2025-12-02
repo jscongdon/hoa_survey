@@ -82,7 +82,12 @@ export default function MemberListDetailPage({
         }
         const data = await res.json();
         // keep list metadata (without members)
-        setList({ id: data.id, name: data.name, createdAt: data.createdAt, members: [] });
+        setList({
+          id: data.id,
+          name: data.name,
+          createdAt: data.createdAt,
+          members: [],
+        });
       } catch (err) {
         console.error(err);
         router.back();
@@ -105,7 +110,7 @@ export default function MemberListDetailPage({
         return;
       }
       const parsed = JSON.parse(raw);
-      if (!parsed || typeof parsed !== 'object') {
+      if (!parsed || typeof parsed !== "object") {
         setCacheLoaded(true);
         return;
       }
@@ -120,14 +125,22 @@ export default function MemberListDetailPage({
         return;
       }
 
-      const mapped: Member[] = items.map((it: any) => ({ id: it.id || it.memberId || '', lot: it.lot || it.lotNumber || '', name: it.name || '', email: it.email || '', address: it.address || '' })).filter(x => x.id);
+      const mapped: Member[] = items
+        .map((it: any) => ({
+          id: it.id || it.memberId || "",
+          lot: it.lot || it.lotNumber || "",
+          name: it.name || "",
+          email: it.email || "",
+          address: it.address || "",
+        }))
+        .filter((x) => x.id);
       if (mapped.length) {
         setMembers(mapped);
         membersRef.current = mapped;
-        mapped.forEach(m => seenRef.current.add(m.id));
+        mapped.forEach((m) => seenRef.current.add(m.id));
       }
     } catch (e) {
-      console.error('Failed to load cached members', e);
+      console.error("Failed to load cached members", e);
     } finally {
       setCacheLoaded(true);
     }
@@ -143,31 +156,42 @@ export default function MemberListDetailPage({
     const run = async () => {
       try {
         setStreaming(true);
-        const last = membersRef.current.length ? membersRef.current[membersRef.current.length - 1].id : undefined;
-        const streamUrl = `/api/member-lists/${id}/members?stream=1${last ? `&afterId=${encodeURIComponent(last)}` : ''}`;
-        console.debug('Members: fetching stream', { streamUrl, lastLoaded: last, cachedCount: membersRef.current.length });
-        const res = await fetch(streamUrl, { credentials: 'include', signal });
-        console.debug('Members: stream response', { ok: res.ok, status: res.status, headers: Array.from(res.headers.entries()) });
-        const headerTotal = res.headers.get('x-total-count');
-        if (headerTotal && !Number.isNaN(Number(headerTotal))) setTotalCount(Number(headerTotal));
+        const last = membersRef.current.length
+          ? membersRef.current[membersRef.current.length - 1].id
+          : undefined;
+        const streamUrl = `/api/member-lists/${id}/members?stream=1${last ? `&afterId=${encodeURIComponent(last)}` : ""}`;
+        console.debug("Members: fetching stream", {
+          streamUrl,
+          lastLoaded: last,
+          cachedCount: membersRef.current.length,
+        });
+        const res = await fetch(streamUrl, { credentials: "include", signal });
+        console.debug("Members: stream response", {
+          ok: res.ok,
+          status: res.status,
+          headers: Array.from(res.headers.entries()),
+        });
+        const headerTotal = res.headers.get("x-total-count");
+        if (headerTotal && !Number.isNaN(Number(headerTotal)))
+          setTotalCount(Number(headerTotal));
         if (!res.ok) {
           setStreaming(false);
           return;
         }
-        const ct = res.headers.get('content-type') || '';
-        if (res.body && ct.includes('ndjson')) {
+        const ct = res.headers.get("content-type") || "";
+        if (res.body && ct.includes("ndjson")) {
           const reader = res.body.getReader();
           readerRef.current = reader;
           const dec = new TextDecoder();
-          let buf = '';
+          let buf = "";
           while (true) {
             const { done, value } = await reader.read();
             if (done) break;
             const chunk = dec.decode(value, { stream: true });
-            console.debug('Members: stream chunk preview', chunk.slice(0, 200));
+            console.debug("Members: stream chunk preview", chunk.slice(0, 200));
             buf += chunk;
-            const lines = buf.split('\n');
-            buf = lines.pop() || '';
+            const lines = buf.split("\n");
+            buf = lines.pop() || "";
             for (const line of lines) {
               if (!line.trim()) continue;
               try {
@@ -175,17 +199,30 @@ export default function MemberListDetailPage({
                 if (!obj?.id) continue;
                 if (seenRef.current.has(obj.id)) continue;
                 seenRef.current.add(obj.id);
-                setMembers(prev => {
+                setMembers((prev) => {
                   const next = [...prev, obj];
                   membersRef.current = next;
                   // persist immediate
                   try {
                     const key = `members:${id}`;
-                    const payload = { items: next.map(n => ({ id: n.id, lot: n.lot, name: n.name, email: n.email, address: n.address })), ts: Date.now() };
+                    const payload = {
+                      items: next.map((n) => ({
+                        id: n.id,
+                        lot: n.lot,
+                        name: n.name,
+                        email: n.email,
+                        address: n.address,
+                      })),
+                      ts: Date.now(),
+                    };
                     localStorage.setItem(key, JSON.stringify(payload));
-                    console.debug('Members: immediate save', { key, savedCount: next.length, exampleEmail: next[0]?.email });
+                    console.debug("Members: immediate save", {
+                      key,
+                      savedCount: next.length,
+                      exampleEmail: next[0]?.email,
+                    });
                   } catch (e) {}
-                  console.debug('Members: appended from stream', obj.id);
+                  console.debug("Members: appended from stream", obj.id);
                   return next;
                 });
               } catch (e) {
@@ -196,7 +233,7 @@ export default function MemberListDetailPage({
 
           // flush remainder
           if (buf.trim()) {
-            const final = buf.split('\n');
+            const final = buf.split("\n");
             for (const line of final) {
               if (!line.trim()) continue;
               try {
@@ -204,10 +241,27 @@ export default function MemberListDetailPage({
                 if (!obj?.id) continue;
                 if (seenRef.current.has(obj.id)) continue;
                 seenRef.current.add(obj.id);
-                setMembers(prev => {
+                setMembers((prev) => {
                   const next = [...prev, obj];
                   membersRef.current = next;
-                  try { const key = `members:${id}`; const payload = { items: next.map(n => ({ id: n.id, lot: n.lot, name: n.name, email: n.email, address: n.address })), ts: Date.now() }; localStorage.setItem(key, JSON.stringify(payload)); console.debug('Members: final save', { key, savedCount: next.length }); } catch (e) {}
+                  try {
+                    const key = `members:${id}`;
+                    const payload = {
+                      items: next.map((n) => ({
+                        id: n.id,
+                        lot: n.lot,
+                        name: n.name,
+                        email: n.email,
+                        address: n.address,
+                      })),
+                      ts: Date.now(),
+                    };
+                    localStorage.setItem(key, JSON.stringify(payload));
+                    console.debug("Members: final save", {
+                      key,
+                      savedCount: next.length,
+                    });
+                  } catch (e) {}
                   return next;
                 });
               } catch (e) {}
@@ -216,26 +270,60 @@ export default function MemberListDetailPage({
         } else {
           // fallback full array
           const body = await res.json();
-          const arr = Array.isArray(body) ? body : (body && Array.isArray((body as any).items) ? (body as any).items : []);
-          if (typeof (body as any).total === 'number') setTotalCount((body as any).total);
+          const arr = Array.isArray(body)
+            ? body
+            : body && Array.isArray((body as any).items)
+              ? (body as any).items
+              : [];
+          if (typeof (body as any).total === "number")
+            setTotalCount((body as any).total);
           else setTotalCount(arr.length);
           const toAdd: Member[] = [];
           for (const it of arr) {
             if (!it || !it.id) continue;
             if (seenRef.current.has(it.id)) continue;
             seenRef.current.add(it.id);
-            toAdd.push({ id: it.id, lot: it.lot || '', name: it.name || '', email: it.email || '', address: it.address || '' });
+            toAdd.push({
+              id: it.id,
+              lot: it.lot || "",
+              name: it.name || "",
+              email: it.email || "",
+              address: it.address || "",
+            });
           }
           if (toAdd.length) {
-            setMembers(prev => { const next = [...prev, ...toAdd]; membersRef.current = next; try { const key = `members:${id}`; const payload = { items: next.map(n => ({ id: n.id, lot: n.lot, name: n.name, email: n.email, address: n.address })), ts: Date.now() }; localStorage.setItem(key, JSON.stringify(payload)); } catch (e) {} return next; });
+            setMembers((prev) => {
+              const next = [...prev, ...toAdd];
+              membersRef.current = next;
+              try {
+                const key = `members:${id}`;
+                const payload = {
+                  items: next.map((n) => ({
+                    id: n.id,
+                    lot: n.lot,
+                    name: n.name,
+                    email: n.email,
+                    address: n.address,
+                  })),
+                  ts: Date.now(),
+                };
+                localStorage.setItem(key, JSON.stringify(payload));
+              } catch (e) {}
+              return next;
+            });
           }
         }
       } catch (e) {
-        if ((e as any)?.name === 'AbortError') return;
-        console.error('Members stream failed', e);
+        if ((e as any)?.name === "AbortError") return;
+        console.error("Members stream failed", e);
       } finally {
         setStreaming(false);
-        try { if (readerRef.current) { await readerRef.current.releaseLock?.(); readerRef.current = null; } } catch {}
+        try {
+          if (readerRef.current) {
+            await readerRef.current.releaseLock?.();
+            readerRef.current = null;
+          }
+        } catch {}
         controllerRef.current = null;
       }
     };
@@ -243,13 +331,16 @@ export default function MemberListDetailPage({
     run();
 
     return () => {
-      try { controllerRef.current?.abort(); } catch {}
-      try { readerRef.current?.cancel?.(); } catch {}
+      try {
+        controllerRef.current?.abort();
+      } catch {}
+      try {
+        readerRef.current?.cancel?.();
+      } catch {}
       controllerRef.current = null;
       readerRef.current = null;
     };
   }, [id, cacheLoaded]);
-
 
   const startEdit = (member: Member) => {
     setEditingId(member.id);
@@ -312,7 +403,16 @@ export default function MemberListDetailPage({
         membersRef.current = next;
         try {
           const key = `members:${list.id}`;
-          const payload = { items: next.map(n => ({ id: n.id, lot: n.lot, name: n.name, email: n.email, address: n.address })), ts: Date.now() };
+          const payload = {
+            items: next.map((n) => ({
+              id: n.id,
+              lot: n.lot,
+              name: n.name,
+              email: n.email,
+              address: n.address,
+            })),
+            ts: Date.now(),
+          };
           localStorage.setItem(key, JSON.stringify(payload));
         } catch (e) {}
         seenRef.current.add(addedMember.id);
@@ -346,7 +446,20 @@ export default function MemberListDetailPage({
       setMembers((prev) => {
         const next = prev.filter((m) => m.id !== memberId);
         membersRef.current = next;
-        try { const key = `members:${list.id}`; const payload = { items: next.map(n => ({ id: n.id, lot: n.lot, name: n.name, email: n.email, address: n.address })), ts: Date.now() }; localStorage.setItem(key, JSON.stringify(payload)); } catch (e) {}
+        try {
+          const key = `members:${list.id}`;
+          const payload = {
+            items: next.map((n) => ({
+              id: n.id,
+              lot: n.lot,
+              name: n.name,
+              email: n.email,
+              address: n.address,
+            })),
+            ts: Date.now(),
+          };
+          localStorage.setItem(key, JSON.stringify(payload));
+        } catch (e) {}
         return next;
       });
     } catch (error) {
@@ -392,7 +505,20 @@ export default function MemberListDetailPage({
       setMembers((prev) => {
         const next = prev.map((m) => (m.id === editingId ? updatedMember : m));
         membersRef.current = next;
-        try { const key = `members:${list.id}`; const payload = { items: next.map(n => ({ id: n.id, lot: n.lot, name: n.name, email: n.email, address: n.address })), ts: Date.now() }; localStorage.setItem(key, JSON.stringify(payload)); } catch (e) {}
+        try {
+          const key = `members:${list.id}`;
+          const payload = {
+            items: next.map((n) => ({
+              id: n.id,
+              lot: n.lot,
+              name: n.name,
+              email: n.email,
+              address: n.address,
+            })),
+            ts: Date.now(),
+          };
+          localStorage.setItem(key, JSON.stringify(payload));
+        } catch (e) {}
         return next;
       });
       cancelEdit();
@@ -413,7 +539,8 @@ export default function MemberListDetailPage({
   const filtered = members.filter((r) => {
     const lotMatch = !lcLot || (r.lot || "").toLowerCase().includes(lcLot);
     const nameMatch = !lcName || (r.name || "").toLowerCase().includes(lcName);
-    const addrMatch = !lcAddr || ((r.address || "") as string).toLowerCase().includes(lcAddr);
+    const addrMatch =
+      !lcAddr || ((r.address || "") as string).toLowerCase().includes(lcAddr);
     return lotMatch && nameMatch && addrMatch;
   });
 
@@ -425,11 +552,26 @@ export default function MemberListDetailPage({
             {list.name}
           </h1>
           <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-            Loaded {members.length}{totalCount !== null ? ` / ${totalCount}` : ''} members
+            Loaded {members.length}
+            {totalCount !== null ? ` / ${totalCount}` : ""} members
             {streaming && (
-              <svg className="animate-spin h-4 w-4 text-blue-600 inline-block ml-2" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth={4} />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              <svg
+                className="animate-spin h-4 w-4 text-blue-600 inline-block ml-2"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth={4}
+                />
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                />
               </svg>
             )}
           </div>
@@ -451,43 +593,43 @@ export default function MemberListDetailPage({
         </div>
       </div>
 
-          <div className="mb-4 grid grid-cols-1 md:grid-cols-4 gap-4">
-            <input
-              type="text"
-              placeholder="Filter by Lot"
-              value={lotFilter}
-              onChange={(e) => setLotFilter(e.target.value)}
-              className="px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-            />
-            <input
-              type="text"
-              placeholder="Filter by Name"
-              value={nameFilter}
-              onChange={(e) => setNameFilter(e.target.value)}
-              className="px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-            />
-            <input
-              type="text"
-              placeholder="Filter by Address"
-              value={addressFilter}
-              onChange={(e) => setAddressFilter(e.target.value)}
-              className="px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-            />
-            <div>
-              <button
-                onClick={() => {
-                  setLotFilter("");
-                  setNameFilter("");
-                  setAddressFilter("");
-                }}
-                className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
-              >
-                Clear
-              </button>
-            </div>
-          </div>
+      <div className="mb-4 grid grid-cols-1 md:grid-cols-4 gap-4">
+        <input
+          type="text"
+          placeholder="Filter by Lot"
+          value={lotFilter}
+          onChange={(e) => setLotFilter(e.target.value)}
+          className="px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+        />
+        <input
+          type="text"
+          placeholder="Filter by Name"
+          value={nameFilter}
+          onChange={(e) => setNameFilter(e.target.value)}
+          className="px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+        />
+        <input
+          type="text"
+          placeholder="Filter by Address"
+          value={addressFilter}
+          onChange={(e) => setAddressFilter(e.target.value)}
+          className="px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+        />
+        <div>
+          <button
+            onClick={() => {
+              setLotFilter("");
+              setNameFilter("");
+              setAddressFilter("");
+            }}
+            className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
+          >
+            Clear
+          </button>
+        </div>
+      </div>
 
-          <div className="bg-white dark:bg-gray-900 rounded-lg shadow overflow-hidden">
+      <div className="bg-white dark:bg-gray-900 rounded-lg shadow overflow-hidden">
         <table className="w-full">
           <thead className="bg-gray-100 dark:bg-gray-800">
             <tr>
@@ -508,11 +650,9 @@ export default function MemberListDetailPage({
               </th>
             </tr>
           </thead>
-            <tbody>
-            {
-              /* apply client-side filters */
-            }
-            
+          <tbody>
+            {/* apply client-side filters */}
+
             {isAdding && (
               <tr className="border-t border-gray-200 dark:border-gray-700 bg-green-50 dark:bg-green-900">
                 <td className="px-6 py-4">

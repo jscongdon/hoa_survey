@@ -1,8 +1,8 @@
-import { log, error as logError } from '@/lib/logger'
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { verifyToken } from '@/lib/auth/jwt';
-import { decryptMemberData } from '@/lib/encryption';
+import { log, error as logError } from "@/lib/logger";
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { verifyToken } from "@/lib/auth/jwt";
+import { decryptMemberData } from "@/lib/encryption";
 
 export async function POST(
   req: NextRequest,
@@ -10,16 +10,16 @@ export async function POST(
 ) {
   try {
     // Verify authentication
-    let adminId = req.headers.get('x-admin-id');
-    
+    let adminId = req.headers.get("x-admin-id");
+
     if (!adminId) {
-      const token = req.cookies.get('auth-token')?.value;
+      const token = req.cookies.get("auth-token")?.value;
       if (!token) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
       const payload = await verifyToken(token as string);
       if (!payload?.adminId) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
       adminId = payload.adminId;
     }
@@ -31,7 +31,7 @@ export async function POST(
     // Validate required fields
     if (!lot || !name || !email) {
       return NextResponse.json(
-        { error: 'Lot, name, and email are required' },
+        { error: "Lot, name, and email are required" },
         { status: 400 }
       );
     }
@@ -39,7 +39,10 @@ export async function POST(
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      return NextResponse.json({ error: 'Invalid email format' }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid email format" },
+        { status: 400 }
+      );
     }
 
     // Verify list exists
@@ -48,7 +51,10 @@ export async function POST(
     });
 
     if (!list) {
-      return NextResponse.json({ error: 'Member list not found' }, { status: 404 });
+      return NextResponse.json(
+        { error: "Member list not found" },
+        { status: 404 }
+      );
     }
 
     // Create the member and connect to the list
@@ -57,7 +63,7 @@ export async function POST(
         lot,
         name,
         email,
-        address: address || '',
+        address: address || "",
         lists: {
           connect: { id },
         },
@@ -79,7 +85,7 @@ export async function POST(
     for (const survey of ongoingSurveys) {
       // Generate a unique token for this response
       const token = `${survey.id}-${newMember.id}-${Date.now()}`;
-      
+
       await prisma.response.create({
         data: {
           surveyId: survey.id,
@@ -88,7 +94,7 @@ export async function POST(
           submittedAt: null,
         },
       });
-      
+
       // If survey has minResponsesAll=true, increment minResponses
       if (survey.minResponsesAll) {
         await prisma.survey.update({
@@ -104,9 +110,9 @@ export async function POST(
 
     return NextResponse.json(newMember);
   } catch (error) {
-    logError('[MEMBER_CREATE]', error);
+    logError("[MEMBER_CREATE]", error);
     return NextResponse.json(
-      { error: 'Failed to create member' },
+      { error: "Failed to create member" },
       { status: 500 }
     );
   }
@@ -118,26 +124,30 @@ export async function GET(
 ) {
   try {
     const { id } = await context.params;
-    if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
+    if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
 
     // auth
-    let adminId = (req as any).headers?.get?.('x-admin-id');
+    let adminId = (req as any).headers?.get?.("x-admin-id");
     if (!adminId) {
-      const cookieHeader = (req as any).headers?.get?.('cookie') || '';
+      const cookieHeader = (req as any).headers?.get?.("cookie") || "";
       const match = cookieHeader.match(/auth-token=([^;]+)/);
       const token = match ? decodeURIComponent(match[1]) : null;
-      if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      if (!token)
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       const payload = await verifyToken(token as string);
-      if (!payload?.adminId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      if (!payload?.adminId)
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       adminId = payload.adminId;
     }
 
     const url = new URL(req.url);
-    const stream = url.searchParams.get('stream');
-    const afterId = url.searchParams.get('afterId');
+    const stream = url.searchParams.get("stream");
+    const afterId = url.searchParams.get("afterId");
 
     // total count for headers
-    const totalCount = await prisma.member.count({ where: { lists: { some: { id } } } });
+    const totalCount = await prisma.member.count({
+      where: { lists: { some: { id } } },
+    });
 
     if (stream) {
       const batchSize = 200;
@@ -148,7 +158,7 @@ export async function GET(
           while (true) {
             const findOpts: any = {
               where: { lists: { some: { id } } },
-              orderBy: { id: 'asc' },
+              orderBy: { id: "asc" },
               take: batchSize,
             };
             if (cursor) {
@@ -161,18 +171,33 @@ export async function GET(
 
             for (const m of rows) {
               try {
-                const dec = await decryptMemberData({ name: m.name, email: m.email, address: m.address || '', lot: m.lot });
+                const dec = await decryptMemberData({
+                  name: m.name,
+                  email: m.email,
+                  address: m.address || "",
+                  lot: m.lot,
+                });
                 const out = {
                   id: m.id,
                   lot: dec.lot || m.lot,
                   name: dec.name || m.name,
                   email: dec.email || m.email,
-                  address: dec.address || m.address || '',
+                  address: dec.address || m.address || "",
                 };
-                controller.enqueue(Buffer.from(JSON.stringify(out) + '\n'));
+                controller.enqueue(Buffer.from(JSON.stringify(out) + "\n"));
               } catch (e) {
                 // fallback to raw
-                controller.enqueue(Buffer.from(JSON.stringify({ id: m.id, lot: m.lot, name: m.name, email: m.email, address: m.address || '' }) + '\n'));
+                controller.enqueue(
+                  Buffer.from(
+                    JSON.stringify({
+                      id: m.id,
+                      lot: m.lot,
+                      name: m.name,
+                      email: m.email,
+                      address: m.address || "",
+                    }) + "\n"
+                  )
+                );
               }
             }
 
@@ -186,26 +211,51 @@ export async function GET(
 
       return new Response(streamBody, {
         headers: {
-          'Content-Type': 'application/x-ndjson; charset=utf-8',
-          'X-Total-Count': String(totalCount),
+          "Content-Type": "application/x-ndjson; charset=utf-8",
+          "X-Total-Count": String(totalCount),
         },
       });
     }
 
     // fallback: return full array (decrypted)
-    const listMembers = await prisma.member.findMany({ where: { lists: { some: { id } } }, orderBy: { id: 'asc' } });
-    const decrypted = await Promise.all(listMembers.map(async (m) => {
-      try {
-        const dec = await decryptMemberData({ name: m.name, email: m.email, address: m.address || '', lot: m.lot });
-        return { id: m.id, lot: dec.lot || m.lot, name: dec.name || m.name, email: dec.email || m.email, address: dec.address || m.address || '' };
-      } catch (e) {
-        return { id: m.id, lot: m.lot, name: m.name, email: m.email, address: m.address || '' };
-      }
-    }));
+    const listMembers = await prisma.member.findMany({
+      where: { lists: { some: { id } } },
+      orderBy: { id: "asc" },
+    });
+    const decrypted = await Promise.all(
+      listMembers.map(async (m) => {
+        try {
+          const dec = await decryptMemberData({
+            name: m.name,
+            email: m.email,
+            address: m.address || "",
+            lot: m.lot,
+          });
+          return {
+            id: m.id,
+            lot: dec.lot || m.lot,
+            name: dec.name || m.name,
+            email: dec.email || m.email,
+            address: dec.address || m.address || "",
+          };
+        } catch (e) {
+          return {
+            id: m.id,
+            lot: m.lot,
+            name: m.name,
+            email: m.email,
+            address: m.address || "",
+          };
+        }
+      })
+    );
 
     return NextResponse.json({ items: decrypted, total: decrypted.length });
   } catch (err) {
-    logError('[MEMBERS_STREAM]', err);
-    return NextResponse.json({ error: 'Failed to list members' }, { status: 500 });
+    logError("[MEMBERS_STREAM]", err);
+    return NextResponse.json(
+      { error: "Failed to list members" },
+      { status: 500 }
+    );
   }
 }

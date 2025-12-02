@@ -716,6 +716,60 @@ export default function StreamingNonRespondents() {
 
   const loaded = items.length;
 
+  // Prompt and send individual reminder
+  const confirmAndSend = async (rid: string, displayLabel: string) => {
+    if (!surveyId) return;
+    const proceed = window.confirm(
+      `Send reminder to ${displayLabel}? This will email the resident.`
+    );
+    if (!proceed) return;
+    setRemindStatus((s) => ({ ...s, [rid]: "Sending..." }));
+    try {
+      const res = await fetch(`/api/surveys/${surveyId}/remind/${rid}`, {
+        method: "POST",
+        credentials: "include",
+      });
+      if (res.ok) {
+        setRemindStatus((s) => ({ ...s, [rid]: `Reminder sent!` }));
+        setTimeout(
+          () =>
+            setRemindStatus((s) => {
+              const n = { ...s };
+              delete n[rid];
+              return n;
+            }),
+          3000
+        );
+      } else {
+        let data: any = {};
+        try {
+          data = await res.json();
+        } catch {}
+        setRemindStatus((s) => ({ ...s, [rid]: data?.error || "Failed to send reminder" }));
+        setTimeout(
+          () =>
+            setRemindStatus((s) => {
+              const n = { ...s };
+              delete n[rid];
+              return n;
+            }),
+          3000
+        );
+      }
+    } catch (e) {
+      setRemindStatus((s) => ({ ...s, [rid]: "Error sending reminder" }));
+      setTimeout(
+        () =>
+          setRemindStatus((s) => {
+            const n = { ...s };
+            delete n[rid];
+            return n;
+          }),
+        3000
+      );
+    }
+  };
+
   const subtitle = (
     <span className="flex items-center space-x-3">
       <span className="text-sm text-gray-600 dark:text-gray-400">
@@ -862,64 +916,12 @@ export default function StreamingNonRespondents() {
                       Submit Response
                     </button>
                     <button
-                      onClick={async () => {
-                        if (!surveyId) return;
-                        const rid = row.responseId as string;
-                        setRemindStatus((s) => ({ ...s, [rid]: "Sending..." }));
-                        try {
-                          const res = await fetch(
-                            `/api/surveys/${surveyId}/remind/${rid}`,
-                            { method: "POST", credentials: "include" }
-                          );
-                          if (res.ok) {
-                            setRemindStatus((s) => ({
-                              ...s,
-                              [rid]: `Reminder sent!`,
-                            }));
-                            setTimeout(
-                              () =>
-                                setRemindStatus((s) => {
-                                  const n = { ...s };
-                                  delete n[rid];
-                                  return n;
-                                }),
-                              3000
-                            );
-                          } else {
-                            let data: any = {};
-                            try {
-                              data = await res.json();
-                            } catch {}
-                            setRemindStatus((s) => ({
-                              ...s,
-                              [rid]: data?.error || "Failed to send reminder",
-                            }));
-                            setTimeout(
-                              () =>
-                                setRemindStatus((s) => {
-                                  const n = { ...s };
-                                  delete n[rid];
-                                  return n;
-                                }),
-                              3000
-                            );
-                          }
-                        } catch (e) {
-                          setRemindStatus((s) => ({
-                            ...s,
-                            [row.responseId]: "Error sending reminder",
-                          }));
-                          setTimeout(
-                            () =>
-                              setRemindStatus((s) => {
-                                const n = { ...s };
-                                delete n[row.responseId];
-                                return n;
-                              }),
-                            3000
-                          );
-                        }
-                      }}
+                      onClick={() =>
+                        confirmAndSend(
+                          row.responseId as string,
+                          `${row.name || row.lotNumber || "member"}`
+                        )
+                      }
                       disabled={!!remindStatus[row.responseId]}
                       className="px-3 py-1 bg-indigo-500 text-white text-xs rounded hover:bg-indigo-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
                     >
@@ -988,64 +990,12 @@ export default function StreamingNonRespondents() {
                     Submit Response
                   </button>
                   <button
-                    onClick={async () => {
-                      if (!surveyId) return;
-                      const rid = r.responseId;
-                      setRemindStatus((s) => ({ ...s, [rid]: "Sending..." }));
-                      try {
-                        const res = await fetch(
-                          `/api/surveys/${surveyId}/remind/${rid}`,
-                          { method: "POST", credentials: "include" }
-                        );
-                        if (res.ok) {
-                          setRemindStatus((s) => ({
-                            ...s,
-                            [rid]: `Reminder sent!`,
-                          }));
-                          setTimeout(
-                            () =>
-                              setRemindStatus((s) => {
-                                const n = { ...s };
-                                delete n[rid];
-                                return n;
-                              }),
-                            3000
-                          );
-                        } else {
-                          let data: any = {};
-                          try {
-                            data = await res.json();
-                          } catch {}
-                          setRemindStatus((s) => ({
-                            ...s,
-                            [rid]: data?.error || "Failed to send reminder",
-                          }));
-                          setTimeout(
-                            () =>
-                              setRemindStatus((s) => {
-                                const n = { ...s };
-                                delete n[rid];
-                                return n;
-                              }),
-                            3000
-                          );
-                        }
-                      } catch (e) {
-                        setRemindStatus((s) => ({
-                          ...s,
-                          [rid]: "Error sending reminder",
-                        }));
-                        setTimeout(
-                          () =>
-                            setRemindStatus((s) => {
-                              const n = { ...s };
-                              delete n[rid];
-                              return n;
-                            }),
-                          3000
-                        );
-                      }
-                    }}
+                    onClick={() =>
+                      confirmAndSend(
+                        r.responseId,
+                        `${r.name || r.lotNumber || "member"}`
+                      )
+                    }
                     disabled={!!remindStatus[r.responseId]}
                     className="px-4 py-2 bg-indigo-500 text-white text-sm rounded-lg hover:bg-indigo-600 w-full sm:w-auto disabled:bg-gray-400 disabled:cursor-not-allowed"
                   >
