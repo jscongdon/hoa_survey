@@ -14,6 +14,11 @@ async function getEncryptionKey(): Promise<CryptoKey> {
       "ENCRYPTION_KEY or JWT_SECRET environment variable must be set"
     );
   }
+  // Cache the derived key so we don't run PBKDF2 on every encrypt/decrypt
+  // (derivation is expensive and was causing slow streaming responses).
+  if ((global as any).__member_data_crypto_key) {
+    return (global as any).__member_data_crypto_key as CryptoKey;
+  }
 
   // Derive a key from the key source using web crypto
   const keyMaterial = await subtle.importKey(
@@ -24,7 +29,7 @@ async function getEncryptionKey(): Promise<CryptoKey> {
     ["deriveKey"]
   );
 
-  return subtle.deriveKey(
+  const derived = await subtle.deriveKey(
     {
       name: "PBKDF2",
       salt: Buffer.from("member-data-salt"),
@@ -36,6 +41,10 @@ async function getEncryptionKey(): Promise<CryptoKey> {
     false,
     ["encrypt", "decrypt"]
   );
+
+  // store on global to persist across module reloads in dev
+  (global as any).__member_data_crypto_key = derived;
+  return derived;
 }
 
 /**

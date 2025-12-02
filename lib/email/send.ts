@@ -112,8 +112,19 @@ export function generateSurveyEmail(
   name: string
 ): string {
   const title = `Survey for Lot ${lot} – ${name}`;
-  const greeting = ``; // greeting will be provided by caller when personalized
-  const body = `<p>${surveyDescription || ""}</p>`;
+  const displayName = name || "Resident";
+  const greeting = `<p style="margin-bottom:8px;">Hello ${displayName},</p>`;
+
+  const bodyParts: string[] = [];
+  if (surveyDescription) bodyParts.push(`<p>${surveyDescription}</p>`);
+  bodyParts.push(
+    `<p>Our records show that the resident of <strong>Lot ${lot}</strong> has not yet completed the survey "${surveyTitle}". Please take a few minutes to complete it by clicking the button below.</p>`
+  );
+  bodyParts.push(
+    `<p style="margin-top:8px;">If you have already completed the survey, please disregard this reminder. This message is not monitored. If you need assistance, please contact your HOA administrator.</p>`
+  );
+
+  const body = bodyParts.join("\n");
 
   return generateBaseEmail(
     title,
