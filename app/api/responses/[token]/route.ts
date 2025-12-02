@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { sendEmail, generateBaseEmail } from "@/lib/email/send";
 import crypto from "crypto";
 import { decryptMemberData } from "@/lib/encryption";
+import DOMPurify from "isomorphic-dompurify";
 
 export async function GET(
   request: NextRequest,
@@ -68,6 +69,10 @@ export async function GET(
         })),
       }
     : null;
+  // sanitize survey description before returning to client
+  if (parsedSurvey && parsedSurvey.description) {
+    parsedSurvey.description = DOMPurify.sanitize(String(parsedSurvey.description));
+  }
 
   // Decrypt member data for display
   let decryptedMember = response.member;

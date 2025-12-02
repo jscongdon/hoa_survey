@@ -745,7 +745,10 @@ export default function StreamingNonRespondents() {
         try {
           data = await res.json();
         } catch {}
-        setRemindStatus((s) => ({ ...s, [rid]: data?.error || "Failed to send reminder" }));
+        setRemindStatus((s) => ({
+          ...s,
+          [rid]: data?.error || "Failed to send reminder",
+        }));
         setTimeout(
           () =>
             setRemindStatus((s) => {

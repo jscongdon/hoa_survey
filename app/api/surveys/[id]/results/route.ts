@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { cookies } from "next/headers";
 import { verifyToken } from "@/lib/auth/jwt";
 import { decryptMemberData } from "@/lib/encryption";
+import DOMPurify from "isomorphic-dompurify";
 
 export async function GET(
   request: NextRequest,
@@ -231,7 +232,7 @@ export async function GET(
       survey: {
         id: survey.id,
         title: survey.title,
-        description: survey.description,
+        description: survey.description ? DOMPurify.sanitize(String(survey.description)) : survey.description,
         opensAt: survey.opensAt,
         closesAt: survey.closesAt,
         totalResponses: survey.responses.length,

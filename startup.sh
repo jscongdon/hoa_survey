@@ -27,3 +27,16 @@ fi
 
 # Start the application with JWT_SECRET environment variable
 npm run dev
+
+# Optionally seed the database in dev if PRISMA_SEED=true and no admin exists
+if [ "${PRISMA_SEED:-false}" = "true" ]; then
+  echo "[startup] Checking if DB needs seeding..."
+  node -e "const {PrismaClient} = require('@prisma/client'); const prisma = new PrismaClient(); (async ()=>{try{const c=await prisma.admin.count(); // if zero, exit 1 so we run seed
+    if(c===0){ console.log('[startup] No admin found; seeding database'); process.exit(1); } else { console.log('[startup] Admin already exists, skipping seed'); process.exit(0); } }catch(e){ console.error(e); process.exit(0);} finally { await prisma.$disconnect();}})();"
+  if [ $? -ne 0 ]; then
+    echo "[startup] Seeding database..."
+    npm run prisma:seed || echo "[startup] Seed failed or already run"
+  else
+    echo "[startup] Seed not required"
+  fi
+fi

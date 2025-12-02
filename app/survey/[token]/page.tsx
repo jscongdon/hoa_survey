@@ -488,9 +488,10 @@ export default function SurveyPage({
 
         {survey.survey.description && (
           <div className="bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-700 rounded-lg p-4 mb-6">
-            <p className="text-gray-700 dark:text-gray-300">
-              {survey.survey.description}
-            </p>
+            <div
+              className="text-gray-700 dark:text-gray-300"
+              dangerouslySetInnerHTML={{ __html: survey.survey.description || "" }}
+            />
           </div>
         )}
 

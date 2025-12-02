@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import type { Prisma } from "@prisma/client";
 import { verifyToken } from "@/lib/auth/jwt";
+import DOMPurify from "isomorphic-dompurify";
 
 export async function GET(
   req: NextRequest,
@@ -61,7 +62,7 @@ export async function GET(
   return NextResponse.json({
     id: survey.id,
     title: survey.title,
-    description: survey.description,
+    description: survey.description ? DOMPurify.sanitize(String(survey.description)) : survey.description,
     opensAt: survey.opensAt,
     closesAt: survey.closesAt,
     memberListId: survey.memberListId,
@@ -119,6 +120,28 @@ export async function PUT(
       requireSignature,
       groupNotificationsEnabled,
     } = body;
+    const sanitizedDescription = description
+      ? DOMPurify.sanitize(String(description), {
+          ALLOWED_TAGS: [
+            "p",
+            "br",
+            "b",
+            "i",
+            "em",
+            "strong",
+            "u",
+            "ul",
+            "ol",
+            "li",
+            "h1",
+            "h2",
+            "h3",
+            "blockquote",
+            "a",
+          ],
+          ALLOWED_ATTR: ["href", "target", "rel"],
+        })
+      : undefined;
     const { id } = await params;
 
     // Check if memberListId is changing and block if responses already exist
@@ -168,7 +191,7 @@ export async function PUT(
 
       const updatePayload: any = {
         title,
-        description,
+        description: sanitizedDescription,
         opensAt: opensAt ? new Date(opensAt) : undefined,
         closesAt: closesAt ? new Date(closesAt) : undefined,
         memberListId: memberListId || undefined,
