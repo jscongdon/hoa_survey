@@ -80,10 +80,10 @@ export default function SurveyForm({
   const [questions, setQuestions] = useState<any[]>(
     initialValues.questions || []
   );
-    const [lists, setLists] = useState<
+  const [lists, setLists] = useState<
     Array<{ id: string; name: string; _count?: { members: number } }>
   >([]);
-  
+
   const [loading, setLoading] = useState(false);
   useEffect(() => {
     let mounted = true;
@@ -120,7 +120,6 @@ export default function SurveyForm({
         requireSignature: initialValues.requireSignature ?? true,
         notifyOnMinResponses: !!initialValues.notifyOnMinResponses,
         questions: initialValues.questions || [],
-
       }),
     [initialValues]
   );
@@ -476,7 +475,9 @@ export default function SurveyForm({
                 title,
                 description,
                 questions,
-                memberListNote: memberListNote ? String(memberListNote) : undefined,
+                memberListNote: memberListNote
+                  ? String(memberListNote)
+                  : undefined,
                 opensAt: opensAt ? new Date(opensAt).toISOString() : null,
                 closesAt: closesAt ? new Date(closesAt).toISOString() : null,
               };
@@ -492,7 +493,6 @@ export default function SurveyForm({
           Preview
         </button>
       </div>
-       
     </form>
   );
 }

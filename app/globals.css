@@ -87,6 +87,14 @@
   @apply text-blue-400;
 }
 
+  /* Links inside survey descriptions should be visible and obvious */
+  .survey-description a {
+    @apply text-blue-600 underline;
+  }
+  .dark .survey-description a {
+    @apply text-blue-400;
+  }
+
 @layer utilities {
   /* Smooth transitions */
   .transition-smooth {

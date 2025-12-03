@@ -35,52 +35,55 @@ export default function StreamingNonRespondents() {
   const readerRef = useRef<any>(null);
   const autoResumeTriggeredRef = useRef(false);
 
-  const saveCacheNow = React.useCallback((overrideItems?: NonRespondent[]) => {
-    if (!surveyId) return;
-    try {
-      const key = `nonrespondents:${surveyId}`;
-      const seen = Array.from(seenRef.current || []);
-      const src = overrideItems ?? itemsRef.current ?? [];
-      const snapshot = src.map((it) => ({
-        responseId: it.responseId,
-        id: it.id,
-        name: it.name,
-        email: it.email || "",
-        lotNumber: it.lotNumber,
-        address: it.address,
-        token: it.token,
-      }));
-      const payload = {
-        items: snapshot,
-        seen,
-        totalCount,
-        ts: Date.now(),
-      } as any;
-      console.debug("Nonrespondents: immediate save cache", {
-        key,
-        count: snapshot.length,
-        totalCount,
-      });
-      localStorage.setItem(key, JSON.stringify(payload));
+  const saveCacheNow = React.useCallback(
+    (overrideItems?: NonRespondent[]) => {
+      if (!surveyId) return;
       try {
-        const check = localStorage.getItem(key);
-        const parsedCheck = check ? JSON.parse(check) : null;
-        const emailsSaved = Array.isArray(parsedCheck?.items)
-          ? parsedCheck.items.filter((x: any) => x.email && x.email.length)
-              .length
-          : 0;
-        console.debug("Nonrespondents: immediate save verified", {
+        const key = `nonrespondents:${surveyId}`;
+        const seen = Array.from(seenRef.current || []);
+        const src = overrideItems ?? itemsRef.current ?? [];
+        const snapshot = src.map((it) => ({
+          responseId: it.responseId,
+          id: it.id,
+          name: it.name,
+          email: it.email || "",
+          lotNumber: it.lotNumber,
+          address: it.address,
+          token: it.token,
+        }));
+        const payload = {
+          items: snapshot,
+          seen,
+          totalCount,
+          ts: Date.now(),
+        } as any;
+        console.debug("Nonrespondents: immediate save cache", {
           key,
-          savedCount: parsedCheck?.items?.length ?? 0,
-          emailsSaved,
+          count: snapshot.length,
+          totalCount,
         });
+        localStorage.setItem(key, JSON.stringify(payload));
+        try {
+          const check = localStorage.getItem(key);
+          const parsedCheck = check ? JSON.parse(check) : null;
+          const emailsSaved = Array.isArray(parsedCheck?.items)
+            ? parsedCheck.items.filter((x: any) => x.email && x.email.length)
+                .length
+            : 0;
+          console.debug("Nonrespondents: immediate save verified", {
+            key,
+            savedCount: parsedCheck?.items?.length ?? 0,
+            emailsSaved,
+          });
+        } catch (e) {
+          console.error("Nonrespondents: failed verify immediate save", e);
+        }
       } catch (e) {
-        console.error("Nonrespondents: failed verify immediate save", e);
+        console.error("Failed to save cached nonrespondents (immediate)", e);
       }
-    } catch (e) {
-      console.error("Failed to save cached nonrespondents (immediate)", e);
-    }
-  }, [surveyId, totalCount]);
+    },
+    [surveyId, totalCount]
+  );
   const [remindStatus, setRemindStatus] = useState<Record<string, string>>({});
   const [retryKey, setRetryKey] = useState(0);
   const completedRef = useRef(false);
@@ -502,7 +505,17 @@ export default function StreamingNonRespondents() {
         readerRef.current = null;
       }
     };
-  }, [surveyId, refreshAuth, router, retryKey, saveCacheNow, cacheLoaded, items.length, loading, totalCount]);
+  }, [
+    surveyId,
+    refreshAuth,
+    router,
+    retryKey,
+    saveCacheNow,
+    cacheLoaded,
+    items.length,
+    loading,
+    totalCount,
+  ]);
 
   // If the user switches tabs or the window regains focus, attempt to resume streaming
   useEffect(() => {
@@ -572,7 +585,14 @@ export default function StreamingNonRespondents() {
     console.debug("Nonrespondents: auto-triggering resume on page open");
     setRetryKey((k) => k + 1);
     autoResumeTriggeredRef.current = true;
-  }, [cacheLoaded, surveyId, totalCount, streaming, saveCacheNow, CACHE_TTL_MS]);
+  }, [
+    cacheLoaded,
+    surveyId,
+    totalCount,
+    streaming,
+    saveCacheNow,
+    CACHE_TTL_MS,
+  ]);
 
   // Load cached nonrespondents for this survey (if any and not expired)
   useEffect(() => {

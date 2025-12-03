@@ -59,7 +59,7 @@ export default function SurveyPreview({
             <div className="text-sm text-gray-500">Sanitizing preview…</div>
           ) : (
             <div
-              className="text-gray-700 dark:text-gray-300"
+              className="survey-description text-gray-700 dark:text-gray-300"
               dangerouslySetInnerHTML={{ __html: sanitizedHtml || "" }}
             />
           )}
