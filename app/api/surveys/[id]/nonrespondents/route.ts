@@ -112,6 +112,10 @@ export async function GET(
                   lotNumber: decryptedData.lot,
                   address: decryptedData.address,
                   token: response.token,
+                  // count how many reminders already sent to this member for this survey
+                  reminderCount: await prisma.reminder.count({
+                    where: { surveyId: id, memberId: response.member.id },
+                  }),
                 };
 
                 controller.enqueue(encoder.encode(JSON.stringify(item) + "\n"));
@@ -129,6 +133,9 @@ export async function GET(
                   lotNumber: response.member.lot,
                   address: response.member.address,
                   token: response.token,
+                  reminderCount: await prisma.reminder.count({
+                    where: { surveyId: id, memberId: response.member.id },
+                  }),
                 };
                 controller.enqueue(encoder.encode(JSON.stringify(item) + "\n"));
                 (controller as any)._lastId = response.id;
@@ -198,6 +205,9 @@ export async function GET(
             lotNumber: decryptedData.lot,
             address: decryptedData.address,
             token: response.token,
+            reminderCount: await prisma.reminder.count({
+              where: { surveyId: id, memberId: response.member.id },
+            }),
           };
         } catch (error) {
           // If decryption fails, return encrypted data (for backward compatibility)
@@ -210,6 +220,9 @@ export async function GET(
             lotNumber: response.member.lot,
             address: response.member.address,
             token: response.token,
+            reminderCount: await prisma.reminder.count({
+              where: { surveyId: id, memberId: response.member.id },
+            }),
           };
         }
       })

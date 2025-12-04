@@ -2,6 +2,7 @@ import { log, error as logError } from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendEmail, generateBaseEmail } from "@/lib/email/send";
+import { getBaseUrl } from "@/lib/app-url";
 import crypto from "crypto";
 import { decryptMemberData } from "@/lib/encryption";
 import { sanitizeSurveyHtml } from "@/lib/sanitizeHtml";
@@ -293,16 +294,7 @@ export async function PUT(
     // Send signature request email (only if survey requires a signature)
     try {
       if (requiresSignature) {
-        const isDevelopment = process.env.NODE_ENV === "development";
-        let baseUrl: string;
-        if (isDevelopment) {
-          baseUrl = process.env.DEVELOPMENT_URL || "http://localhost:3000";
-        } else {
-          baseUrl = process.env.PRODUCTION_URL || "";
-          if (!baseUrl) {
-            throw new Error("Production URL not configured");
-          }
-        }
+        const baseUrl = await getBaseUrl();
         const signatureUrl = `${baseUrl}/survey/${token}/sign/${signatureToken}`;
         const viewResponseUrl = `${baseUrl}/survey/${token}`;
 
@@ -475,11 +467,7 @@ export async function PUT(
           }
         });
 
-        const notifyUrl =
-          (process.env.PRODUCTION_URL ||
-            process.env.DEVELOPMENT_URL ||
-            "http://localhost:3000") +
-          `/dashboard/surveys/${survey.id}/results`;
+        const notifyUrl = `${await getBaseUrl()}/dashboard/surveys/${survey.id}/results`;
 
         const emailHtml = generateBaseEmail(
           `Survey Reached Minimal Responses: ${survey.title}`,

@@ -2,7 +2,8 @@ import { log, error as logError } from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyToken } from "@/lib/auth/jwt";
-import { sendEmail, generateSurveyEmail } from "@/lib/email/send";
+import { sendBulkEmails, sendEmail, generateSurveyEmail } from "@/lib/email/send";
+import { getBaseUrl } from "@/lib/app-url";
 import { decryptMemberData } from "@/lib/encryption";
 
 export async function POST(
@@ -63,17 +64,13 @@ export async function POST(
     }
 
     // Determine base URL for links
-    const isDevelopment = process.env.NODE_ENV === "development";
-    const baseUrl = isDevelopment
-      ? process.env.DEVELOPMENT_URL ||
-        `${req.headers.get("x-forwarded-proto") || "http"}://${req.headers.get("host")}`
-      : process.env.PRODUCTION_URL ||
-        `${req.headers.get("x-forwarded-proto") || "http"}://${req.headers.get("host")}`;
+    const baseUrl = await getBaseUrl();
 
     let sent = 0;
     let failed = 0;
 
-    await Promise.all(
+    // Build email items list
+    const emailItems = await Promise.all(
       pendingResponses.map(async (response) => {
         try {
           // decrypt member fields (email, name, lot may be encrypted)
@@ -108,39 +105,66 @@ export async function POST(
             decrypted.name
           );
 
-          await sendEmail({
-            to: decrypted.email,
-            subject: `Reminder: ${survey.title}`,
-            html,
-            text: `Please complete the survey: ${link}`,
-          });
-
-          log("[REMIND] Sent successfully to:", response.member.email);
-
-          // Record reminder only on successful send
-          await prisma.reminder.create({
-            data: {
-              surveyId: survey.id,
-              memberId: response.memberId,
-              sentAt: new Date(),
-              reminderNum:
-                (await prisma.reminder.count({
-                  where: { surveyId: survey.id, memberId: response.memberId },
-                })) + 1,
+          return {
+            options: {
+              to: decrypted.email,
+              subject: `Reminder: ${survey.title}`,
+              html,
+              text: `Please complete the survey: ${link}`,
             },
-          });
-
-          sent += 1;
+            meta: { responseId: response.id, memberId: response.memberId, email: decrypted.email },
+          };
         } catch (err) {
           logError(
-            "[REMIND] Failed to send reminder to",
+            "[REMIND] Failed to prepare reminder for",
             response.member.email,
             err
           );
-          failed += 1;
+          return null;
         }
       })
     );
+
+    // Filter out any nulls (failed to prepare) and send in batches
+    const itemsToSend = emailItems.filter(Boolean) as Array<{ options: any; meta: any }>;
+    let results = [] as any[];
+    if (typeof sendBulkEmails === "function") {
+      results = await sendBulkEmails(itemsToSend, { batchSize: 50, delayMsBetweenBatches: 1000, retryCount: 1, retryDelayMs: 500 });
+    } else {
+      for (const it of itemsToSend) {
+        try {
+          await sendEmail(it.options);
+          results.push({ to: it.options.to, ok: true, meta: it.meta });
+        } catch (e) {
+          results.push({ to: it.options.to, ok: false, error: String(e), meta: it.meta });
+        }
+      }
+    }
+
+    for (const r of results) {
+      if (r.ok) {
+        sent += 1;
+        try {
+          await prisma.reminder.create({
+            data: {
+              surveyId: survey.id,
+              memberId: r.meta.memberId,
+              sentAt: new Date(),
+              reminderNum:
+                (await prisma.reminder.count({
+                  where: { surveyId: survey.id, memberId: r.meta.memberId },
+                })) + 1,
+            },
+          });
+          log("[REMIND] Sent successfully to:", r.to);
+        } catch (e) {
+          logError("[REMIND] Failed to record reminder for", r.to, e);
+        }
+      } else {
+        failed += 1;
+        logError("[REMIND] Failed to send to", r.to, r.error);
+      }
+    }
 
     return NextResponse.json({
       success: true,

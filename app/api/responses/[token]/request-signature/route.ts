@@ -2,6 +2,7 @@ import { log, error as logError } from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendEmail, generateBaseEmail } from "@/lib/email/send";
+import { getBaseUrl } from "@/lib/app-url";
 import crypto from "crypto";
 
 export async function POST(
@@ -51,7 +52,8 @@ export async function POST(
     });
 
     // Send signature request email
-    const signatureUrl = `${process.env.NEXT_PUBLIC_APP_URL || process.env.BASE_URL}/survey/${token}/sign/${signatureToken}`;
+    const baseUrl = await getBaseUrl();
+    const signatureUrl = `${baseUrl}/survey/${token}/sign/${signatureToken}`;
 
     const bodyHtml = `
       <p>Your survey response for <strong>"${response.survey.title}"</strong> has been received.</p>

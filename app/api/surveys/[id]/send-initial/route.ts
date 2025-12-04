@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyToken } from "@/lib/auth/jwt";
-import { sendEmail, generateBaseEmail } from "@/lib/email/send";
+import { sendBulkEmails, sendEmail, generateBaseEmail } from "@/lib/email/send";
+import { getBaseUrl } from "@/lib/app-url";
 import { log, error as logError } from "@/lib/logger";
 
 export async function POST(
@@ -45,31 +46,48 @@ export async function POST(
       include: { member: true },
     });
 
-    // Determine base URL
-    const isDevelopment = process.env.NODE_ENV === "development";
-    const baseUrl = isDevelopment
-      ? process.env.DEVELOPMENT_URL || "http://localhost:3000"
-      : process.env.PRODUCTION_URL || "";
+    // Determine base URL for links
+    const baseUrl = await getBaseUrl();
 
-    // Send email to each response/member (do sequentially to avoid spamming mail server)
-    for (const resp of responses) {
-      try {
-        const surveyUrl = `${baseUrl}/survey/${resp.token}`;
-        const html = generateBaseEmail(
+    // Bulk send initial notices in batches
+    const emailItems = responses.map((resp) => ({
+      options: {
+        to: resp.member.email,
+        subject: `Survey: ${survey.title}`,
+        html: generateBaseEmail(
           `Survey: ${survey.title}`,
           `<p>Hello ${resp.member.name},</p>`,
           `<p>You are invited to participate in the survey: <strong>${survey.title}</strong>.</p><p>Please click the button below to complete the survey.</p>`,
-          { text: "Open Survey", url: surveyUrl }
-        );
+          { text: "Open Survey", url: `${baseUrl}/survey/${resp.token}` }
+        ),
+      },
+      meta: { memberId: resp.memberId, email: resp.member.email },
+    }));
 
-        await sendEmail({
-          to: resp.member.email,
-          subject: `Survey: ${survey.title}`,
-          html,
-        });
-      } catch (e) {
-        // Log and continue
-        log("[SEND_INITIAL] Failed to send to", resp.member.email, e);
+    let results = [] as any[];
+    if (typeof sendBulkEmails === "function") {
+      results = await sendBulkEmails(emailItems, { batchSize: 50, delayMsBetweenBatches: 1000, retryCount: 1, retryDelayMs: 500 });
+    } else {
+      // Fallback sequential send
+      for (const it of emailItems) {
+        try {
+          await sendEmail(it.options);
+          results.push({ to: it.options.to, ok: true });
+        } catch (e) {
+          results.push({ to: it.options.to, ok: false, error: String(e) });
+        }
+      }
+    }
+    // log for successes and failures
+    let successCount = 0;
+    let failureCount = 0;
+    for (const r of results) {
+      if (r.ok) {
+        successCount += 1;
+        log("[SEND_INITIAL] Sent to", r.to);
+      } else {
+        failureCount += 1;
+        log("[SEND_INITIAL] Failed to send to", r.to, r.error);
       }
     }
 

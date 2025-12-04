@@ -14,6 +14,7 @@ type NonRespondent = {
   lotNumber: string;
   address?: string | null;
   token: string;
+  reminderCount?: number;
 };
 
 export default function StreamingNonRespondents() {
@@ -50,6 +51,7 @@ export default function StreamingNonRespondents() {
           lotNumber: it.lotNumber,
           address: it.address,
           token: it.token,
+          reminderCount: it.reminderCount ?? 0,
         }));
         const payload = {
           items: snapshot,
@@ -366,6 +368,7 @@ export default function StreamingNonRespondents() {
                       lotNumber: it.lotNumber || it.lot || "",
                       address: it.address || null,
                       token: it.token || "",
+                      reminderCount: it.reminderCount ?? 0,
                     });
                   }
                   if (toAdd.length)
@@ -430,6 +433,7 @@ export default function StreamingNonRespondents() {
               lotNumber: it.lotNumber || it.lot || "",
               address: it.address || null,
               token: it.token || "",
+              reminderCount: it.reminderCount ?? 0,
             });
           }
           if (toAdd.length)
@@ -636,6 +640,7 @@ export default function StreamingNonRespondents() {
           lotNumber: it.lotNumber || it.lot || "",
           address: it.address || it.addr || null,
           token: it.token || "",
+          reminderCount: it.reminderCount ?? 0,
         }))
         .filter((x) => x.responseId);
 
@@ -654,6 +659,43 @@ export default function StreamingNonRespondents() {
       console.error("Failed to load cached nonrespondents", e);
     } finally {
       setCacheLoaded(true);
+      // After loading cached items, fetch updated reminder counts from server to ensure cache reflects latest data
+      (async () => {
+        try {
+          const r = await fetch(`/api/surveys/${surveyId}/nonrespondents`, { credentials: "include" });
+          if (!r.ok) return;
+          const body = await r.json();
+          const arr = Array.isArray(body) ? body : body?.items || [];
+          if (!Array.isArray(arr) || arr.length === 0) return;
+          const seen = seenRef.current;
+          // Merge counts into current items
+          const countsMap = new Map<string, number>();
+          arr.forEach((it: any) => {
+            const id = it.responseId || it.id || it.response_id;
+            if (!id) return;
+            countsMap.set(id, Number(it.reminderCount ?? 0));
+          });
+          if (countsMap.size === 0) return;
+          setItems((prev) => {
+            let changed = false;
+            const next = prev.map((it) => {
+              const cnt = countsMap.get(it.responseId);
+              if (cnt !== undefined && (it.reminderCount ?? 0) !== cnt) {
+                changed = true;
+                return { ...it, reminderCount: cnt };
+              }
+              return it;
+            });
+            if (changed) {
+              itemsRef.current = next;
+              saveCacheNow(next);
+            }
+            return next;
+          });
+        } catch (e) {
+          // ignore
+        }
+      })();
     }
   }, [surveyId, CACHE_TTL_MS]);
 
@@ -677,6 +719,7 @@ export default function StreamingNonRespondents() {
           lotNumber: it.lotNumber,
           address: it.address,
           token: it.token,
+          reminderCount: it.reminderCount ?? 0,
         }));
         const payload = {
           items: snapshot,
@@ -751,6 +794,17 @@ export default function StreamingNonRespondents() {
       });
       if (res.ok) {
         setRemindStatus((s) => ({ ...s, [rid]: `Reminder sent!` }));
+        // increment local reminder count for immediate UX
+        setItems((prev) => {
+          const next = prev.map((it) =>
+            it.responseId === rid
+              ? { ...it, reminderCount: (it.reminderCount ?? 0) + 1 }
+              : it
+          );
+          itemsRef.current = next;
+          saveCacheNow(next);
+          return next;
+        });
         setTimeout(
           () =>
             setRemindStatus((s) => {
@@ -926,6 +980,15 @@ export default function StreamingNonRespondents() {
                     </span>
                   ),
               },
+              {
+                key: "reminderCount",
+                header: "Reminders",
+                render: (v) => (
+                  <span className="px-2 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-sm font-medium">
+                    {v ?? 0}
+                  </span>
+                ),
+              },
               { key: "address", header: "Address", render: (v) => v || "N/A" },
               {
                 key: "actions",
@@ -979,6 +1042,9 @@ export default function StreamingNonRespondents() {
                     <div className="flex items-center gap-2 mb-1">
                       <span className="font-medium text-gray-900 dark:text-white truncate">
                         {r.name}
+                      </span>
+                      <span className="ml-2 text-xs text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 rounded-full px-2 py-0.5">
+                        Reminders: {r.reminderCount ?? 0}
                       </span>
                     </div>
                     <div className="text-sm text-gray-600 dark:text-gray-400">

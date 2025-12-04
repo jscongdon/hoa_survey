@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyToken } from "@/lib/auth/jwt";
 import { sendEmail, generateSurveyEmail } from "@/lib/email/send";
+import { getBaseUrl } from "@/lib/app-url";
 import { decryptMemberData } from "@/lib/encryption";
 
 export async function POST(
@@ -67,12 +68,7 @@ export async function POST(
     }
 
     // Determine base URL for links
-    const isDevelopment = process.env.NODE_ENV === "development";
-    const baseUrl = isDevelopment
-      ? process.env.DEVELOPMENT_URL ||
-        `${req.headers.get("x-forwarded-proto") || "http"}://${req.headers.get("host")}`
-      : process.env.PRODUCTION_URL ||
-        `${req.headers.get("x-forwarded-proto") || "http"}://${req.headers.get("host")}`;
+    const baseUrl = await getBaseUrl();
 
     try {
       // decrypt member fields (email/name/lot may be encrypted)

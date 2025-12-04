@@ -6,7 +6,7 @@ let cachedConfig: any = null;
 let cacheTime = 0;
 const CACHE_TTL = 60000; // Cache for 1 minute
 
-async function getEmailConfig() {
+export async function getEmailConfig() {
   // Use cache to avoid database queries on every email
   if (cachedConfig && Date.now() - cacheTime < CACHE_TTL) {
     return cachedConfig;
@@ -33,7 +33,14 @@ async function getEmailConfig() {
   };
 }
 
-async function createTransporter() {
+// Return the configured application URL used in generated email links.
+export async function getAppUrl(): Promise<string | null> {
+  const cfg = await getEmailConfig();
+  // Prefer explicit appUrl, otherwise null
+  return cfg?.appUrl || null;
+}
+
+export async function createTransporter() {
   const config = await getEmailConfig();
 
   return nodemailer.createTransport({
@@ -54,16 +61,89 @@ export interface EmailOptions {
   text?: string;
 }
 
-export async function sendEmail(options: EmailOptions): Promise<void> {
+export async function sendEmail(
+  options: EmailOptions,
+  transporter?: nodemailer.Transporter
+): Promise<void> {
   const config = await getEmailConfig();
-  const transporter = await createTransporter();
+  const t = transporter ?? (await createTransporter());
   const fromName = config.hoaName || "HOA";
   const fromEmail = config.smtpFrom || "noreply@hoa.local";
 
-  await transporter.sendMail({
+  await t.sendMail({
     from: `"${fromName}" <${fromEmail}>`,
     ...options,
   });
+}
+
+export interface BulkEmailOptions {
+  batchSize?: number; // number of emails per batch (concurrency per batch)
+  delayMsBetweenBatches?: number; // ms to wait between batches
+  retryCount?: number; // how many times to retry a failed email
+  retryDelayMs?: number; // delay between retries
+  transporter?: any; // optional transporter override for tests or pooling
+}
+
+export interface BulkEmailResult {
+  to: string;
+  ok: boolean;
+  error?: any;
+  meta?: any;
+}
+
+export async function sendBulkEmails(
+  items: Array<{ options: EmailOptions; meta?: any }>,
+  opts?: BulkEmailOptions
+): Promise<BulkEmailResult[]> {
+  const batchSize = opts?.batchSize ?? 25;
+  const delayMsBetweenBatches = opts?.delayMsBetweenBatches ?? 1000;
+  const retryCount = opts?.retryCount ?? 1;
+  const retryDelayMs = opts?.retryDelayMs ?? 500;
+
+  const transporter = opts?.transporter ?? (await createTransporter());
+  const results: BulkEmailResult[] = [];
+
+  const sleep = (ms: number) => new Promise((res) => setTimeout(res, ms));
+
+  for (let i = 0; i < items.length; i += batchSize) {
+    const batch = items.slice(i, i + batchSize);
+    // send the whole batch in parallel (concurrency batchSize)
+    const sendPromises = batch.map(async (it) => {
+      let attempts = 0;
+      while (attempts <= retryCount) {
+        try {
+          await sendEmail(it.options, transporter);
+          return { to: it.options.to, ok: true, meta: it.meta } as BulkEmailResult;
+        } catch (e) {
+          attempts += 1;
+          if (attempts > retryCount) {
+            return { to: it.options.to, ok: false, error: String(e), meta: it.meta } as BulkEmailResult;
+          }
+          // wait a bit before retry
+          await sleep(retryDelayMs);
+        }
+      }
+      // fallback
+      return { to: it.options.to, ok: false, error: "Unknown error", meta: it.meta } as BulkEmailResult;
+    });
+
+    const settled = await Promise.all(sendPromises);
+    results.push(...settled);
+
+    // delay between batches when there are more
+    if (i + batchSize < items.length && delayMsBetweenBatches > 0) {
+      await sleep(delayMsBetweenBatches);
+    }
+  }
+
+  // try to close transporter connection pool if available
+  try {
+    (transporter as any).close?.();
+  } catch (e) {
+    // ignore
+  }
+
+  return results;
 }
 
 export interface PrimaryButton {
