@@ -697,7 +697,7 @@ export default function StreamingNonRespondents() {
         }
       })();
     }
-  }, [surveyId, CACHE_TTL_MS]);
+  }, [surveyId, CACHE_TTL_MS, saveCacheNow]);
 
   // Persist cache when items change (debounced)
   useEffect(() => {
