@@ -8,13 +8,17 @@ beforeEach(() => {
   // clear localStorage
   // ensure we have a simple localStorage polyfill for tests
   // @ts-ignore
-  if (!global.localStorage || typeof global.localStorage.getItem !== 'function') {
+  if (
+    !global.localStorage ||
+    typeof global.localStorage.getItem !== "function"
+  ) {
     // basic in-memory localStorage
     // @ts-ignore
     global.localStorage = (function () {
       let store: Record<string, string> = {};
       return {
-        getItem: (key: string) => (store[key] === undefined ? null : store[key]),
+        getItem: (key: string) =>
+          store[key] === undefined ? null : store[key],
         setItem: (key: string, val: string) => {
           store[key] = String(val);
         },
@@ -34,8 +38,14 @@ beforeEach(() => {
     // @ts-ignore
     Object.keys(localStorage || {}).forEach((k) => localStorage.removeItem(k));
   }
-  vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }), usePathname: () => "/dashboard/surveys/s1/nonrespondents", useParams: () => ({ id: 's1' }) }));
-  vi.mock("@/lib/auth/AuthContext", () => ({ useAuth: () => ({ refreshAuth: vi.fn() }) }));
+  vi.mock("next/navigation", () => ({
+    useRouter: () => ({ push: vi.fn() }),
+    usePathname: () => "/dashboard/surveys/s1/nonrespondents",
+    useParams: () => ({ id: "s1" }),
+  }));
+  vi.mock("@/lib/auth/AuthContext", () => ({
+    useAuth: () => ({ refreshAuth: vi.fn() }),
+  }));
 });
 
 afterEach(() => {
@@ -49,27 +59,38 @@ describe("Nonrespondents cache resync", () => {
     // mock fetch to return server data when called
     // First, the component will call /api/surveys/s1/nonrespondents (load cached counts) and later for resync
     // Return array of one nonrespondent
-    const sample = [{
-      responseId: 'r1',
-      id: 'm1',
-      name: 'Alice',
-      email: 'a@example.com',
-      lotNumber: '101',
-      address: '123 Main St',
-      token: 't1',
-      reminderCount: 0
-    }];
+    const sample = [
+      {
+        responseId: "r1",
+        id: "m1",
+        name: "Alice",
+        email: "a@example.com",
+        lotNumber: "101",
+        address: "123 Main St",
+        token: "t1",
+        reminderCount: 0,
+      },
+    ];
 
     // Save empty cache to localStorage
-    const key = 'nonrespondents:s1';
-    localStorage.setItem(key, JSON.stringify({ items: [], seen: [], totalCount: 1, ts: Date.now() }));
+    const key = "nonrespondents:s1";
+    localStorage.setItem(
+      key,
+      JSON.stringify({ items: [], seen: [], totalCount: 1, ts: Date.now() })
+    );
 
     // Mock fetch for the server call used in resync
     global.fetch = vi.fn((url, opts) => {
-      if ((url as string).includes('/api/surveys/s1/nonrespondents')) {
-        return Promise.resolve({ ok: true, json: () => Promise.resolve(sample) } as any);
+      if ((url as string).includes("/api/surveys/s1/nonrespondents")) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(sample),
+        } as any);
       }
-      return Promise.resolve({ ok: true, json: () => Promise.resolve({}) } as any);
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({}),
+      } as any);
     }) as any;
 
     render(<StreamingNonRespondents />);

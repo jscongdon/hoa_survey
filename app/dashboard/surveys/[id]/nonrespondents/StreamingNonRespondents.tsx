@@ -101,21 +101,24 @@ export default function StreamingNonRespondents() {
   const [addressFilter, setAddressFilter] = useState("");
 
   // helper for safely aborting/canceling reader + controller without throwing
-  const safeAbort = React.useCallback((controller?: AbortController | null, reader?: any) => {
-    try {
-      // cancel the reader (best-effort, don't await)
+  const safeAbort = React.useCallback(
+    (controller?: AbortController | null, reader?: any) => {
       try {
-        if (reader?.cancel) {
-          const p = reader.cancel();
-          if (p && typeof p.then === "function") p.catch(() => {});
-        }
+        // cancel the reader (best-effort, don't await)
+        try {
+          if (reader?.cancel) {
+            const p = reader.cancel();
+            if (p && typeof p.then === "function") p.catch(() => {});
+          }
+        } catch {}
+        // abort controller if present
+        try {
+          controller?.abort?.();
+        } catch {}
       } catch {}
-      // abort controller if present
-      try {
-        controller?.abort?.();
-      } catch {}
-    } catch {}
-  }, []);
+    },
+    []
+  );
 
   useEffect(() => {
     if (!surveyId) return;
@@ -683,7 +686,9 @@ export default function StreamingNonRespondents() {
       // After loading cached items, fetch updated reminder counts from server to ensure cache reflects latest data
       (async () => {
         try {
-          const r = await fetch(`/api/surveys/${surveyId}/nonrespondents`, { credentials: "include" });
+          const r = await fetch(`/api/surveys/${surveyId}/nonrespondents`, {
+            credentials: "include",
+          });
           if (!r.ok) return;
           const body = await r.json();
           const arr = Array.isArray(body) ? body : body?.items || [];
