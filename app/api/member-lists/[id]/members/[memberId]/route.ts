@@ -61,9 +61,10 @@ export async function PUT(
     const updatedMember = await prisma.member.update({
       where: { id: memberId },
       data: {
-        lot: lot || member.lot,
-        name: name || member.name,
-        email: email || member.email,
+        lot: lot !== undefined ? lot : member.lot,
+        name: name !== undefined ? name : member.name,
+        // Allow empty-string to clear an email; only use fallback when field is undefined
+        email: email !== undefined ? email : member.email,
         address: address !== undefined ? address : member.address,
       },
     });
