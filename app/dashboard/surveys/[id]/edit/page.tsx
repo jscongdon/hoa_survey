@@ -161,6 +161,27 @@ export default function EditSurveyPage({
       });
   }, [surveyId]);
 
+  // Force override state persisted in localStorage per survey
+  const [forceOverride, setForceOverride] = useState<boolean>(false);
+  useEffect(() => {
+    if (!surveyId) return;
+    try {
+      const k = `hoa:survey:force:${surveyId}`;
+      const val = localStorage.getItem(k);
+      setForceOverride(val === 'true');
+    } catch (e) {
+      setForceOverride(false);
+    }
+  }, [surveyId]);
+
+  useEffect(() => {
+    if (!surveyId) return;
+    try {
+      const k = `hoa:survey:force:${surveyId}`;
+      localStorage.setItem(k, forceOverride ? 'true' : 'false');
+    } catch (e) {}
+  }, [forceOverride, surveyId]);
+
   // Check for changes whenever form data changes
   useEffect(() => {
     if (!originalData) return;
@@ -272,6 +293,22 @@ export default function EditSurveyPage({
     >
       <div className="max-w-2xl mx-auto">
         <div className="space-y-4">
+          <div className="mb-4 flex items-center justify-between">
+            <div />
+            <div className="flex items-center gap-3">
+              <input
+                id="forceOverride"
+                type="checkbox"
+                checked={forceOverride}
+                onChange={(e) => setForceOverride(e.target.checked)}
+                className="w-4 h-4 text-red-600"
+              />
+              <label htmlFor="forceOverride" className="text-sm text-red-600">
+                Enable Force Edit (admin override)
+              </label>
+            </div>
+          </div>
+
           <SurveyForm
             mode="edit"
             initialValues={{
@@ -296,9 +333,9 @@ export default function EditSurveyPage({
                   : false,
               questions: questions || [],
             }}
-            disableMemberList={submittedResponses > 0}
-            lockQuestions={submittedResponses > 0}
-            memberListLocked={submittedResponses > 0}
+            disableMemberList={!forceOverride && submittedResponses > 0}
+            lockQuestions={!forceOverride && submittedResponses > 0}
+            memberListLocked={!forceOverride && submittedResponses > 0}
             memberListNote={
               submittedResponses > 0
                 ? `Member list locked (${submittedResponses}/${totalResponses} responses submitted).`
@@ -309,10 +346,20 @@ export default function EditSurveyPage({
             onSubmit={async (payload) => {
               setStatus(null);
               try {
+                // If forcing, ask for explicit confirmation first
+                if (forceOverride) {
+                  const ok = window.confirm(
+                    'You are about to force-update this survey. This bypasses normal safety checks and is auditable. Proceed?'
+                  );
+                  if (!ok) return;
+                }
+
+                const bodyPayload = { ...payload, ...(forceOverride ? { force: true } : {}) };
+
                 const res = await fetch(`/api/surveys/${surveyId}`, {
                   method: "PUT",
                   headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify(payload),
+                  body: JSON.stringify(bodyPayload),
                 });
                 if (res.ok) {
                   setStatus("Survey updated!");

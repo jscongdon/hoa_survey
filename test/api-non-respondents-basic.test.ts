@@ -68,14 +68,30 @@ describe("Non-respondents API - Basic", () => {
       {
         id: "resp1",
         token: "token1",
-        member: { id: "m1", name: "Jane Doe", email: "jane@example.com", lot: "101" },
+        member: {
+          id: "m1",
+          name: "Jane Doe",
+          email: "jane@example.com",
+          lot: "101",
+        },
       },
     ]);
     (prisma.reminder as any) = { count: vi.fn().mockResolvedValue(2) };
-    (decryptMemberData as any).mockResolvedValue({ name: "Jane Doe", email: "jane@example.com", lot: "101", address: "" });
+    (decryptMemberData as any).mockResolvedValue({
+      name: "Jane Doe",
+      email: "jane@example.com",
+      lot: "101",
+      address: "",
+    });
 
-    const req: any = { headers: { get: () => null }, cookies: { get: () => ({ value: "token" }) }, url: 'http://localhost/api/surveys/s1/nonrespondents' };
-    const { GET } = await import("../app/api/surveys/[id]/nonrespondents/route");
+    const req: any = {
+      headers: { get: () => null },
+      cookies: { get: () => ({ value: "token" }) },
+      url: "http://localhost/api/surveys/s1/nonrespondents",
+    };
+    const { GET } = await import(
+      "../app/api/surveys/[id]/nonrespondents/route"
+    );
     const res: any = await GET(req, { params: Promise.resolve({ id: "s1" }) });
     const body = await res.json();
     expect(Array.isArray(body)).toBe(true);

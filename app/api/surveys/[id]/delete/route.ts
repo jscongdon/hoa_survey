@@ -59,6 +59,19 @@ export async function DELETE(
     const forceDelete = req.nextUrl.searchParams.get('force') === 'true';
     log('[DELETE_SURVEY] Force delete:', forceDelete);
 
+    if (forceDelete) {
+      try {
+        const admin = await prisma.admin.findUnique({ where: { id: adminId } });
+        if (!admin || admin.role !== 'FULL') {
+          return NextResponse.json({ error: 'Insufficient permissions for forced delete' }, { status: 403 });
+        }
+        log(`[DELETE_SURVEY] Admin ${adminId} forced delete on survey ${id}`);
+      } catch (e) {
+        logError('[DELETE_SURVEY] Error fetching admin role for force delete', e);
+        return NextResponse.json({ error: 'Insufficient permissions for forced delete' }, { status: 403 });
+      }
+    }
+
     if (submittedCount > 0 && !forceDelete) {
       log('[DELETE_SURVEY] Returning 409 - has submitted responses');
       return NextResponse.json({

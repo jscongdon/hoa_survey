@@ -39,8 +39,114 @@ export async function GET(
     const url = new URL(req.url);
     const stream = url.searchParams.get("stream");
     const afterId = url.searchParams.get("afterId") || undefined;
+    const remindersParam = url.searchParams.get("reminders");
+    const reminders =
+      typeof remindersParam === "string" && remindersParam !== ""
+        ? parseInt(remindersParam, 10)
+        : undefined;
+    const minRemindersParam =
+      url.searchParams.get("minReminders") ||
+      url.searchParams.get("minReminder");
+    const minReminders =
+      typeof minRemindersParam === "string" && minRemindersParam !== ""
+        ? parseInt(minRemindersParam, 10)
+        : undefined;
 
     // If client requests streaming, send NDJSON lines as we paginate through the DB
+    // Precompute memberIdsFilter for optional minReminders filter so both streaming and non-stream code can use it
+    // Precompute a memberIdsFilter for the optional reminders/minReminders filters.
+    // Support exact matching via `reminders=<n>` (e.g., reminders=0 for none),
+    // or legacy `minReminders` for >= semantics if provided and `reminders` is absent.
+    let memberIdsFilter: string[] | undefined;
+    if (typeof reminders === "number" && !Number.isNaN(reminders)) {
+      if (reminders < 0) {
+        memberIdsFilter = undefined;
+      } else if (reminders === 0) {
+        // members who have zero reminders: all memberIds in responses minus those with any reminders
+        const allResponses = await prisma.response.findMany({
+          where: { surveyId: id, submittedAt: null },
+          select: { memberId: true },
+        });
+        const allMemberIds = Array.from(
+          new Set(allResponses.map((r) => r.memberId))
+        );
+        const grouped = await prisma.reminder.groupBy({
+          by: ["memberId"],
+          where: { surveyId: id },
+          _count: { _all: true },
+        });
+        const withReminders = new Set(grouped.map((g) => g.memberId));
+        memberIdsFilter = allMemberIds.filter((mid) => !withReminders.has(mid));
+        if (!memberIdsFilter || memberIdsFilter.length === 0) {
+          const emptyStream = new ReadableStream({
+            start(controller) {
+              controller.close();
+            },
+          });
+          return new Response(emptyStream, {
+            headers: {
+              "Content-Type": "application/x-ndjson; charset=utf-8",
+              "X-Total-Count": "0",
+              "X-Total-Remaining": "0",
+            },
+          });
+        }
+      } else {
+        // exact match > 0
+        const grouped = await prisma.reminder.groupBy({
+          by: ["memberId"],
+          where: { surveyId: id },
+          _count: { _all: true },
+        });
+        memberIdsFilter = grouped
+          .filter((g) => (g._count?._all ?? 0) === reminders)
+          .map((g) => g.memberId);
+        if (!memberIdsFilter || memberIdsFilter.length === 0) {
+          const emptyStream = new ReadableStream({
+            start(controller) {
+              controller.close();
+            },
+          });
+          return new Response(emptyStream, {
+            headers: {
+              "Content-Type": "application/x-ndjson; charset=utf-8",
+              "X-Total-Count": "0",
+              "X-Total-Remaining": "0",
+            },
+          });
+        }
+      }
+    } else if (
+      typeof minReminders === "number" &&
+      !Number.isNaN(minReminders)
+    ) {
+      if (minReminders <= 0) {
+        memberIdsFilter = undefined;
+      } else {
+        const grouped = await prisma.reminder.groupBy({
+          by: ["memberId"],
+          where: { surveyId: id },
+          _count: { _all: true },
+        });
+        memberIdsFilter = grouped
+          .filter((g) => (g._count?._all ?? 0) >= minReminders)
+          .map((g) => g.memberId);
+        if (!memberIdsFilter || memberIdsFilter.length === 0) {
+          const emptyStream = new ReadableStream({
+            start(controller) {
+              controller.close();
+            },
+          });
+          return new Response(emptyStream, {
+            headers: {
+              "Content-Type": "application/x-ndjson; charset=utf-8",
+              "X-Total-Count": "0",
+              "X-Total-Remaining": "0",
+            },
+          });
+        }
+      }
+    }
     if (stream === "1" || stream === "true") {
       // allow overriding batch size via query param for testing/tuning
       const batchSizeParam =
@@ -52,12 +158,24 @@ export async function GET(
 
       // compute total count upfront and expose via header so clients can render a total
       // compute overall total and remaining (after the optional cursor)
+      // If the user requested a minimum number of reminders, compute members who match
+      // memberIdsFilter already computed above
+
       const overallTotal = await prisma.response.count({
-        where: { surveyId: id, submittedAt: null },
+        where: {
+          surveyId: id,
+          submittedAt: null,
+          ...(memberIdsFilter ? { memberId: { in: memberIdsFilter } } : {}),
+        },
       });
       const remainingTotal = afterId
         ? await prisma.response.count({
-            where: { surveyId: id, submittedAt: null, id: { gt: afterId } },
+            where: {
+              surveyId: id,
+              submittedAt: null,
+              id: { gt: afterId },
+              ...(memberIdsFilter ? { memberId: { in: memberIdsFilter } } : {}),
+            },
           })
         : overallTotal;
 
@@ -73,7 +191,13 @@ export async function GET(
               (controller as any)._lastId ?? afterId;
             // We will fetch batches using a cursor
             const batch = await prisma.response.findMany({
-              where: { surveyId: id, submittedAt: null },
+              where: {
+                surveyId: id,
+                submittedAt: null,
+                ...(memberIdsFilter
+                  ? { memberId: { in: memberIdsFilter } }
+                  : {}),
+              },
               include: {
                 member: {
                   select: {
@@ -168,11 +292,13 @@ export async function GET(
     }
 
     // Non-streaming: fetch all responses and return as array (backwards compatible)
+    const nonStreamingWhere = {
+      surveyId: id,
+      submittedAt: null,
+      ...(memberIdsFilter ? { memberId: { in: memberIdsFilter } } : {}),
+    };
     const nonRespondents = await prisma.response.findMany({
-      where: {
-        surveyId: id,
-        submittedAt: null,
-      },
+      where: nonStreamingWhere,
       include: {
         member: {
           select: {

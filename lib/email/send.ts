@@ -113,18 +113,32 @@ export async function sendBulkEmails(
       while (attempts <= retryCount) {
         try {
           await sendEmail(it.options, transporter);
-          return { to: it.options.to, ok: true, meta: it.meta } as BulkEmailResult;
+          return {
+            to: it.options.to,
+            ok: true,
+            meta: it.meta,
+          } as BulkEmailResult;
         } catch (e) {
           attempts += 1;
           if (attempts > retryCount) {
-            return { to: it.options.to, ok: false, error: String(e), meta: it.meta } as BulkEmailResult;
+            return {
+              to: it.options.to,
+              ok: false,
+              error: String(e),
+              meta: it.meta,
+            } as BulkEmailResult;
           }
           // wait a bit before retry
           await sleep(retryDelayMs);
         }
       }
       // fallback
-      return { to: it.options.to, ok: false, error: "Unknown error", meta: it.meta } as BulkEmailResult;
+      return {
+        to: it.options.to,
+        ok: false,
+        error: "Unknown error",
+        meta: it.meta,
+      } as BulkEmailResult;
     });
 
     const settled = await Promise.all(sendPromises);

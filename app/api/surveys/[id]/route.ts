@@ -121,6 +121,7 @@ export async function PUT(
       minResponsesAll,
       requireSignature,
       groupNotificationsEnabled,
+      force,
     } = body;
     const sanitizedDescription = description
       ? sanitizeSurveyHtml(String(description))
@@ -138,7 +139,7 @@ export async function PUT(
         const submittedCount = await prisma.response.count({
           where: { surveyId: id, submittedAt: { not: null } },
         });
-        if (submittedCount > 0) {
+        if (submittedCount > 0 && !force) {
           return NextResponse.json(
             {
               error:
@@ -147,6 +148,20 @@ export async function PUT(
             { status: 409 }
           );
         }
+      }
+    }
+
+    // If force is requested, ensure the admin has FULL role
+    if (force) {
+      try {
+        const admin = await prisma.admin.findUnique({ where: { id: adminId } });
+        if (!admin || admin.role !== 'FULL') {
+          return NextResponse.json({ error: 'Insufficient permissions for force override' }, { status: 403 });
+        }
+        log(`[FORCE_UPDATE] Admin ${adminId} forcing update on survey ${id}`);
+      } catch (e) {
+        logError('Error checking admin role for force update', e);
+        return NextResponse.json({ error: 'Insufficient permissions for force override' }, { status: 403 });
       }
     }
 

@@ -66,7 +66,12 @@ export async function POST(
 
     let results = [] as any[];
     if (typeof sendBulkEmails === "function") {
-      results = await sendBulkEmails(emailItems, { batchSize: 50, delayMsBetweenBatches: 1000, retryCount: 1, retryDelayMs: 500 });
+      results = await sendBulkEmails(emailItems, {
+        batchSize: 50,
+        delayMsBetweenBatches: 1000,
+        retryCount: 1,
+        retryDelayMs: 500,
+      });
     } else {
       // Fallback sequential send
       for (const it of emailItems) {

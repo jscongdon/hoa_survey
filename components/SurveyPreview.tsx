@@ -49,7 +49,9 @@ export default function SurveyPreview({
           {title}
         </h2>
         {memberNote && (
-          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{memberNote}</p>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+            {memberNote}
+          </p>
         )}
       </div>
 
@@ -78,13 +80,19 @@ export default function SurveyPreview({
                 {q.required && <span className="text-red-600 ml-1">*</span>}
               </h3>
               {q.type === "YES_NO" && (
-                <div className="text-sm text-gray-600 dark:text-gray-300">Yes / No</div>
+                <div className="text-sm text-gray-600 dark:text-gray-300">
+                  Yes / No
+                </div>
               )}
               {q.type === "MULTI_MULTI" && (
-                <div className="text-sm text-gray-600 dark:text-gray-300">Multiple choice</div>
+                <div className="text-sm text-gray-600 dark:text-gray-300">
+                  Multiple choice
+                </div>
               )}
               {q.type === "MULTI_SINGLE" && (
-                <div className="text-sm text-gray-600 dark:text-gray-300">Single choice</div>
+                <div className="text-sm text-gray-600 dark:text-gray-300">
+                  Single choice
+                </div>
               )}
             </div>
           ))

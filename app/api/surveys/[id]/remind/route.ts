@@ -2,7 +2,11 @@ import { log, error as logError } from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyToken } from "@/lib/auth/jwt";
-import { sendBulkEmails, sendEmail, generateSurveyEmail } from "@/lib/email/send";
+import {
+  sendBulkEmails,
+  sendEmail,
+  generateSurveyEmail,
+} from "@/lib/email/send";
 import { getBaseUrl } from "@/lib/app-url";
 import { decryptMemberData } from "@/lib/encryption";
 
@@ -112,7 +116,11 @@ export async function POST(
               html,
               text: `Please complete the survey: ${link}`,
             },
-            meta: { responseId: response.id, memberId: response.memberId, email: decrypted.email },
+            meta: {
+              responseId: response.id,
+              memberId: response.memberId,
+              email: decrypted.email,
+            },
           };
         } catch (err) {
           logError(
@@ -126,17 +134,30 @@ export async function POST(
     );
 
     // Filter out any nulls (failed to prepare) and send in batches
-    const itemsToSend = emailItems.filter(Boolean) as Array<{ options: any; meta: any }>;
+    const itemsToSend = emailItems.filter(Boolean) as Array<{
+      options: any;
+      meta: any;
+    }>;
     let results = [] as any[];
     if (typeof sendBulkEmails === "function") {
-      results = await sendBulkEmails(itemsToSend, { batchSize: 50, delayMsBetweenBatches: 1000, retryCount: 1, retryDelayMs: 500 });
+      results = await sendBulkEmails(itemsToSend, {
+        batchSize: 50,
+        delayMsBetweenBatches: 1000,
+        retryCount: 1,
+        retryDelayMs: 500,
+      });
     } else {
       for (const it of itemsToSend) {
         try {
           await sendEmail(it.options);
           results.push({ to: it.options.to, ok: true, meta: it.meta });
         } catch (e) {
-          results.push({ to: it.options.to, ok: false, error: String(e), meta: it.meta });
+          results.push({
+            to: it.options.to,
+            ok: false,
+            error: String(e),
+            meta: it.meta,
+          });
         }
       }
     }

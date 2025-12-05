@@ -40,7 +40,7 @@ export default function StreamingNonRespondents() {
     (overrideItems?: NonRespondent[]) => {
       if (!surveyId) return;
       try {
-        const key = `nonrespondents:${surveyId}`;
+        const key = cacheKey(surveyId);
         const seen = Array.from(seenRef.current || []);
         const src = overrideItems ?? itemsRef.current ?? [];
         const snapshot = src.map((it) => ({
@@ -99,6 +99,17 @@ export default function StreamingNonRespondents() {
   const [lotFilter, setLotFilter] = useState("");
   const [nameFilter, setNameFilter] = useState("");
   const [addressFilter, setAddressFilter] = useState("");
+  const [reminders, setReminders] = useState<number | "">("");
+  // string-backed input so user can type and we only apply on blur/enter
+  const [remindersInput, setRemindersInput] = useState<string>("");
+  const prevRemindersRef = useRef<number | "">("");
+  // keep input in sync with applied numeric filter
+  useEffect(() => {
+    setRemindersInput(typeof reminders === "number" ? String(reminders) : "");
+  }, [reminders]);
+
+  const cacheKey = (sid?: string) =>
+    `nonrespondents:${sid}${typeof reminders === "number" && reminders !== "" ? `:reminders:${reminders}` : ""}`;
 
   useEffect(() => {
     if (!surveyId) return;
@@ -126,7 +137,7 @@ export default function StreamingNonRespondents() {
         });
         // rehydrate seen set from cache in case previous runs persisted it
         try {
-          const key = `nonrespondents:${surveyId}`;
+          const key = cacheKey(surveyId);
           const raw = localStorage.getItem(key);
           if (raw) {
             const parsed = JSON.parse(raw);
@@ -151,7 +162,11 @@ export default function StreamingNonRespondents() {
             itemsRef.current && itemsRef.current.length
               ? itemsRef.current[itemsRef.current.length - 1].responseId
               : undefined;
-          const streamUrl = `/api/surveys/${surveyId}/nonrespondents?stream=1${last ? `&afterId=${encodeURIComponent(last)}` : ""}`;
+          let streamUrl = `/api/surveys/${surveyId}/nonrespondents?stream=1`;
+          if (last) streamUrl += `&afterId=${encodeURIComponent(last)}`;
+          if (typeof reminders === "number" && reminders !== "") {
+            streamUrl += `${last ? "&" : "&"}reminders=${encodeURIComponent(String(reminders))}`;
+          }
           console.debug("Nonrespondents: stream url", streamUrl);
           const res = await fetch(streamUrl, {
             credentials: "include",
@@ -342,10 +357,15 @@ export default function StreamingNonRespondents() {
                 { itemsLoaded: items.length, totalCount }
               );
               try {
-                const rmore = await fetch(
-                  `/api/surveys/${surveyId}/nonrespondents`,
-                  { credentials: "include", signal }
-                );
+                // fetch remainder; include minReminders if set so fallback matches stream filter
+                let rmoreUrl = `/api/surveys/${surveyId}/nonrespondents`;
+                if (typeof reminders === "number" && reminders !== "") {
+                  rmoreUrl += `?reminders=${encodeURIComponent(String(reminders))}`;
+                }
+                const rmore = await fetch(rmoreUrl, {
+                  credentials: "include",
+                  signal,
+                });
                 if (rmore.ok) {
                   const bodyMore = await rmore.json();
                   const arr = Array.isArray(bodyMore)
@@ -404,7 +424,11 @@ export default function StreamingNonRespondents() {
 
         // fallback: fetch full array
         console.debug("Nonrespondents: falling back to full fetch");
-        const r2 = await fetch(`/api/surveys/${surveyId}/nonrespondents`, {
+        let r2Url = `/api/surveys/${surveyId}/nonrespondents`;
+        if (typeof reminders === "number" && reminders !== "") {
+          r2Url += `?reminders=${encodeURIComponent(String(reminders))}`;
+        }
+        const r2 = await fetch(r2Url, {
           credentials: "include",
           signal,
         });
@@ -598,11 +622,53 @@ export default function StreamingNonRespondents() {
     CACHE_TTL_MS,
   ]);
 
+  // When reminders changes, clear current items and restart stream with the new filter
+  useEffect(() => {
+    if (!surveyId) return;
+    if (prevRemindersRef.current === reminders) return;
+    prevRemindersRef.current = reminders;
+    // clear in-memory items and seen set
+    itemsRef.current = [];
+    seenRef.current.clear();
+    setItems([]);
+    setTotalCount(null);
+    setLoading(true);
+    setStreaming(false);
+    // abort any running controller and cancel reader
+    if (controllerRef.current) {
+      try {
+        runIdRef.current++;
+      } catch {}
+      try {
+        controllerRef.current.abort();
+      } catch {}
+      controllerRef.current = null;
+    }
+    if (readerRef.current) {
+      try {
+        readerRef.current.cancel?.();
+      } catch {}
+      readerRef.current = null;
+    }
+    // remove cached entries for this survey (including reminders variants)
+    try {
+      const prefix = `nonrespondents:${surveyId}`;
+      const toRemove: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith(prefix)) toRemove.push(k);
+      }
+      toRemove.forEach((k) => localStorage.removeItem(k));
+    } catch (e) {}
+    // force retry of stream
+    setRetryKey((k) => k + 1);
+  }, [reminders, cacheLoaded, surveyId]);
+
   // Load cached nonrespondents for this survey (if any and not expired)
   useEffect(() => {
     if (!surveyId) return;
     try {
-      const key = `nonrespondents:${surveyId}`;
+      const key = cacheKey(surveyId);
       const raw = localStorage.getItem(key);
       if (!raw) {
         setCacheLoaded(true);
@@ -662,7 +728,9 @@ export default function StreamingNonRespondents() {
       // After loading cached items, fetch updated reminder counts from server to ensure cache reflects latest data
       (async () => {
         try {
-          const r = await fetch(`/api/surveys/${surveyId}/nonrespondents`, { credentials: "include" });
+          const r = await fetch(`/api/surveys/${surveyId}/nonrespondents`, {
+            credentials: "include",
+          });
           if (!r.ok) return;
           const body = await r.json();
           const arr = Array.isArray(body) ? body : body?.items || [];
@@ -707,7 +775,7 @@ export default function StreamingNonRespondents() {
 
     const doSave = () => {
       try {
-        const key = `nonrespondents:${surveyId}`;
+        const key = cacheKey(surveyId);
         const seen = Array.from(seenRef.current || []);
         // snapshot plain objects to avoid any unexpected properties
         const src = itemsRef.current || items;
@@ -853,6 +921,11 @@ export default function StreamingNonRespondents() {
         Loaded {loaded}
         {totalCount !== null ? ` / ${totalCount}` : ""} nonrespondents
       </span>
+      {typeof reminders === "number" && (
+        <span className="text-sm text-gray-600 dark:text-gray-400">
+          • Reminders = {reminders}
+        </span>
+      )}
       {streaming && (
         <svg className="animate-spin h-4 w-4 text-blue-600" viewBox="0 0 24 24">
           <circle
@@ -884,7 +957,11 @@ export default function StreamingNonRespondents() {
     const nameMatch = !lcName || (r.name || "").toLowerCase().includes(lcName);
     const addrMatch =
       !lcAddr || ((r.address || "") as string).toLowerCase().includes(lcAddr);
-    return lotMatch && nameMatch && addrMatch;
+    const remindersMatch =
+      typeof reminders === "number"
+        ? (r.reminderCount ?? 0) === reminders
+        : true;
+    return lotMatch && nameMatch && addrMatch && remindersMatch;
   });
 
   const actions = [
@@ -902,7 +979,7 @@ export default function StreamingNonRespondents() {
       isLoading={loading}
       actions={actions}
     >
-      <div className="mb-4 grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="mb-4 grid grid-cols-1 md:grid-cols-5 gap-4">
         <input
           type="text"
           placeholder="Filter by Lot"
@@ -925,15 +1002,62 @@ export default function StreamingNonRespondents() {
           className="px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
         />
         <div>
+          <input
+            type="number"
+            min={0}
+            placeholder="Reminders (exact)"
+            value={remindersInput}
+            onChange={(e) => setRemindersInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                // apply on enter
+                const parsed =
+                  e.currentTarget.value === ""
+                    ? ""
+                    : parseInt(e.currentTarget.value, 10);
+                setReminders(
+                  typeof parsed === "number" && !Number.isNaN(parsed)
+                    ? parsed
+                    : ""
+                );
+              }
+            }}
+            onBlur={(e) => {
+              const parsed =
+                e.currentTarget.value === ""
+                  ? ""
+                  : parseInt(e.currentTarget.value, 10);
+              setReminders(
+                typeof parsed === "number" && !Number.isNaN(parsed)
+                  ? parsed
+                  : ""
+              );
+            }}
+            className="px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white w-full"
+          />
+        </div>
+        <div>
           <button
             onClick={() => {
               setLotFilter("");
               setNameFilter("");
               setAddressFilter("");
+              setReminders("");
+              setRemindersInput("");
             }}
             className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
           >
             Clear
+          </button>
+          <button
+            onClick={() => {
+              // clear reminders filter
+              setReminders("");
+              setRemindersInput("");
+            }}
+            className="ml-2 px-4 py-2 bg-gray-300 text-gray-900 rounded-lg hover:bg-gray-400"
+          >
+            Clear Reminders
           </button>
         </div>
       </div>

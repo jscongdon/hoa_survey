@@ -503,7 +503,10 @@ export default function MemberListDetailPage({
         return;
       }
 
-      const updatedMember = await res.json();
+      const body = await res.json();
+      const updatedMember = (body?.member ?? body) as any;
+      // Ensure the updated member has an id; fallback to editingId when absent
+      if (!updatedMember.id) updatedMember.id = editingId;
       setMembers((prev) => {
         const next = prev.map((m) => (m.id === editingId ? updatedMember : m));
         membersRef.current = next;
@@ -524,6 +527,35 @@ export default function MemberListDetailPage({
         return next;
       });
       cancelEdit();
+
+      // If the server returned affectedResponses, invalidate nonrespondents cache for affected surveys
+      try {
+        const affected = body?.affectedResponses ?? [];
+        if (Array.isArray(affected) && affected.length) {
+          const surveyIds = Array.from(
+            new Set(affected.map((r: any) => r.surveyId))
+          );
+          for (const sid of surveyIds) {
+            try {
+              const prefix = `nonrespondents:${sid}`;
+              // remove any keys for this survey that match the nonrespondents prefix (including any filter variants)
+              const toRemove: string[] = [];
+              for (let i = 0; i < localStorage.length; i++) {
+                const k = localStorage.key(i);
+                if (k && k.startsWith(prefix)) toRemove.push(k);
+              }
+              toRemove.forEach((k) => localStorage.removeItem(k));
+              // Optionally trigger a background refresh of the nonrespondents endpoint to repopulate cache
+              // This keeps clients in sync sooner if they're viewing the nonrespondents page.
+              fetch(`/api/surveys/${sid}/nonrespondents`, {
+                credentials: "include",
+              }).catch(() => {});
+            } catch (e) {}
+          }
+        }
+      } catch (e) {
+        console.error("Failed to invalidate nonrespondents cache", e);
+      }
     } catch (error) {
       console.error("Failed to update member:", error);
       alert("Failed to update member");
