@@ -1027,20 +1027,22 @@ export default function StreamingNonRespondents() {
                     >
                       Submit Response
                     </button>
-                    <button
-                      onClick={() =>
-                        confirmAndSend(
-                          row.responseId as string,
-                          `${row.name || row.lotNumber || "member"}`
-                        )
-                      }
-                      disabled={!!remindStatus[row.responseId]}
-                      className="px-3 py-1 bg-indigo-500 text-white text-xs rounded hover:bg-indigo-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
-                    >
-                      {remindStatus[row.responseId]
-                        ? remindStatus[row.responseId]
-                        : "Remind"}
-                    </button>
+                    {row.email ? (
+                      <button
+                        onClick={() =>
+                          confirmAndSend(
+                            row.responseId as string,
+                            `${row.name || row.lotNumber || "member"}`
+                          )
+                        }
+                        disabled={!!remindStatus[row.responseId]}
+                        className="px-3 py-1 bg-indigo-500 text-white text-xs rounded hover:bg-indigo-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                      >
+                        {remindStatus[row.responseId]
+                          ? remindStatus[row.responseId]
+                          : "Remind"}
+                      </button>
+                    ) : null}
                   </div>
                 ),
               },
@@ -1104,20 +1106,22 @@ export default function StreamingNonRespondents() {
                   >
                     Submit Response
                   </button>
-                  <button
-                    onClick={() =>
-                      confirmAndSend(
-                        r.responseId,
-                        `${r.name || r.lotNumber || "member"}`
-                      )
-                    }
-                    disabled={!!remindStatus[r.responseId]}
-                    className="px-4 py-2 bg-indigo-500 text-white text-sm rounded-lg hover:bg-indigo-600 w-full sm:w-auto disabled:bg-gray-400 disabled:cursor-not-allowed"
-                  >
-                    {remindStatus[r.responseId]
-                      ? remindStatus[r.responseId]
-                      : "Remind"}
-                  </button>
+                  {r.email ? (
+                    <button
+                      onClick={() =>
+                        confirmAndSend(
+                          r.responseId,
+                          `${r.name || r.lotNumber || "member"}`
+                        )
+                      }
+                      disabled={!!remindStatus[r.responseId]}
+                      className="px-4 py-2 bg-indigo-500 text-white text-sm rounded-lg hover:bg-indigo-600 w-full sm:w-auto disabled:bg-gray-400 disabled:cursor-not-allowed"
+                    >
+                      {remindStatus[r.responseId]
+                        ? remindStatus[r.responseId]
+                        : "Remind"}
+                    </button>
+                  ) : null}
                 </div>
               </div>
             ))
