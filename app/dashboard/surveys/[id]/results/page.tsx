@@ -195,12 +195,15 @@ export default function SurveyResultsPage({
     if (!surveyId || !editingResponse) return;
     setEditStatus("Saving...");
     try {
-      const res = await fetch(`/api/surveys/${surveyId}/responses/${editingResponse.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ answers }),
-      });
+      const res = await fetch(
+        `/api/surveys/${surveyId}/responses/${editingResponse.id}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ answers }),
+        }
+      );
       if (!res.ok) {
         const data = await res.json();
         setEditStatus(data?.error || "Error saving");
@@ -299,7 +302,7 @@ export default function SurveyResultsPage({
           </div>
         </div>
 
-          <div className="space-y-6">
+        <div className="space-y-6">
           {data.stats.map((stat, index) => {
             const question = data.questions.find(
               (q) => q.id === stat.questionId
@@ -474,10 +477,23 @@ export default function SurveyResultsPage({
           {/* Edit Response Modal */}
           {editing && editingResponse && (
             <div className="fixed inset-0 bg-black/40 z-40 flex items-center justify-center">
-              <div data-testid="edit-response-modal" className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 w-full max-w-3xl z-50">
+              <div
+                data-testid="edit-response-modal"
+                className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 w-full max-w-3xl z-50"
+              >
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Edit Response - {editingResponse.member.name}</h3>
-                  <button onClick={() => { setEditing(false); setEditingResponse(null); }} className="px-3 py-1 text-gray-600 dark:text-gray-300">Close</button>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    Edit Response - {editingResponse.member.name}
+                  </h3>
+                  <button
+                    onClick={() => {
+                      setEditing(false);
+                      setEditingResponse(null);
+                    }}
+                    className="px-3 py-1 text-gray-600 dark:text-gray-300"
+                  >
+                    Close
+                  </button>
                 </div>
                 <SurveyRenderer
                   survey={{
@@ -495,7 +511,9 @@ export default function SurveyResultsPage({
                   initialAnswers={editingResponse.answers}
                   onSubmit={handleSaveEditedResponse}
                 />
-                {editStatus && <div className="mt-2 text-sm text-gray-700">{editStatus}</div>}
+                {editStatus && (
+                  <div className="mt-2 text-sm text-gray-700">{editStatus}</div>
+                )}
               </div>
             </div>
           )}
@@ -553,7 +571,7 @@ export default function SurveyResultsPage({
                       ? "Hide Details"
                       : "View Details"}
                   </button>
-                          {currentAdminRole === "FULL" && (
+                  {currentAdminRole === "FULL" && (
                     <button
                       onClick={() => handleDeleteResponse(response.id)}
                       disabled={deletingId === response.id}
@@ -562,14 +580,14 @@ export default function SurveyResultsPage({
                       {deletingId === response.id ? "Deleting..." : "Delete"}
                     </button>
                   )}
-                          {currentAdminRole === "FULL" && (
-                            <button
-                              onClick={() => handleEditClick(response)}
-                              className="px-3 py-1 bg-yellow-500 text-white text-sm rounded-lg hover:bg-yellow-600 flex-1 min-w-0"
-                            >
-                              Edit
-                            </button>
-                          )}
+                  {currentAdminRole === "FULL" && (
+                    <button
+                      onClick={() => handleEditClick(response)}
+                      className="px-3 py-1 bg-yellow-500 text-white text-sm rounded-lg hover:bg-yellow-600 flex-1 min-w-0"
+                    >
+                      Edit
+                    </button>
+                  )}
                 </div>
 
                 {expandedResponseId === response.id && (
