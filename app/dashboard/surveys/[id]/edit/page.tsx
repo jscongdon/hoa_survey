@@ -168,7 +168,7 @@ export default function EditSurveyPage({
     try {
       const k = `hoa:survey:force:${surveyId}`;
       const val = localStorage.getItem(k);
-      setForceOverride(val === 'true');
+      setForceOverride(val === "true");
     } catch (e) {
       setForceOverride(false);
     }
@@ -178,7 +178,7 @@ export default function EditSurveyPage({
     if (!surveyId) return;
     try {
       const k = `hoa:survey:force:${surveyId}`;
-      localStorage.setItem(k, forceOverride ? 'true' : 'false');
+      localStorage.setItem(k, forceOverride ? "true" : "false");
     } catch (e) {}
   }, [forceOverride, surveyId]);
 
@@ -349,12 +349,15 @@ export default function EditSurveyPage({
                 // If forcing, ask for explicit confirmation first
                 if (forceOverride) {
                   const ok = window.confirm(
-                    'You are about to force-update this survey. This bypasses normal safety checks and is auditable. Proceed?'
+                    "You are about to force-update this survey. This bypasses normal safety checks and is auditable. Proceed?"
                   );
                   if (!ok) return;
                 }
 
-                const bodyPayload = { ...payload, ...(forceOverride ? { force: true } : {}) };
+                const bodyPayload = {
+                  ...payload,
+                  ...(forceOverride ? { force: true } : {}),
+                };
 
                 const res = await fetch(`/api/surveys/${surveyId}`, {
                   method: "PUT",

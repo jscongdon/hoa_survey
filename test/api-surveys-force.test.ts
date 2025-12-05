@@ -24,7 +24,9 @@ describe("Survey force update", () => {
 
   it("blocks memberList change when submitted responses exist without force", async () => {
     (verifyToken as any).mockResolvedValue({ adminId: "a1" });
-    (prisma.survey.findUnique as any).mockResolvedValue({ memberListId: "list1" });
+    (prisma.survey.findUnique as any).mockResolvedValue({
+      memberListId: "list1",
+    });
     (prisma.response.count as any).mockResolvedValue(2);
 
     const { PUT } = await import("../app/api/surveys/[id]/route");
@@ -43,9 +45,14 @@ describe("Survey force update", () => {
 
   it("allows force update for FULL admin", async () => {
     (verifyToken as any).mockResolvedValue({ adminId: "a1" });
-    (prisma.survey.findUnique as any).mockResolvedValue({ memberListId: "list1" });
+    (prisma.survey.findUnique as any).mockResolvedValue({
+      memberListId: "list1",
+    });
     (prisma.response.count as any).mockResolvedValue(2);
-    (prisma.admin.findUnique as any).mockResolvedValue({ id: "a1", role: "FULL" });
+    (prisma.admin.findUnique as any).mockResolvedValue({
+      id: "a1",
+      role: "FULL",
+    });
 
     // $transaction will be attempted; stub a successful result
     (prisma.$transaction as any).mockResolvedValue({});
@@ -66,9 +73,14 @@ describe("Survey force update", () => {
 
   it("rejects force update for non-FULL admin", async () => {
     (verifyToken as any).mockResolvedValue({ adminId: "a1" });
-    (prisma.survey.findUnique as any).mockResolvedValue({ memberListId: "list1" });
+    (prisma.survey.findUnique as any).mockResolvedValue({
+      memberListId: "list1",
+    });
     (prisma.response.count as any).mockResolvedValue(2);
-    (prisma.admin.findUnique as any).mockResolvedValue({ id: "a1", role: "LIMITED" });
+    (prisma.admin.findUnique as any).mockResolvedValue({
+      id: "a1",
+      role: "LIMITED",
+    });
 
     const { PUT } = await import("../app/api/surveys/[id]/route");
 

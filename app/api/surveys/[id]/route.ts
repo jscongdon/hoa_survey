@@ -155,13 +155,19 @@ export async function PUT(
     if (force) {
       try {
         const admin = await prisma.admin.findUnique({ where: { id: adminId } });
-        if (!admin || admin.role !== 'FULL') {
-          return NextResponse.json({ error: 'Insufficient permissions for force override' }, { status: 403 });
+        if (!admin || admin.role !== "FULL") {
+          return NextResponse.json(
+            { error: "Insufficient permissions for force override" },
+            { status: 403 }
+          );
         }
         log(`[FORCE_UPDATE] Admin ${adminId} forcing update on survey ${id}`);
       } catch (e) {
-        logError('Error checking admin role for force update', e);
-        return NextResponse.json({ error: 'Insufficient permissions for force override' }, { status: 403 });
+        logError("Error checking admin role for force update", e);
+        return NextResponse.json(
+          { error: "Insufficient permissions for force override" },
+          { status: 403 }
+        );
       }
     }
 
