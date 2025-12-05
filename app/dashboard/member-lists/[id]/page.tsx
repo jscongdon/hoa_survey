@@ -60,6 +60,20 @@ export default function MemberListDetailPage({
   const [nameFilter, setNameFilter] = useState("");
   const [addressFilter, setAddressFilter] = useState("");
 
+  const safeAbort = React.useCallback((controller?: AbortController | null, reader?: any) => {
+    try {
+      try {
+        if (reader?.cancel) {
+          const p = reader.cancel();
+          if (p && typeof p.then === "function") p.catch(() => {});
+        }
+      } catch {}
+      try {
+        controller?.abort?.();
+      } catch {}
+    } catch {}
+  }, []);
+
   useEffect(() => {
     let active = true;
     (async () => {
@@ -334,7 +348,7 @@ export default function MemberListDetailPage({
 
     return () => {
       try {
-        controllerRef.current?.abort();
+        safeAbort(controllerRef.current, readerRef.current);
       } catch {}
       try {
         readerRef.current?.cancel?.();
