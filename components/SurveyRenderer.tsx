@@ -148,7 +148,7 @@ export default function SurveyRenderer({
                   return (
                     <label
                       key={`${question.id ?? qIdx}-yesno-${option}`}
-                      className={`flex items-center p-3 rounded-lg border-2 ${isChecked ? "border-blue-500 bg-blue-50" : "border-gray-300"}`}
+                      className={`flex items-center p-3 rounded-lg border-2 text-gray-900 dark:text-white ${isChecked ? "border-blue-500 bg-blue-50 dark:bg-blue-800/30" : "border-gray-300 dark:border-gray-700"}`}
                     >
                       <input
                         type="radio"
@@ -156,6 +156,7 @@ export default function SurveyRenderer({
                         value={option}
                         checked={isChecked}
                         disabled={disabled}
+                        className="accent-blue-500 dark:accent-blue-400"
                         onChange={() => setAnswer(question.id, option)}
                       />
                       <span className="ml-2">{option}</span>
@@ -173,7 +174,7 @@ export default function SurveyRenderer({
                   return (
                     <label
                       key={`${question.id ?? qIdx}-single-${opt ?? optIdx}`}
-                      className={`flex items-center p-3 rounded-lg border-2 ${isChecked ? "border-blue-500 bg-blue-50" : "border-gray-300"}`}
+                      className={`flex items-center p-3 rounded-lg border-2 text-gray-900 dark:text-white ${isChecked ? "border-blue-500 bg-blue-50 dark:bg-blue-800/30" : "border-gray-300 dark:border-gray-700"}`}
                     >
                       <input
                         type="radio"
@@ -181,6 +182,7 @@ export default function SurveyRenderer({
                         value={opt}
                         checked={isChecked}
                         disabled={disabled}
+                        className="accent-blue-500 dark:accent-blue-400"
                         onChange={() => setAnswer(question.id, opt)}
                       />
                       <span className="ml-2">{opt}</span>
@@ -199,7 +201,7 @@ export default function SurveyRenderer({
                   return (
                     <label
                       key={`${question.id ?? qIdx}-multi-${opt ?? optIdx}`}
-                      className={`flex items-center p-3 rounded-lg border-2 ${checked ? "border-blue-500 bg-blue-50" : "border-gray-300"}`}
+                      className={`flex items-center p-3 rounded-lg border-2 text-gray-900 dark:text-white ${checked ? "border-blue-500 bg-blue-50 dark:bg-blue-800/30" : "border-gray-300 dark:border-gray-700"}`}
                     >
                       <input
                         type="checkbox"
@@ -207,6 +209,7 @@ export default function SurveyRenderer({
                         value={opt}
                         checked={checked}
                         disabled={disabled}
+                        className="accent-blue-500 dark:accent-blue-400"
                         onChange={(e) => {
                           const arr = new Set(current);
                           if (e.target.checked) arr.add(opt);
@@ -234,7 +237,7 @@ export default function SurveyRenderer({
                     })
                   }
                   disabled={!enabledMap[question.id]}
-                  className="w-full px-4 py-2 border rounded"
+                  className="w-full px-4 py-2 border border-gray-300 bg-white text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-white rounded"
                 />
               </div>
             )}
@@ -251,7 +254,7 @@ export default function SurveyRenderer({
         <div className="flex gap-4">
           <button
             onClick={() => onSubmit?.(answers)}
-            className="px-6 py-2 bg-blue-500 text-white rounded-lg"
+            className="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg dark:bg-blue-600 dark:hover:bg-blue-500"
           >
             Submit
           </button>
