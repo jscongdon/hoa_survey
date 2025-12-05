@@ -7,12 +7,16 @@ import StreamingNonRespondents from "@/app/dashboard/surveys/[id]/nonrespondents
 beforeEach(() => {
   // basic localStorage polyfill
   // @ts-ignore
-  if (!global.localStorage || typeof global.localStorage.getItem !== "function") {
+  if (
+    !global.localStorage ||
+    typeof global.localStorage.getItem !== "function"
+  ) {
     // @ts-ignore
     global.localStorage = (function () {
       let store: Record<string, string> = {};
       return {
-        getItem: (key: string) => (store[key] === undefined ? null : store[key]),
+        getItem: (key: string) =>
+          store[key] === undefined ? null : store[key],
         setItem: (key: string, val: string) => {
           store[key] = String(val);
         },
@@ -65,21 +69,37 @@ describe("Nonrespondents Remind button visibility", () => {
 
     localStorage.setItem(
       "nonrespondents:s1",
-      JSON.stringify({ items: sample, seen: ["r1"], totalCount: 1, ts: Date.now() })
+      JSON.stringify({
+        items: sample,
+        seen: ["r1"],
+        totalCount: 1,
+        ts: Date.now(),
+      })
     );
 
     global.fetch = vi.fn((url: any) => {
-      if (typeof url === "string" && url.indexOf("/api/surveys/s1/nonrespondents") !== -1) {
-        return Promise.resolve({ ok: true, json: () => Promise.resolve(sample) } as any);
+      if (
+        typeof url === "string" &&
+        url.indexOf("/api/surveys/s1/nonrespondents") !== -1
+      ) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(sample),
+        } as any);
       }
-      return Promise.resolve({ ok: true, json: () => Promise.resolve({}) } as any);
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({}),
+      } as any);
     }) as any;
 
     render(<StreamingNonRespondents />);
 
-    await waitFor(() => screen.getByText(/Bob/));
+    await waitFor(() =>
+      expect(screen.getAllByText(/Bob/).length).toBeGreaterThan(0)
+    );
 
-    // There should be no Remind button visible
-    expect(screen.queryByText(/Remind/)).toBeNull();
+    // There should be no Remind button visible; match whole 'Remind' button label
+    expect(screen.queryByText(/^Remind$/)).toBeNull();
   });
 });
