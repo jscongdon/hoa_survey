@@ -25,10 +25,13 @@ describe("Admin delete response - clears answers and marks unsubmitted", () => {
   it("clears answers and sets submittedAt to null instead of creating a new response", async () => {
     // create admin
     const timestamp = Date.now();
+    const adminEmail = `a+${timestamp}@e.com`;
+    // ensure we don't collide with a previous admin record by removing any with the same email
+    await prisma.admin.deleteMany({ where: { email: adminEmail } });
     const admin = await prisma.admin.create({
       data: {
         id: `admin-d1-${timestamp}`,
-        email: `a+${timestamp}@e.com`,
+        email: adminEmail,
         password: "x",
         role: "FULL",
       },

@@ -29,6 +29,8 @@ describe("Admin edit response", () => {
     const adminTimestamp = Date.now();
     const adminId = `admin-${adminTimestamp}`;
     const adminEmail = `a+${adminTimestamp}@e.com`;
+    // Ensure a previous admin with the same email is removed to avoid unique constraint errors
+    await prisma.admin.deleteMany({ where: { email: adminEmail } });
     const admin = await prisma.admin.create({
       data: { id: adminId, email: adminEmail, password: "x", role: "FULL" },
     });
@@ -64,6 +66,7 @@ describe("Admin edit response", () => {
     const r = await prisma.response.create({
       data: { surveyId: survey.id, memberId: m.id, token: "t1" },
     });
+    console.log("[ADMIN_EDIT-DEBUG] created response", r.id);
     await prisma.answer.create({
       data: { responseId: r.id, questionId: q1.id, value: JSON.stringify("A") },
     });
@@ -81,6 +84,13 @@ describe("Admin edit response", () => {
     const responseRowCheck = await prisma.response.findUnique({
       where: { id: r.id },
     });
+    const allResponses = await prisma.response.findMany();
+    console.log(
+      "[ADMIN_EDIT-DEBUG] responseRow",
+      !!responseRowCheck,
+      "allResponsesCount",
+      allResponses.length
+    );
     console.log(
       "[ADMIN_EDIT-DEBUG] surveyId",
       survey.id,
