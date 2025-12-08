@@ -148,23 +148,22 @@ export async function DELETE(
       return NextResponse.json({ error: 'Response does not belong to this survey' }, { status: 400 });
     }
 
-    // Store member ID before deleting
+    // Store member ID and clear answers for this response and mark as unsubmitted
     const memberId = response.memberId;
 
-    // Delete the response
-    await prisma.response.delete({
-      where: { id: responseId },
-    });
-
-    // Create a new unsubmitted response for the member
-    const newToken = crypto.randomBytes(32).toString('hex');
-    await prisma.response.create({
-      data: {
-        surveyId: surveyId,
-        memberId: memberId,
-        token: newToken,
-        submittedAt: null,
-      },
+    // Use a transaction to delete all answers for this response and mark the response as unsubmitted.
+    // Keep the same response row so the token and relation remain intact.
+    await prisma.$transaction(async (tx) => {
+      await tx.answer.deleteMany({ where: { responseId } });
+      await tx.response.update({
+        where: { id: responseId },
+        data: {
+          submittedAt: null,
+          signed: false,
+          signedAt: null,
+          signatureToken: null,
+        },
+      });
     });
 
     return NextResponse.json({ success: true, message: 'Response deleted successfully and new response created' });
