@@ -77,6 +77,19 @@ describe("Admin edit response", () => {
     // hack: attach cookies interface like Next.js request
     (req as any).cookies = { get: () => ({ value: "token" }) };
 
+    // Sanity check: verify the response row exists before calling the route
+    const responseRowCheck = await prisma.response.findUnique({
+      where: { id: r.id },
+    });
+    console.log(
+      "[ADMIN_EDIT-DEBUG] surveyId",
+      survey.id,
+      "responseId",
+      r.id,
+      "responseRow",
+      !!responseRowCheck
+    );
+
     const res = await PUT(
       req as any,
       { params: Promise.resolve({ id: survey.id, responseId: r.id }) } as any
