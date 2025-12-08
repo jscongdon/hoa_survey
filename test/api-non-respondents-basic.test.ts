@@ -34,9 +34,8 @@ describe("Non-respondents API - Basic", () => {
     };
 
     // Import the route dynamically to avoid issues
-    const { GET } = await import(
-      "../app/api/surveys/[id]/nonrespondents/route"
-    );
+    const { GET } =
+      await import("../app/api/surveys/[id]/nonrespondents/route");
     const res: any = await GET(req, {
       params: Promise.resolve({ id: "survey1" }),
     });
@@ -44,7 +43,7 @@ describe("Non-respondents API - Basic", () => {
   });
 
   it("returns 404 for non-existent survey", async () => {
-    (verifyToken as any).mockResolvedValue({ adminId: "admin1" });
+    (verifyToken as any).mockResolvedValue({ adminId: "admin1", role: "FULL" });
     (prisma.survey.findUnique as any).mockResolvedValue(null);
 
     const req: any = {
@@ -52,9 +51,8 @@ describe("Non-respondents API - Basic", () => {
       cookies: { get: () => ({ value: "token" }) },
     };
 
-    const { GET } = await import(
-      "../app/api/surveys/[id]/nonrespondents/route"
-    );
+    const { GET } =
+      await import("../app/api/surveys/[id]/nonrespondents/route");
     const res: any = await GET(req, {
       params: Promise.resolve({ id: "nonexistent" }),
     });
@@ -62,7 +60,7 @@ describe("Non-respondents API - Basic", () => {
   });
 
   it("includes reminderCount for each nonrespondent", async () => {
-    (verifyToken as any).mockResolvedValue({ adminId: "admin1" });
+    (verifyToken as any).mockResolvedValue({ adminId: "admin1", role: "FULL" });
     (prisma.survey.findUnique as any).mockResolvedValue({ id: "s1" });
     (prisma.response.findMany as any).mockResolvedValue([
       {
@@ -89,9 +87,8 @@ describe("Non-respondents API - Basic", () => {
       cookies: { get: () => ({ value: "token" }) },
       url: "http://localhost/api/surveys/s1/nonrespondents",
     };
-    const { GET } = await import(
-      "../app/api/surveys/[id]/nonrespondents/route"
-    );
+    const { GET } =
+      await import("../app/api/surveys/[id]/nonrespondents/route");
     const res: any = await GET(req, { params: Promise.resolve({ id: "s1" }) });
     const body = await res.json();
     expect(Array.isArray(body)).toBe(true);

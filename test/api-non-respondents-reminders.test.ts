@@ -26,7 +26,7 @@ describe("Non-respondents API - reminders exact filter", () => {
   });
 
   it("filters `reminders=1` exactly (returns only members with exactly 1 reminder)", async () => {
-    (verifyToken as any).mockResolvedValue({ adminId: "admin1" });
+    (verifyToken as any).mockResolvedValue({ adminId: "admin1", role: "FULL" });
     (prisma.survey.findUnique as any).mockResolvedValue({ id: "s1" });
 
     // responses with 2 members
@@ -74,9 +74,8 @@ describe("Non-respondents API - reminders exact filter", () => {
       cookies: { get: () => ({ value: "token" }) },
       url: "http://localhost/api/surveys/s1/nonrespondents?reminders=1",
     };
-    const { GET } = await import(
-      "../app/api/surveys/[id]/nonrespondents/route"
-    );
+    const { GET } =
+      await import("../app/api/surveys/[id]/nonrespondents/route");
     const res: any = await GET(req, { params: Promise.resolve({ id: "s1" }) });
     const body = await res.json();
     // debug: ensure groupBy and response calls were made with expected where clauses
@@ -89,7 +88,7 @@ describe("Non-respondents API - reminders exact filter", () => {
   });
 
   it("filters `reminders=0` (returns only members with zero reminders)", async () => {
-    (verifyToken as any).mockResolvedValue({ adminId: "admin1" });
+    (verifyToken as any).mockResolvedValue({ adminId: "admin1", role: "FULL" });
     (prisma.survey.findUnique as any).mockResolvedValue({ id: "s1" });
 
     // responses contain 3 members
@@ -140,9 +139,8 @@ describe("Non-respondents API - reminders exact filter", () => {
       cookies: { get: () => ({ value: "token" }) },
       url: "http://localhost/api/surveys/s1/nonrespondents?reminders=0",
     };
-    const { GET } = await import(
-      "../app/api/surveys/[id]/nonrespondents/route"
-    );
+    const { GET } =
+      await import("../app/api/surveys/[id]/nonrespondents/route");
     const res: any = await GET(req, { params: Promise.resolve({ id: "s1" }) });
     const body = await res.json();
     // debug: check called where filters

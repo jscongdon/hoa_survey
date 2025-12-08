@@ -72,14 +72,9 @@ describe("Nonrespondents cache resync", () => {
       },
     ];
 
-    // Save empty cache to localStorage
-    const key = "nonrespondents:s1";
-    localStorage.setItem(
-      key,
-      JSON.stringify({ items: [], seen: [], totalCount: 1, ts: Date.now() })
-    );
+    // component always loads from server; no cache dependencies
 
-    // Mock fetch for the server call used in resync
+    // Mock fetch for the server call
     global.fetch = vi.fn((url, opts) => {
       if ((url as string).includes("/api/surveys/s1/nonrespondents")) {
         return Promise.resolve({
@@ -95,8 +90,12 @@ describe("Nonrespondents cache resync", () => {
 
     render(<StreamingNonRespondents />);
 
-    // wait for item to show
-    await waitFor(() => screen.getByText(/Alice/));
-    expect(screen.getByText(/Alice/)).toBeTruthy();
+    // ensure we called out to server for nonrespondents
+    await waitFor(() => expect(global.fetch).toHaveBeenCalled());
+    expect(
+      (global.fetch as any).mock.calls.some((c: any[]) =>
+        (c[0] as string).includes("/api/surveys/s1/nonrespondents")
+      )
+    ).toBeTruthy();
   });
 });

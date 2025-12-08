@@ -14,11 +14,16 @@ describe("response persistence transaction", () => {
   beforeAll(async () => {
     const ml = await prisma.memberList.create({
       data: {
-        name: "test-list",
+        name: `test-list-${Date.now()}`,
         createdAt: new Date(),
       },
     });
     memberListId = ml.id;
+    // DEBUG: ml id created
+    const mlFound = await prisma.memberList.findUnique({
+      where: { id: ml.id },
+    });
+    // DEBUG: confirmed memberlist exists
 
     const member = await prisma.member.create({
       data: {
@@ -30,16 +35,22 @@ describe("response persistence transaction", () => {
     });
     memberId = member.id;
 
-    const survey = await prisma.survey.create({
-      data: {
-        title: "test-survey",
-        opensAt: new Date(),
-        closesAt: new Date(Date.now() + 1000 * 60 * 60),
-        memberListId: memberListId,
-        minResponses: 1,
-        createdAt: new Date(),
-      },
-    });
+    let survey;
+    try {
+      survey = await prisma.survey.create({
+        data: {
+          title: "test-survey",
+          opensAt: new Date(),
+          closesAt: new Date(Date.now() + 1000 * 60 * 60),
+          memberListId: memberListId,
+          minResponses: 1,
+          createdAt: new Date(),
+        },
+      });
+    } catch (e) {
+      console.error("DEBUG survey.create error", e);
+      throw e;
+    }
     surveyId = survey.id;
 
     const q1 = await prisma.question.create({
@@ -47,6 +58,7 @@ describe("response persistence transaction", () => {
     });
     q1Id = q1.id;
 
+    // DEBUG: survey created
     const q2 = await prisma.question.create({
       data: { surveyId: surveyId, type: "MULTI_MULTI", text: "q2", order: 1 },
     });

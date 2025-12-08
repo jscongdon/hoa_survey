@@ -36,64 +36,12 @@ export default function StreamingNonRespondents() {
   const readerRef = useRef<any>(null);
   const autoResumeTriggeredRef = useRef(false);
 
-  const saveCacheNow = React.useCallback(
-    (overrideItems?: NonRespondent[]) => {
-      if (!surveyId) return;
-      try {
-        const key = `nonrespondents:${surveyId}`;
-        const seen = Array.from(seenRef.current || []);
-        const src = overrideItems ?? itemsRef.current ?? [];
-        const snapshot = src.map((it) => ({
-          responseId: it.responseId,
-          id: it.id,
-          name: it.name,
-          email: it.email || "",
-          lotNumber: it.lotNumber,
-          address: it.address,
-          token: it.token,
-          reminderCount: it.reminderCount ?? 0,
-        }));
-        const payload = {
-          items: snapshot,
-          seen,
-          totalCount,
-          ts: Date.now(),
-        } as any;
-        console.debug("Nonrespondents: immediate save cache", {
-          key,
-          count: snapshot.length,
-          totalCount,
-        });
-        localStorage.setItem(key, JSON.stringify(payload));
-        try {
-          const check = localStorage.getItem(key);
-          const parsedCheck = check ? JSON.parse(check) : null;
-          const emailsSaved = Array.isArray(parsedCheck?.items)
-            ? parsedCheck.items.filter((x: any) => x.email && x.email.length)
-                .length
-            : 0;
-          console.debug("Nonrespondents: immediate save verified", {
-            key,
-            savedCount: parsedCheck?.items?.length ?? 0,
-            emailsSaved,
-          });
-        } catch (e) {
-          console.error("Nonrespondents: failed verify immediate save", e);
-        }
-      } catch (e) {
-        console.error("Failed to save cached nonrespondents (immediate)", e);
-      }
-    },
-    [surveyId, totalCount]
-  );
+  // removed localStorage caching: stream/live from DB only
   const [remindStatus, setRemindStatus] = useState<Record<string, string>>({});
   const [retryKey, setRetryKey] = useState(0);
   const completedRef = useRef(false);
   const controllerRef = useRef<AbortController | null>(null);
-  const [cacheLoaded, setCacheLoaded] = useState(false);
-  // cache settings
-  const CACHE_TTL_MS = 1000 * 60 * 60; // 1 hour
-  const saveTimerRef = useRef<number | null>(null);
+  // no cache: always stream from DB
 
   // Filters
   const [lotFilter, setLotFilter] = useState("");
@@ -103,26 +51,39 @@ export default function StreamingNonRespondents() {
   // helper for safely aborting/canceling reader + controller without throwing
   const safeAbort = React.useCallback(
     (controller?: AbortController | null, reader?: any) => {
+      // Best-effort: cancel reader + abort controller but avoid throwing
       try {
         // cancel the reader (best-effort, don't await)
         try {
-          if (reader?.cancel) {
+          if (reader?.cancel && typeof reader.cancel === "function") {
             const p = reader.cancel();
             if (p && typeof p.then === "function") p.catch(() => {});
           }
-        } catch {}
-        // abort controller if present
+        } catch (e) {
+          // ignore reader cancel errors
+        }
+        // Only call abort if controller is present and the signal is not already aborted
         try {
-          controller?.abort?.();
-        } catch {}
-      } catch {}
+          if (
+            controller &&
+            controller.abort &&
+            controller.signal &&
+            controller.signal.aborted !== true
+          ) {
+            controller.abort();
+          }
+        } catch (e) {
+          // ignore abort errors — some environments (or polyfills) may throw
+        }
+      } catch (e) {
+        // completely swallow any unexpected errors here to avoid crashing the UI
+      }
     },
     []
   );
 
   useEffect(() => {
     if (!surveyId) return;
-    if (!cacheLoaded) return; // wait until cache load attempt finishes
     // create an AbortController for this run so we can cancel when the tab becomes hidden
     controllerRef.current = new AbortController();
     const signal = controllerRef.current.signal;
@@ -131,36 +92,21 @@ export default function StreamingNonRespondents() {
       // mark this run id so other concurrent runs can be ignored
       const myRun = ++runIdRef.current;
       completedRef.current = false;
-      // ensure seenRef contains any ids from current in-memory items (safety)
+      // scope-wide try so we can catch and handle errors for this run
       try {
-        for (const it of itemsRef.current || [])
-          seenRef.current.add(it.responseId);
-      } catch {}
-      // ensure localStorage seen is merged too (defensive; may duplicate)
-      try {
-        console.debug("Nonrespondents: starting stream run", {
-          surveyId,
-          itemsLoaded: itemsRef.current.length,
-          seen: seenRef.current.size,
-          runId: myRun,
-        });
-        // rehydrate seen set from cache in case previous runs persisted it
+        // ensure seenRef contains any ids from current in-memory items (safety)
         try {
-          const key = `nonrespondents:${surveyId}`;
-          const raw = localStorage.getItem(key);
-          if (raw) {
-            const parsed = JSON.parse(raw);
-            if (parsed && Array.isArray(parsed.seen)) {
-              parsed.seen.forEach((id: string) => seenRef.current.add(id));
-              console.debug(
-                "Nonrespondents: merged seen from cache",
-                seenRef.current.size
-              );
-            }
-          }
-        } catch (e) {
-          /* ignore cache read errors */
-        }
+          for (const it of itemsRef.current || [])
+            seenRef.current.add(it.responseId);
+        } catch {}
+        try {
+          console.debug("Nonrespondents: starting stream run", {
+            surveyId,
+            itemsLoaded: itemsRef.current.length,
+            seen: seenRef.current.size,
+            runId: myRun,
+          });
+        } catch {}
         const supportsStream =
           typeof window !== "undefined" && !!(window as any).ReadableStream;
         if (supportsStream) {
@@ -287,7 +233,6 @@ export default function StreamingNonRespondents() {
                   setItems((prev) => {
                     const next = [...prev, obj];
                     itemsRef.current = next;
-                    saveCacheNow(next);
                     return next;
                   });
                   console.debug(
@@ -338,7 +283,6 @@ export default function StreamingNonRespondents() {
                   setItems((prev) => {
                     const next = [...prev, obj];
                     itemsRef.current = next;
-                    saveCacheNow(next);
                     return next;
                   });
                   console.debug(
@@ -397,7 +341,6 @@ export default function StreamingNonRespondents() {
                     setItems((prev) => {
                       const next = [...prev, ...toAdd];
                       itemsRef.current = next;
-                      saveCacheNow(next);
                       return next;
                     });
                 }
@@ -462,7 +405,6 @@ export default function StreamingNonRespondents() {
             setItems((prev) => {
               const next = [...prev, ...toAdd];
               itemsRef.current = next;
-              saveCacheNow(next);
               return next;
             });
           setTotalCount(body.length);
@@ -490,7 +432,6 @@ export default function StreamingNonRespondents() {
             setItems((prev) => {
               const next = [...prev, ...toAdd];
               itemsRef.current = next;
-              saveCacheNow(next);
               return next;
             });
           setTotalCount((body as any).total ?? arr.length);
@@ -536,8 +477,6 @@ export default function StreamingNonRespondents() {
     refreshAuth,
     router,
     retryKey,
-    saveCacheNow,
-    cacheLoaded,
     items.length,
     loading,
     totalCount,
@@ -594,10 +533,9 @@ export default function StreamingNonRespondents() {
     }
   }, [pathname, surveyId]);
 
-  // When the cache load completes and we are on the page, auto-trigger a resume once
+  // When the page mounts, auto-trigger a resume once
   useEffect(() => {
     if (!surveyId) return;
-    if (!cacheLoaded) return;
     // only once per visit; reset on navigation back to page
     if (autoResumeTriggeredRef.current) return;
     if (completedRef.current) return;
@@ -613,190 +551,11 @@ export default function StreamingNonRespondents() {
     console.debug("Nonrespondents: auto-triggering resume on page open");
     setRetryKey((k) => k + 1);
     autoResumeTriggeredRef.current = true;
-  }, [
-    cacheLoaded,
-    surveyId,
-    totalCount,
-    streaming,
-    saveCacheNow,
-    CACHE_TTL_MS,
-  ]);
+  }, [surveyId, totalCount, streaming]);
 
-  // Load cached nonrespondents for this survey (if any and not expired)
-  useEffect(() => {
-    if (!surveyId) return;
-    try {
-      const key = `nonrespondents:${surveyId}`;
-      const raw = localStorage.getItem(key);
-      if (!raw) {
-        setCacheLoaded(true);
-        return;
-      }
-      const parsed = JSON.parse(raw);
-      if (!parsed || typeof parsed !== "object") {
-        setCacheLoaded(true);
-        return;
-      }
-      const {
-        items: cachedItems,
-        seen: cachedSeen,
-        totalCount: cachedTotal,
-        ts,
-      } = parsed as any;
-      if (!Array.isArray(cachedItems) || !ts) {
-        setCacheLoaded(true);
-        return;
-      }
-      if (Date.now() - ts > CACHE_TTL_MS) {
-        // stale
-        localStorage.removeItem(key);
-        setCacheLoaded(true);
-        return;
-      }
+  // No cache load; always stream and refresh counts from server via fetch when needed
 
-      // defensive mapping: ensure each cached item has responseId and token
-      const mapped: NonRespondent[] = cachedItems
-        .map((it: any) => ({
-          responseId: it.responseId || it.id || it.response_id || "",
-          id: it.id || it.memberId || it.responseId || "",
-          name: it.name || "",
-          email: it.email || it.member?.email || "",
-          lotNumber: it.lotNumber || it.lot || "",
-          address: it.address || it.addr || null,
-          token: it.token || "",
-          reminderCount: it.reminderCount ?? 0,
-        }))
-        .filter((x) => x.responseId);
-
-      // restore
-      if (mapped.length) {
-        setItems(mapped);
-      }
-      if (typeof cachedTotal === "number") setTotalCount(cachedTotal);
-      const seen = seenRef.current;
-      if (Array.isArray(cachedSeen))
-        cachedSeen.forEach((id: string) => seen.add(id));
-      setLoading(false);
-      console.debug("Nonrespondents: loaded cached items", mapped.length);
-    } catch (e) {
-      // ignore cache errors
-      console.error("Failed to load cached nonrespondents", e);
-    } finally {
-      setCacheLoaded(true);
-      // After loading cached items, fetch updated reminder counts from server to ensure cache reflects latest data
-      (async () => {
-        try {
-          const r = await fetch(`/api/surveys/${surveyId}/nonrespondents`, {
-            credentials: "include",
-          });
-          if (!r.ok) return;
-          const body = await r.json();
-          const arr = Array.isArray(body) ? body : body?.items || [];
-          if (!Array.isArray(arr) || arr.length === 0) return;
-          const seen = seenRef.current;
-          // Merge counts into current items
-          const countsMap = new Map<string, number>();
-          arr.forEach((it: any) => {
-            const id = it.responseId || it.id || it.response_id;
-            if (!id) return;
-            countsMap.set(id, Number(it.reminderCount ?? 0));
-          });
-          if (countsMap.size === 0) return;
-          setItems((prev) => {
-            let changed = false;
-            const next = prev.map((it) => {
-              const cnt = countsMap.get(it.responseId);
-              if (cnt !== undefined && (it.reminderCount ?? 0) !== cnt) {
-                changed = true;
-                return { ...it, reminderCount: cnt };
-              }
-              return it;
-            });
-            if (changed) {
-              itemsRef.current = next;
-              saveCacheNow(next);
-            }
-            return next;
-          });
-        } catch (e) {
-          // ignore
-        }
-      })();
-    }
-  }, [surveyId, CACHE_TTL_MS]);
-
-  // Persist cache when items change (debounced)
-  useEffect(() => {
-    if (!surveyId) return;
-    // clear previous timer
-    if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current as any);
-
-    const doSave = () => {
-      try {
-        const key = `nonrespondents:${surveyId}`;
-        const seen = Array.from(seenRef.current || []);
-        // snapshot plain objects to avoid any unexpected properties
-        const src = itemsRef.current || items;
-        const snapshot = src.map((it) => ({
-          responseId: it.responseId,
-          id: it.id,
-          name: it.name,
-          email: it.email || "",
-          lotNumber: it.lotNumber,
-          address: it.address,
-          token: it.token,
-          reminderCount: it.reminderCount ?? 0,
-        }));
-        const payload = {
-          items: snapshot,
-          seen,
-          totalCount,
-          ts: Date.now(),
-        } as any;
-        console.debug("Nonrespondents: saving cache", {
-          key,
-          count: snapshot.length,
-          totalCount,
-        });
-        localStorage.setItem(key, JSON.stringify(payload));
-        try {
-          const check = localStorage.getItem(key);
-          const parsedCheck = check ? JSON.parse(check) : null;
-          const emailsSaved = Array.isArray(parsedCheck?.items)
-            ? parsedCheck.items.filter((x: any) => x.email && x.email.length)
-                .length
-            : 0;
-          console.debug("Nonrespondents: debounced save verified", {
-            key,
-            savedCount: parsedCheck?.items?.length ?? 0,
-            emailsSaved,
-          });
-        } catch (e) {
-          console.error("Nonrespondents: failed verify debounced save", e);
-        }
-      } catch (e) {
-        console.error("Failed to save cached nonrespondents", e);
-      }
-    };
-
-    saveTimerRef.current = window.setTimeout(() => {
-      doSave();
-      saveTimerRef.current = null;
-    }, 500);
-
-    return () => {
-      if (saveTimerRef.current) {
-        window.clearTimeout(saveTimerRef.current as any);
-        saveTimerRef.current = null;
-      }
-      // flush immediately on cleanup
-      try {
-        doSave();
-      } catch (e) {
-        /* ignore */
-      }
-    };
-  }, [items, totalCount, surveyId]);
+  // no persisting to localStorage
 
   // keep a stable ref of items so other async callbacks can access latest
   useEffect(() => {
@@ -828,7 +587,6 @@ export default function StreamingNonRespondents() {
               : it
           );
           itemsRef.current = next;
-          saveCacheNow(next);
           return next;
         });
         setTimeout(

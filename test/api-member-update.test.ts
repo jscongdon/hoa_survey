@@ -25,7 +25,7 @@ describe("Member update returns affectedResponses", () => {
   });
 
   it("returns decrypted member and affectedResponses", async () => {
-    (verifyToken as any).mockResolvedValue({ adminId: "admin1" });
+    (verifyToken as any).mockResolvedValue({ adminId: "admin1", role: "FULL" });
     (prisma.member.findUnique as any).mockResolvedValue({
       id: "m1",
       lists: [{ id: "list1" }],
@@ -48,9 +48,8 @@ describe("Member update returns affectedResponses", () => {
       address: "1 Main St",
     });
 
-    const { PUT } = await import(
-      "../app/api/member-lists/[id]/members/[memberId]/route"
-    );
+    const { PUT } =
+      await import("../app/api/member-lists/[id]/members/[memberId]/route");
 
     const req: any = {
       headers: { get: () => null },
@@ -77,7 +76,7 @@ describe("Member update returns affectedResponses", () => {
   });
 
   it("allows clearing member email by setting it to empty string", async () => {
-    (verifyToken as any).mockResolvedValue({ adminId: "admin1" });
+    (verifyToken as any).mockResolvedValue({ adminId: "admin1", role: "FULL" });
     (prisma.member.findUnique as any).mockResolvedValue({
       id: "m1",
       lists: [{ id: "list1" }],
@@ -100,9 +99,8 @@ describe("Member update returns affectedResponses", () => {
       address: "1 Main St",
     });
 
-    const { PUT } = await import(
-      "../app/api/member-lists/[id]/members/[memberId]/route"
-    );
+    const { PUT } =
+      await import("../app/api/member-lists/[id]/members/[memberId]/route");
 
     const req: any = {
       headers: { get: () => null },

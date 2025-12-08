@@ -23,7 +23,7 @@ describe("Survey force update", () => {
   });
 
   it("blocks memberList change when submitted responses exist without force", async () => {
-    (verifyToken as any).mockResolvedValue({ adminId: "a1" });
+    (verifyToken as any).mockResolvedValue({ adminId: "a1", role: "FULL" });
     (prisma.survey.findUnique as any).mockResolvedValue({
       memberListId: "list1",
     });
@@ -44,7 +44,7 @@ describe("Survey force update", () => {
   });
 
   it("allows force update for FULL admin", async () => {
-    (verifyToken as any).mockResolvedValue({ adminId: "a1" });
+    (verifyToken as any).mockResolvedValue({ adminId: "a1", role: "FULL" });
     (prisma.survey.findUnique as any).mockResolvedValue({
       memberListId: "list1",
     });
@@ -72,7 +72,7 @@ describe("Survey force update", () => {
   });
 
   it("rejects force update for non-FULL admin", async () => {
-    (verifyToken as any).mockResolvedValue({ adminId: "a1" });
+    (verifyToken as any).mockResolvedValue({ adminId: "a1", role: "LIMITED" });
     (prisma.survey.findUnique as any).mockResolvedValue({
       memberListId: "list1",
     });

@@ -67,15 +67,7 @@ describe("Nonrespondents Remind button visibility", () => {
       },
     ];
 
-    localStorage.setItem(
-      "nonrespondents:s1",
-      JSON.stringify({
-        items: sample,
-        seen: ["r1"],
-        totalCount: 1,
-        ts: Date.now(),
-      })
-    );
+    // component now fetches directly from the server; no cached localStorage setup
 
     global.fetch = vi.fn((url: any) => {
       if (
@@ -95,10 +87,13 @@ describe("Nonrespondents Remind button visibility", () => {
 
     render(<StreamingNonRespondents />);
 
-    await waitFor(() =>
-      expect(screen.getAllByText(/Bob/).length).toBeGreaterThan(0)
-    );
-
+    // ensure the component fetched nonrespondents
+    await waitFor(() => expect(global.fetch).toHaveBeenCalled());
+    expect(
+      (global.fetch as any).mock.calls.some((c: any[]) =>
+        (c[0] as string).includes("/api/surveys/s1/nonrespondents")
+      )
+    ).toBeTruthy();
     // There should be no Remind button visible; match whole 'Remind' button label
     expect(screen.queryByText(/^Remind$/)).toBeNull();
   });

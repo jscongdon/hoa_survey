@@ -64,7 +64,10 @@ describe("Admin Upload Logo API - /api/admin/upload-logo", () => {
   describe("POST /api/admin/upload-logo", () => {
     it("successfully uploads PNG logo with valid authentication", async () => {
       // Mock authentication
-      (verifyToken as any).mockResolvedValue({ adminId: "admin1" });
+      (verifyToken as any).mockResolvedValue({
+        adminId: "admin1",
+        role: "FULL",
+      });
 
       // Mock file system
       let existsSyncCallCount = 0;
@@ -157,7 +160,10 @@ describe("Admin Upload Logo API - /api/admin/upload-logo", () => {
     });
 
     it("successfully uploads JPEG logo", async () => {
-      (verifyToken as any).mockResolvedValue({ adminId: "admin1" });
+      (verifyToken as any).mockResolvedValue({
+        adminId: "admin1",
+        role: "FULL",
+      });
       (fs.existsSync as any).mockReturnValue(true);
       (fs.unlinkSync as any).mockImplementation(() => {});
       (path.join as any).mockImplementation((...args: string[]) =>
@@ -220,7 +226,10 @@ describe("Admin Upload Logo API - /api/admin/upload-logo", () => {
     });
 
     it("successfully uploads SVG logo", async () => {
-      (verifyToken as any).mockResolvedValue({ adminId: "admin1" });
+      (verifyToken as any).mockResolvedValue({
+        adminId: "admin1",
+        role: "FULL",
+      });
       (fs.existsSync as any).mockReturnValue(true);
       (fs.unlinkSync as any).mockImplementation(() => {});
       (path.join as any).mockImplementation((...args: string[]) =>
@@ -312,7 +321,10 @@ describe("Admin Upload Logo API - /api/admin/upload-logo", () => {
     });
 
     it("returns 413 when content-length header indicates file too large", async () => {
-      (verifyToken as any).mockResolvedValue({ adminId: "admin1" });
+      (verifyToken as any).mockResolvedValue({
+        adminId: "admin1",
+        role: "FULL",
+      });
 
       const req = new NextRequest(
         "http://localhost:3000/api/admin/upload-logo",
@@ -333,7 +345,10 @@ describe("Admin Upload Logo API - /api/admin/upload-logo", () => {
     });
 
     it("returns 400 when no file uploaded", async () => {
-      (verifyToken as any).mockResolvedValue({ adminId: "admin1" });
+      (verifyToken as any).mockResolvedValue({
+        adminId: "admin1",
+        role: "FULL",
+      });
 
       const formData = new FormData();
 
@@ -356,7 +371,10 @@ describe("Admin Upload Logo API - /api/admin/upload-logo", () => {
     });
 
     it("returns 413 when file buffer is too large", async () => {
-      (verifyToken as any).mockResolvedValue({ adminId: "admin1" });
+      (verifyToken as any).mockResolvedValue({
+        adminId: "admin1",
+        role: "FULL",
+      });
 
       const largeBuffer = new ArrayBuffer(3 * 1024 * 1024); // 3MB
       const mockFile = {
@@ -394,7 +412,10 @@ describe("Admin Upload Logo API - /api/admin/upload-logo", () => {
     });
 
     it("returns 415 for invalid file type", async () => {
-      (verifyToken as any).mockResolvedValue({ adminId: "admin1" });
+      (verifyToken as any).mockResolvedValue({
+        adminId: "admin1",
+        role: "FULL",
+      });
 
       const mockFile = {
         name: "text.txt",
@@ -428,7 +449,10 @@ describe("Admin Upload Logo API - /api/admin/upload-logo", () => {
     });
 
     it("returns 500 on database error", async () => {
-      (verifyToken as any).mockResolvedValue({ adminId: "admin1" });
+      (verifyToken as any).mockResolvedValue({
+        adminId: "admin1",
+        role: "FULL",
+      });
       (fs.existsSync as any).mockReturnValue(true);
       (path.join as any).mockImplementation((...args: string[]) =>
         args.join("/")
@@ -485,7 +509,10 @@ describe("Admin Upload Logo API - /api/admin/upload-logo", () => {
 
   describe("DELETE /api/admin/upload-logo", () => {
     it("successfully deletes existing logo", async () => {
-      (verifyToken as any).mockResolvedValue({ adminId: "admin1" });
+      (verifyToken as any).mockResolvedValue({
+        adminId: "admin1",
+        role: "FULL",
+      });
       (prisma.systemConfig.findUnique as any).mockResolvedValue({
         id: "system",
         hoaLogoUrl: "/uploads/old-logo.png",
@@ -524,7 +551,10 @@ describe("Admin Upload Logo API - /api/admin/upload-logo", () => {
     });
 
     it("handles deletion when no logo exists", async () => {
-      (verifyToken as any).mockResolvedValue({ adminId: "admin1" });
+      (verifyToken as any).mockResolvedValue({
+        adminId: "admin1",
+        role: "FULL",
+      });
       (prisma.systemConfig.findUnique as any).mockResolvedValue({
         id: "system",
         hoaLogoUrl: null,
@@ -589,7 +619,10 @@ describe("Admin Upload Logo API - /api/admin/upload-logo", () => {
     });
 
     it("returns 500 on database error during find", async () => {
-      (verifyToken as any).mockResolvedValue({ adminId: "admin1" });
+      (verifyToken as any).mockResolvedValue({
+        adminId: "admin1",
+        role: "FULL",
+      });
       (prisma.systemConfig.findUnique as any).mockRejectedValue(
         new Error("DB Error")
       );
@@ -612,7 +645,10 @@ describe("Admin Upload Logo API - /api/admin/upload-logo", () => {
     });
 
     it("returns 500 on database error during upsert", async () => {
-      (verifyToken as any).mockResolvedValue({ adminId: "admin1" });
+      (verifyToken as any).mockResolvedValue({
+        adminId: "admin1",
+        role: "FULL",
+      });
       (prisma.systemConfig.findUnique as any).mockResolvedValue({
         id: "system",
         hoaLogoUrl: "/uploads/old-logo.png",

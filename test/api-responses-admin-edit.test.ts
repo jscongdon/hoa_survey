@@ -10,25 +10,35 @@ import { verifyToken } from "@/lib/auth/jwt";
 describe("Admin edit response", () => {
   beforeEach(async () => {
     vi.resetAllMocks();
-    // clean small set to avoid FK errors
+    // clean only test-scoped rows to avoid FK errors and cross-test interference
     await prisma.answer.deleteMany();
     await prisma.response.deleteMany();
     await prisma.question.deleteMany();
-    await prisma.survey.deleteMany();
-    await prisma.member.deleteMany();
-    await prisma.memberList.deleteMany();
-    await prisma.admin.deleteMany();
+    await prisma.survey.deleteMany({ where: { title: "S" } });
+    await prisma.member.deleteMany({
+      where: { lists: { some: { name: { startsWith: "list-" } } } },
+    });
+    await prisma.memberList.deleteMany({
+      where: { name: { startsWith: "list-" } },
+    });
+    await prisma.admin.deleteMany({ where: { email: { contains: "a+" } } });
   });
 
   it("allows FULL admin to update answers for a response", async () => {
     // create admin
+    const adminTimestamp = Date.now();
+    const adminId = `admin-${adminTimestamp}`;
+    const adminEmail = `a+${adminTimestamp}@e.com`;
     const admin = await prisma.admin.create({
-      data: { id: "admin1", email: "a@e.com", password: "x", role: "FULL" },
+      data: { id: adminId, email: adminEmail, password: "x", role: "FULL" },
     });
-    (verifyToken as any).mockResolvedValue({ adminId: "admin1" });
+    // admin creation logged in test; mock verifyToken to ensure admin is FULL
+    (verifyToken as any).mockResolvedValue({ adminId, role: "FULL" });
 
     // create survey
-    const ml = await prisma.memberList.create({ data: { name: "list" } });
+    const ml = await prisma.memberList.create({
+      data: { name: `list-${Date.now()}` },
+    });
     const survey = await prisma.survey.create({
       data: {
         title: "S",
@@ -58,9 +68,8 @@ describe("Admin edit response", () => {
       data: { responseId: r.id, questionId: q1.id, value: JSON.stringify("A") },
     });
 
-    const { PUT } = await import(
-      "../app/api/surveys/[id]/responses/[responseId]/route"
-    );
+    const { PUT } =
+      await import("../app/api/surveys/[id]/responses/[responseId]/route");
     const req = new Request(
       `http://localhost/api/surveys/${survey.id}/responses/${r.id}`,
       { method: "PUT", body: JSON.stringify({ answers: { [q1.id]: "B" } }) }
