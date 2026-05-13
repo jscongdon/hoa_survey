@@ -1,12 +1,14 @@
-import type { Metadata } from 'next';
-import './globals.css';
+import type { Metadata } from "next";
+import "./globals.css";
 
-import Footer from '@/components/Footer';
-import Header from '@/components/Header';
+import Footer from "@/components/Footer";
+import Header from "@/components/Header";
+import { AuthProvider } from "@/lib/auth/AuthContext";
+import { ErrorProvider } from "@/lib/error/ErrorContext";
 
 export const metadata: Metadata = {
-  title: 'HOA Survey',
-  description: 'Secure survey management for HOA communities',
+  title: "HOA Survey",
+  description: "Secure survey management for HOA communities",
 };
 
 export default function RootLayout({
@@ -36,13 +38,15 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-screen flex flex-col">
-        <Header />
-        <main className="flex-1 p-4 sm:p-6 lg:p-8">
-          <div className="max-w-7xl mx-auto">
-            {children}
-          </div>
-        </main>
-        <Footer />
+        <ErrorProvider>
+          <AuthProvider>
+            <Header />
+            <main className="flex-1 p-3 sm:p-4 lg:p-8">
+              <div className="max-w-7xl mx-auto">{children}</div>
+            </main>
+            <Footer />
+          </AuthProvider>
+        </ErrorProvider>
       </body>
     </html>
   );

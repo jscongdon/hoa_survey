@@ -20,7 +20,6 @@ model SystemConfig {
   smtpPass        String?
   smtpFrom        String?
   appUrl          String?
-  jwtSecret       String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }
@@ -37,8 +36,11 @@ model Admin {
   invitedById String?
   invitedBy   Admin?   @relation("InvitedAdmins", fields: [invitedById], references: [id])
   invites     Admin[]  @relation("InvitedAdmins")
+  surveysCreated Survey[] @relation("CreatedSurveys")
   resetToken  String?  @unique
   resetTokenExpires DateTime?
+  verificationToken String? @unique
+  verificationExpires DateTime?
   createdAt   DateTime @default(now())
 }
 
@@ -47,7 +49,7 @@ model MemberList {
   name      String
   members   Member[]  @relation("MemberListsOnMembers")
   surveys   Survey[]
-  createdAt DateTime  @default(now())
+  createdAt DateTime @default(now())
 }
 
 model Member {
@@ -58,6 +60,7 @@ model Member {
   address   String?
   lists     MemberList[] @relation("MemberListsOnMembers")
   responses Response[]
+  createdAt DateTime @default(now())
 }
 
 model Survey {
@@ -68,6 +71,8 @@ model Survey {
   closesAt       DateTime
   memberListId   String
   memberList     MemberList @relation(fields: [memberListId], references: [id])
+  createdById    String?
+  createdBy      Admin?     @relation("CreatedSurveys", fields: [createdById], references: [id])
   questions      Question[]
   responses      Response[]
   initialSentAt  DateTime? // When the initial notice was sent to recipients
@@ -75,7 +80,11 @@ model Survey {
   showAfterClose Boolean    @default(true)
   minResponses   Int?       // Minimum number of responses needed (optional)
   minResponsesAll Boolean   @default(false) // If true, minResponses should equal total members in list
-  createdAt      DateTime   @default(now())
+  requireSignature Boolean    @default(true) // Whether this survey requires digital signature for responses
+  notifyOnMinResponses Boolean @default(false) // Email creator when minResponses reached
+  minimalNotifiedAt DateTime?
+  groupNotificationsEnabled Boolean @default(true) // Whether to send group notifications for this survey
+  createdAt      DateTime @default(now())
 }
 
 model Question {
@@ -88,6 +97,10 @@ model Question {
   options       String?
   // Conditional display rules stored as JSON string (e.g. { triggerOrder: 0, operator: "equals", value: "Yes" })
   showWhen      String?
+  // Allow a single 'write-in' option for MULTI_SINGLE questions
+  writeIn       Boolean  @default(false)
+  // For MULTI_MULTI questions, number of write-in slots available
+  writeInCount  Int?     @default(0)
   maxSelections Int?     // For MULTI_MULTI questions: max number of options that can be selected
   required      Boolean  @default(false) // Whether this question must be answered
   order         Int

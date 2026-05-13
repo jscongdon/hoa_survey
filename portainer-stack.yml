@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   app:
@@ -8,19 +8,27 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - hoasurvey_data:/data
+      - hoa_survey_data:/data
     environment:
-      - DATABASE_URL=file:/data/hoasurvey.db
+      - DATABASE_URL=file:/data/hoa-survey.db
       - NODE_ENV=production
       # Update PRODUCTION_URL with your actual domain
       - PRODUCTION_URL=${PRODUCTION_URL:-https://survey.yourdomain.com}
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/setup/status"]
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:3000/api/setup/status",
+        ]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
 
 volumes:
-  hoasurvey_data:
+  hoa_survey_data:
     driver: local
