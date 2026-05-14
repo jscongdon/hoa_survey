@@ -35,30 +35,10 @@ export default function SetupWizard() {
   const [emailTested, setEmailTested] = useState(false);
 
   useEffect(() => {
-    // Don't check status if we're on the verify step
-    if (step === "verify") {
-      return;
-    }
-
-    // Check if setup is already complete or if admin exists
-    fetch("/api/setup/status")
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.setupCompleted) {
-          router.push("/login");
-        } else if (data.adminExists) {
-          // Admin created but not verified yet
-          router.push("/login?pending=verification");
-        }
-      })
-      .catch(() => {});
-
-    // Load environment variables for pre-population (development only)
     fetch("/api/setup/env")
       .then((res) => res.json())
       .then((data) => {
         if (data && !data.error) {
-          // Pre-populate form fields with environment variables
           if (data.hoaName) setHoaName(data.hoaName);
           if (data.hoaLogoUrl) setHoaLogoUrl(data.hoaLogoUrl);
           if (data.appUrl) setAppUrl(data.appUrl);
@@ -69,14 +49,29 @@ export default function SetupWizard() {
           if (data.smtpFrom) setSmtpFrom(data.smtpFrom);
           if (data.adminEmail) setAdminEmail(data.adminEmail);
           if (data.adminPassword) setAdminPassword(data.adminPassword);
-          if (data.adminPassword) setConfirmPassword(data.adminPassword); // Also populate confirm password
+          if (data.adminPassword) setConfirmPassword(data.adminPassword);
           if (data.adminName) setAdminName(data.adminName);
           if (data.testEmail) setTestEmail(data.testEmail);
         }
       })
-      .catch(() => {
-        // Silently fail if env endpoint is not available (production)
-      });
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (step === "verify") {
+      return;
+    }
+
+    fetch("/api/setup/status")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.setupCompleted) {
+          router.push("/login");
+        } else if (data.adminExists) {
+          router.push("/login?pending=verification");
+        }
+      })
+      .catch(() => {});
   }, [router, step]);
 
   const handleTestEmail = async () => {
